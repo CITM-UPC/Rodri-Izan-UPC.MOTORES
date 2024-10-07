@@ -4,6 +4,8 @@
 #include <exception>
 #include <glm/glm.hpp>
 #include "MyWindow.h"
+#include <imgui_impl_sdl2.h>
+
 using namespace std;
 
 using hrclock = chrono::high_resolution_clock;
@@ -30,6 +32,7 @@ static void draw_triangle(const u8vec4& color, const vec3& center, double size) 
 	glVertex3d(center.x + size, center.y - size, center.z);
 	glEnd();
 }
+
 
 static void display_func() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
