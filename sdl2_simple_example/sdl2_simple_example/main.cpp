@@ -8,7 +8,7 @@ using namespace std;
 
 using hrclock = chrono::high_resolution_clock;
 using u8vec4 = glm::u8vec4;
-using ivec2 = glm::ivec2; // kansfkajn
+using ivec2 = glm::ivec2;
 using vec3 = glm::dvec3;
 
 static const ivec2 WINDOW_SIZE(512, 512);
