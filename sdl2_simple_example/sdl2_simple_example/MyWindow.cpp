@@ -8,17 +8,20 @@
 #include "imgui_impl_opengl3.h"
 #include <SDL2/SDL.h>
 
+// Variables de la cámara (declaradas en main.cpp)
+extern GLfloat cameraX;
+extern GLfloat cameraY;
+extern GLfloat cameraZ;
+
 using namespace std;
 
-
-MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height){
-	open(title, width, height);
-
+MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height)
+{
+    open(title, width, height);
 }
 
 MyWindow::~MyWindow() {
     close();
-    
 }
 
 void MyWindow::open(const char* title, unsigned short width, unsigned short height) {
@@ -28,7 +31,7 @@ void MyWindow::open(const char* title, unsigned short width, unsigned short heig
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    _window = SDL_CreateWindow( title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
+    _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
     if (!_window) throw exception(SDL_GetError());
 
     _ctx = SDL_GL_CreateContext(_window);
@@ -41,10 +44,7 @@ void MyWindow::open(const char* title, unsigned short width, unsigned short heig
     ImGui_ImplOpenGL3_Init("#version 130");
 }
 
-
-
 void MyWindow::swapBuffers() const {
-
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
@@ -61,22 +61,26 @@ void MyWindow::swapBuffers() const {
         ImGui::EndMainMenuBar();
     }
 
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(static_cast<SDL_Window*>(_window));
 }
 
-
- bool MyWindow ::processEvents(IEventProcessor* eventp)
-{
+bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
-        if (eventp) eventp->processEvent(event);
+    while (SDL_PollEvent(&event)) {
+        if (event_processor) event_processor->processEvent(event);
         switch (event.type) {
         case SDL_QUIT:
             return false;
+            break;
+        case SDL_MOUSEWHEEL: // Manejar eventos de la rueda del ratón
+            if (event.wheel.y > 0) {
+                cameraZ -= 1.0f; // Alejar
+            }
+            else if (event.wheel.y < 0) {
+                cameraZ += 1.0f; // Acercar
+            }
             break;
         default:
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -86,9 +90,6 @@ void MyWindow::swapBuffers() const {
     return true;
 }
 
-
-
- void MyWindow::close()
- {
-     
- }
+void MyWindow::close() {
+    // Cerrar recursos
+}

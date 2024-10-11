@@ -22,14 +22,12 @@ static const ivec2 WINDOW_SIZE(512, 512);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
 
-GLfloat cameraX = 10.0;
-GLfloat cameraY = 40.0;
-GLfloat cameraZ = 10.0;
+GLfloat cameraX = 10.0f;
+GLfloat cameraY = 40.0f;
+GLfloat cameraZ = 10.0f;
 
 // Cargar modelo FBX
 const char* file = "C:\\Users\\rodrigoam\\Documents\\GitHub\\Rodri-Izan-UPC.MOTORES\\Assets\\masterchief.fbx";
-
-
 
 struct Mesh {
     std::vector<GLfloat> vertices;
@@ -37,7 +35,6 @@ struct Mesh {
 };
 
 std::vector<Mesh> meshes;
-
 
 void loadFBX(const std::string& filePath) {
     Assimp::Importer importer;
@@ -53,7 +50,7 @@ void loadFBX(const std::string& filePath) {
         const aiMesh* aimesh = scene->mMeshes[i];
         std::cout << "Malla " << i << " cargada con " << aimesh->mNumVertices << " vértices." << std::endl;
 
-        Mesh mesh;  // Estructura para almacenar los vértices e índices de esta malla
+        Mesh mesh;
 
         // Almacenar vértices
         for (unsigned int v = 0; v < aimesh->mNumVertices; v++) {
@@ -70,74 +67,15 @@ void loadFBX(const std::string& filePath) {
             }
         }
 
-        meshes.push_back(mesh);  // Guardar la malla procesada en el vector `meshes`
+        meshes.push_back(mesh);
     }
 }
-
-
-
-
 
 static void init_openGL() {
     glewInit();
     if (!GLEW_VERSION_3_0) throw exception("OpenGL 3.0 API is not available.");
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.5, 0.5, 0.5, 1.0);
-}
-
-static void draw_triangle(const u8vec4& color, const vec3& center, double size) {
-}
-
-
-static void display_func() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    draw_triangle(u8vec4(255, 0, 0, 255), vec3(0.0, 0.0, 0.0), 0.5);
-}
-
-//void Draw(const char* object)
-//{
-//    const struct aiScene* scene = aiImportFile(object, aiProcess_Triangulate);
-//
-//    if (!scene)
-//    {
-//        fprintf(stderr, "error: %s\n", aiGetErrorString());
-//        return;
-//    }
-//
-//    for (unsigned int i = 0; i < scene->mNumMeshes; i++)
-//    {
-//        Mesh mesh;
-//        const aiMesh* aimesh = scene->mMeshes[i];
-//
-//
-//        //Vertex
-//        for (unsigned int v = 0; v < aimesh->mNumVertices; v++)
-//        {
-//            mesh.vertices.push_back(aimesh->mVertices[v].x);
-//            mesh.vertices.push_back(aimesh->mVertices[v].y);
-//            mesh.vertices.push_back(aimesh->mVertices[v].z);
-//        }
-//
-//        for (unsigned int v = 0; v < aimesh->mNumVertices; v++)
-//        {
-//            const aiFace& face = aimesh->mFaces[v];
-//            for (unsigned int i = 0; i < face.mNumIndices; i++)
-//            {
-//                mesh.indices.push_back(face.mIndices[i]);
-//            }
-//        }
-//
-//        meshes.push_back(mesh);
-//    }
-//}
-
-// Función de inicialización de OpenGL
-void init() {
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void render() {
@@ -166,20 +104,16 @@ void render() {
     glFlush();  // Asegurarse de que se envíen los comandos de dibujo
 }
 
-
-
-
 int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
 
     init_openGL();
     loadFBX(file);
-    //Draw(file);
 
     while (window.processEvents() && window.isOpen()) {
         const auto t0 = hrclock::now();
 
-        render();  
+        render();
 
         window.swapBuffers();
         const auto t1 = hrclock::now();
@@ -189,5 +123,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
-
