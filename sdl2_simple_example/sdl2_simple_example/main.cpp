@@ -30,6 +30,7 @@ GLfloat cameraAngleX = 0.0f;
 GLfloat cameraAngleY = 0.0f;
 GLfloat cameraAngleZ = 0.0f;
 bool rotatingCamera = false;
+bool movingCamera = false;
 
 // Cargar modelo FBX
 const char* file = "C:\\Users\\rodrigoam\\Documents\\GitHub\\Rodri-Izan-UPC.MOTORES\\Assets\\masterchief.fbx";
@@ -116,7 +117,7 @@ void render() {
     // Rotación de la cámara (añadir aquí)
     glRotatef(cameraAngleY, 1.0f, 0.0f, 0.0f); // Rotar en eje X
     glRotatef(cameraAngleX, 0.0f, 1.0f, 0.0f); // Rotar en eje Y
-    glRotatef(cameraAngleZ, 0.0f, 0.0f, 1.0f); // Rotar en eje Y
+    glRotatef(cameraAngleZ, 0.0f, 0.0f, 1.0f); // Rotar en eje Z
 
     // Dibujar el suelo de rejillas
     /*drawGrid(50.0f, 1.0f);*/

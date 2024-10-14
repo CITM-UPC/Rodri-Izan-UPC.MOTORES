@@ -16,6 +16,7 @@ extern GLfloat cameraAngleX;
 extern GLfloat cameraAngleY;
 extern GLfloat cameraAngleZ;
 extern bool rotatingCamera;
+extern bool movingCamera;
 
 
 
@@ -80,25 +81,34 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
         switch (event.type) {
         case SDL_QUIT:
             return false;
+
         case SDL_MOUSEBUTTONDOWN:
-            if (event.button.button == SDL_BUTTON_LEFT && (SDL_GetModState() & KMOD_ALT)) {
-                rotatingCamera = true; // Iniciar la rotación de la cámara
-            }
-            else
-            {
-                rotatingCamera = false; // Detener la rotación de la cámara
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                if (SDL_GetModState() & KMOD_ALT) {
+                    rotatingCamera = true; // Iniciar la rotación de la cámara
+                }
+                else if (SDL_GetModState() & KMOD_CTRL) {
+                    movingCamera = true; // Iniciar movimiento de la cámara
+                }
             }
             break;
+
         case SDL_MOUSEBUTTONUP:
             if (event.button.button == SDL_BUTTON_LEFT) {
                 rotatingCamera = false; // Detener la rotación de la cámara
+                movingCamera = false; // Detener el movimiento de la cámara
             }
             break;
+
         case SDL_MOUSEMOTION:
             if (rotatingCamera) {
                 cameraAngleX += event.motion.xrel * 0.2f; // Ajustar la sensibilidad
                 cameraAngleY += event.motion.yrel * 0.2f;
                 cameraAngleZ += event.motion.yrel * 0.2f;
+               
+            }
+            else if (movingCamera) {
+                cameraZ += event.motion.zrel * 0.2f; // Cambiar el movimiento de la cámara en Z
             }
             break;
 
@@ -110,6 +120,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
                 cameraZ += 1.0f; // Acercar
             }
             break;
+
         default:
             ImGui_ImplSDL2_ProcessEvent(&event);
             break;
@@ -117,6 +128,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
     }
     return true;
 }
+
 
 
 void MyWindow::close() {
