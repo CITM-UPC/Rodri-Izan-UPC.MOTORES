@@ -11,6 +11,11 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#define CHECKERS_HEIGHT 64
+#define CHECKERS_WIDTH 64
+
+GLuint textureID;
+
 using namespace std;
 
 using hrclock = chrono::high_resolution_clock;
@@ -33,7 +38,7 @@ bool rotatingCamera = false;
 bool movingCamera = false;
 
 // Cargar modelo FBX
-const char* file = "C:\\Users\\rodrigoam\\Documents\\GitHub\\Rodri-Izan-UPC.MOTORES\\Assets\\masterchief.fbx";
+const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
@@ -54,18 +59,18 @@ void loadFBX(const std::string& filePath) {
     // Recorrer las mallas
     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
         const aiMesh* aimesh = scene->mMeshes[i];
-        std::cout << "Malla " << i << " cargada con " << aimesh->mNumVertices << " vértices." << std::endl;
+        std::cout << "Malla " << i << " cargada con " << aimesh->mNumVertices << " vÃ©rtices." << std::endl;
 
         Mesh mesh;
 
-        // Almacenar vértices
+        // Almacenar vÃ©rtices
         for (unsigned int v = 0; v < aimesh->mNumVertices; v++) {
             mesh.vertices.push_back(aimesh->mVertices[v].x);
             mesh.vertices.push_back(aimesh->mVertices[v].y);
             mesh.vertices.push_back(aimesh->mVertices[v].z);
         }
 
-        // Almacenar índices (caras)
+        // Almacenar Ã­ndices (caras)
         for (unsigned int f = 0; f < aimesh->mNumFaces; f++) {
             const aiFace& face = aimesh->mFaces[f];
             for (unsigned int j = 0; j < face.mNumIndices; j++) {
@@ -84,16 +89,39 @@ static void init_openGL() {
     glClearColor(0.5, 0.5, 0.5, 1.0);
 }
 
+void Texturegenerator() {
+    GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
+    for (int i = 0; i < CHECKERS_HEIGHT; i++) {
+        for (int j = 0; j < CHECKERS_WIDTH; j++) {
+            int c = ((((i & 0x8) == 0) ^ (((j & 0x8)) == 0))) * 255;
+            checkerImage[i][j][0] = (GLubyte)c;
+            checkerImage[i][j][1] = (GLubyte)c;
+            checkerImage[i][j][2] = (GLubyte)c;
+            checkerImage[i][j][3] = (GLubyte)255;
+        }
+    }
+
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
+}
+
 //void drawGrid(float size, float step) {
 //    glBegin(GL_LINES);
-//    glColor3f(0.5f, 0.5f, 0.5f); // Color gris para las líneas
+//    glColor3f(0.5f, 0.5f, 0.5f); // Color gris para las lÃ­neas
 //
 //    for (float i = -size; i <= size; i += step) {
-//        // Líneas paralelas al eje X
+//        // LÃ­neas paralelas al eje X
 //        glVertex3f(i, 0, -size);
 //        glVertex3f(i, 0, size);
 //
-//        // Líneas paralelas al eje Z
+//        // LÃ­neas paralelas al eje Z
 //        glVertex3f(-size, 0, i);
 //        glVertex3f(size, 0, i);
 //    }
@@ -105,16 +133,29 @@ static void init_openGL() {
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Configurar la cámara
+    // Configurar la cÃ¡mara
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0f, 1.0f, 0.1f, 100.0f);  // Campo de visión, aspecto, plano cercano y lejano
+    gluPerspective(45.0f, 1.0f, 0.1f, 100.0f);  // Campo de visiÃ³n, aspecto, plano cercano y lejano
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(cameraX, cameraY, cameraZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);  // Posición de la cámara
+    gluLookAt(cameraX, cameraY, cameraZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);  // PosiciÃ³n de la cÃ¡mara
 
-    // Rotación de la cámara (añadir aquí)
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);  
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);  
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);  
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 0.0f);  
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    // RotaciÃ³n de la cÃ¡mara (aÃ±adir aquÃ­)
     glRotatef(cameraAngleY, 1.0f, 0.0f, 0.0f); // Rotar en eje X
     glRotatef(cameraAngleX, 0.0f, 1.0f, 0.0f); // Rotar en eje Y
     glRotatef(cameraAngleZ, 0.0f, 0.0f, 1.0f); // Rotar en eje Z
@@ -122,28 +163,35 @@ void render() {
     // Dibujar el suelo de rejillas
     /*drawGrid(50.0f, 1.0f);*/
 
-    // Transformación del modelo
+    // TransformaciÃ³n del modelo
     glPushMatrix();  // Guardar la matriz actual
-    glTranslatef(0.0f, 0.0f, 0.0f);  // Aquí puedes ajustar  X y Z
+    glTranslatef(0.0f, 0.0f, 0.0f);  // AquÃ­ puedes ajustar  X y Z
+
 
     // Renderizar cada malla del modelo
-    for (const auto& mesh : meshes) {
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+    //for (const auto& mesh : meshes) {
+    //    glEnableClientState(GL_VERTEX_ARRAY);
+    //    glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+
 
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
 
-        glDisableClientState(GL_VERTEX_ARRAY);
-    }
+    //    glDisableClientState(GL_VERTEX_ARRAY);
+    //}
 
     glPopMatrix();
     glFlush();
 }
 
+
+
 int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
 
     init_openGL();
+
+    Texturegenerator();
+
     loadFBX(file);
 
     while (window.processEvents() && window.isOpen()) {
