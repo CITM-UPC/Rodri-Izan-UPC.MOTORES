@@ -38,7 +38,7 @@ bool rotatingCamera = false;
 bool movingCamera = false;
 
 // Cargar modelo FBX
-const char* file = "notdeletedcube.fbx";
+const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
