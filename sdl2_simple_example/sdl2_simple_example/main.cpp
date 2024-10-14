@@ -38,7 +38,7 @@ bool rotatingCamera = false;
 bool movingCamera = false;
 
 // Cargar modelo FBX
-const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
+const char* file = "notdeletedcube.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
@@ -168,16 +168,16 @@ void render() {
     glTranslatef(0.0f, 0.0f, 0.0f);  // Aquí puedes ajustar  X y Z
 
 
-    // Renderizar cada malla del modelo
-    //for (const auto& mesh : meshes) {
-    //    glEnableClientState(GL_VERTEX_ARRAY);
-    //    glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+     //Renderizar cada malla del modelo
+    for (const auto& mesh : meshes) {
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
 
 
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
 
-    //    glDisableClientState(GL_VERTEX_ARRAY);
-    //}
+        glDisableClientState(GL_VERTEX_ARRAY);
+    }
 
     glPopMatrix();
     glFlush();
