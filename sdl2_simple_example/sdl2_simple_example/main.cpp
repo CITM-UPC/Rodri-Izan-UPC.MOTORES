@@ -11,6 +11,11 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#define CHECKERS_HEIGHT 64
+#define CHECKERS_WIDTH 64
+
+GLuint textureID;
+
 using namespace std;
 
 using hrclock = chrono::high_resolution_clock;
@@ -27,7 +32,7 @@ GLfloat cameraY = 40.0f;
 GLfloat cameraZ = 10.0f;
 
 // Cargar modelo FBX
-const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
+const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
@@ -90,6 +95,18 @@ void render() {
     glLoadIdentity();
     gluLookAt(cameraX, cameraY, cameraZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);  // Posición de la cámara
 
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);  
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);  
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);  
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 0.0f);  
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
     // Renderizar cada malla del modelo
     for (const auto& mesh : meshes) {
         glEnableClientState(GL_VERTEX_ARRAY);
@@ -104,10 +121,36 @@ void render() {
     glFlush();  // Asegurarse de que se envíen los comandos de dibujo
 }
 
+void Texturegenerator() {
+    GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
+    for (int i = 0; i < CHECKERS_HEIGHT; i++) {
+        for (int j = 0; j < CHECKERS_WIDTH; j++) {
+            int c = ((((i & 0x8) == 0) ^ (((j & 0x8)) == 0))) * 255;
+            checkerImage[i][j][0] = (GLubyte)c;
+            checkerImage[i][j][1] = (GLubyte)c;
+            checkerImage[i][j][2] = (GLubyte)c;
+            checkerImage[i][j][3] = (GLubyte)255;
+        }
+    }
+
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
+}
+
 int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
 
     init_openGL();
+
+    Texturegenerator();
+
     loadFBX(file);
 
     while (window.processEvents() && window.isOpen()) {
