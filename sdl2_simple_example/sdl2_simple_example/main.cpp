@@ -27,7 +27,7 @@ GLfloat cameraY = 40.0f;
 GLfloat cameraZ = 10.0f;
 
 // Cargar modelo FBX
-const char* file = "C:\\Users\\rodrigoam\\Documents\\GitHub\\Rodri-Izan-UPC.MOTORES\\Assets\\masterchief.fbx";
+const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
