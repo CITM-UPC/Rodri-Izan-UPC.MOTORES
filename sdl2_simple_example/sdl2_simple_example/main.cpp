@@ -27,9 +27,15 @@ static const ivec2 WINDOW_SIZE(512, 512);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
 
-GLfloat cameraX = 10.0f;
-GLfloat cameraY = 40.0f;
-GLfloat cameraZ = 10.0f;
+GLfloat cameraX = 0.0f;
+GLfloat cameraY = 10.0f; 
+GLfloat cameraZ = 5.0f; 
+
+GLfloat cameraAngleX = 0.0f;
+GLfloat cameraAngleY = 0.0f;
+GLfloat cameraAngleZ = 0.0f;
+bool rotatingCamera = false;
+bool movingCamera = false;
 
 // Cargar modelo FBX
 const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
@@ -53,18 +59,18 @@ void loadFBX(const std::string& filePath) {
     // Recorrer las mallas
     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
         const aiMesh* aimesh = scene->mMeshes[i];
-        std::cout << "Malla " << i << " cargada con " << aimesh->mNumVertices << " vértices." << std::endl;
+        std::cout << "Malla " << i << " cargada con " << aimesh->mNumVertices << " vÃ©rtices." << std::endl;
 
         Mesh mesh;
 
-        // Almacenar vértices
+        // Almacenar vÃ©rtices
         for (unsigned int v = 0; v < aimesh->mNumVertices; v++) {
             mesh.vertices.push_back(aimesh->mVertices[v].x);
             mesh.vertices.push_back(aimesh->mVertices[v].y);
             mesh.vertices.push_back(aimesh->mVertices[v].z);
         }
 
-        // Almacenar índices (caras)
+        // Almacenar Ã­ndices (caras)
         for (unsigned int f = 0; f < aimesh->mNumFaces; f++) {
             const aiFace& face = aimesh->mFaces[f];
             for (unsigned int j = 0; j < face.mNumIndices; j++) {
@@ -106,17 +112,36 @@ void Texturegenerator() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
 }
 
+//void drawGrid(float size, float step) {
+//    glBegin(GL_LINES);
+//    glColor3f(0.5f, 0.5f, 0.5f); // Color gris para las lÃ­neas
+//
+//    for (float i = -size; i <= size; i += step) {
+//        // LÃ­neas paralelas al eje X
+//        glVertex3f(i, 0, -size);
+//        glVertex3f(i, 0, size);
+//
+//        // LÃ­neas paralelas al eje Z
+//        glVertex3f(-size, 0, i);
+//        glVertex3f(size, 0, i);
+//    }
+//
+//    glEnd();
+//}
+
+
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Configurar la cámara
+    // Configurar la cÃ¡mara
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0f, 1.0f, 0.1f, 100.0f);  // Campo de visión, aspecto, plano cercano y lejano
+    gluPerspective(45.0f, 1.0f, 0.1f, 100.0f);  // Campo de visiÃ³n, aspecto, plano cercano y lejano
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(cameraX, cameraY, cameraZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);  // Posición de la cámara
+    gluLookAt(cameraX, cameraY, cameraZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);  // PosiciÃ³n de la cÃ¡mara
+
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -130,18 +155,32 @@ void render() {
 
     glDisable(GL_TEXTURE_2D);
 
+    // RotaciÃ³n de la cÃ¡mara (aÃ±adir aquÃ­)
+    glRotatef(cameraAngleY, 1.0f, 0.0f, 0.0f); // Rotar en eje X
+    glRotatef(cameraAngleX, 0.0f, 1.0f, 0.0f); // Rotar en eje Y
+    glRotatef(cameraAngleZ, 0.0f, 0.0f, 1.0f); // Rotar en eje Z
+
+    // Dibujar el suelo de rejillas
+    /*drawGrid(50.0f, 1.0f);*/
+
+    // TransformaciÃ³n del modelo
+    glPushMatrix();  // Guardar la matriz actual
+    glTranslatef(0.0f, 0.0f, 0.0f);  // AquÃ­ puedes ajustar  X y Z
+
+
     // Renderizar cada malla del modelo
     //for (const auto& mesh : meshes) {
     //    glEnableClientState(GL_VERTEX_ARRAY);
     //    glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
 
-    //    // Renderizar los índices como triángulos
-    //    glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
+
+        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
 
     //    glDisableClientState(GL_VERTEX_ARRAY);
     //}
 
-    glFlush();  // Asegurarse de que se envíen los comandos de dibujo
+    glPopMatrix();
+    glFlush();
 }
 
 
