@@ -105,10 +105,9 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
                 cameraAngleX += event.motion.xrel * 0.2f; // Ajustar la sensibilidad
                 cameraAngleY += event.motion.yrel * 0.2f;
                 cameraAngleZ += event.motion.yrel * 0.2f;
-               
             }
             else if (movingCamera) {
-                cameraZ += event.motion.zrel * 0.2f; // Cambiar el movimiento de la cámara en Z
+                cameraZ += event.motion.yrel * 0.2f; // Cambiar el movimiento de la cámara en Z
             }
             break;
 
