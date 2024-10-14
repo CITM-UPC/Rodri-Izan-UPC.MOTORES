@@ -12,6 +12,12 @@
 extern GLfloat cameraX;
 extern GLfloat cameraY;
 extern GLfloat cameraZ;
+extern GLfloat cameraAngleX;
+extern GLfloat cameraAngleY;
+extern GLfloat cameraAngleZ;
+extern bool rotatingCamera;
+
+
 
 using namespace std;
 
@@ -70,11 +76,33 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event_processor) event_processor->processEvent(event);
+
         switch (event.type) {
         case SDL_QUIT:
             return false;
+        case SDL_MOUSEBUTTONDOWN:
+            if (event.button.button == SDL_BUTTON_LEFT && (SDL_GetModState() & KMOD_ALT)) {
+                rotatingCamera = true; // Iniciar la rotación de la cámara
+            }
+            else
+            {
+                rotatingCamera = false; // Detener la rotación de la cámara
+            }
             break;
-        case SDL_MOUSEWHEEL: // Manejar eventos de la rueda del ratón
+        case SDL_MOUSEBUTTONUP:
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                rotatingCamera = false; // Detener la rotación de la cámara
+            }
+            break;
+        case SDL_MOUSEMOTION:
+            if (rotatingCamera) {
+                cameraAngleX += event.motion.xrel * 0.2f; // Ajustar la sensibilidad
+                cameraAngleY += event.motion.yrel * 0.2f;
+                cameraAngleZ += event.motion.yrel * 0.2f;
+            }
+            break;
+
+        case SDL_MOUSEWHEEL:
             if (event.wheel.y > 0) {
                 cameraZ -= 1.0f; // Alejar
             }
@@ -89,6 +117,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
     }
     return true;
 }
+
 
 void MyWindow::close() {
     // Cerrar recursos

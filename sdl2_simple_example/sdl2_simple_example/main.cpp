@@ -22,9 +22,14 @@ static const ivec2 WINDOW_SIZE(512, 512);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
 
-GLfloat cameraX = 10.0f;
-GLfloat cameraY = 40.0f;
-GLfloat cameraZ = 10.0f;
+GLfloat cameraX = 0.0f;
+GLfloat cameraY = 10.0f; 
+GLfloat cameraZ = 5.0f; 
+
+GLfloat cameraAngleX = 0.0f;
+GLfloat cameraAngleY = 0.0f;
+GLfloat cameraAngleZ = 0.0f;
+bool rotatingCamera = false;
 
 // Cargar modelo FBX
 const char* file = "C:\\Users\\rodrigoam\\Documents\\GitHub\\Rodri-Izan-UPC.MOTORES\\Assets\\masterchief.fbx";
@@ -78,6 +83,24 @@ static void init_openGL() {
     glClearColor(0.5, 0.5, 0.5, 1.0);
 }
 
+//void drawGrid(float size, float step) {
+//    glBegin(GL_LINES);
+//    glColor3f(0.5f, 0.5f, 0.5f); // Color gris para las líneas
+//
+//    for (float i = -size; i <= size; i += step) {
+//        // Líneas paralelas al eje X
+//        glVertex3f(i, 0, -size);
+//        glVertex3f(i, 0, size);
+//
+//        // Líneas paralelas al eje Z
+//        glVertex3f(-size, 0, i);
+//        glVertex3f(size, 0, i);
+//    }
+//
+//    glEnd();
+//}
+
+
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -90,18 +113,30 @@ void render() {
     glLoadIdentity();
     gluLookAt(cameraX, cameraY, cameraZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);  // Posición de la cámara
 
+    // Rotación de la cámara (añadir aquí)
+    glRotatef(cameraAngleY, 1.0f, 0.0f, 0.0f); // Rotar en eje X
+    glRotatef(cameraAngleX, 0.0f, 1.0f, 0.0f); // Rotar en eje Y
+    glRotatef(cameraAngleZ, 0.0f, 0.0f, 1.0f); // Rotar en eje Y
+
+    // Dibujar el suelo de rejillas
+    /*drawGrid(50.0f, 1.0f);*/
+
+    // Transformación del modelo
+    glPushMatrix();  // Guardar la matriz actual
+    glTranslatef(0.0f, 0.0f, 0.0f);  // Aquí puedes ajustar  X y Z
+
     // Renderizar cada malla del modelo
     for (const auto& mesh : meshes) {
         glEnableClientState(GL_VERTEX_ARRAY);
         glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
 
-        // Renderizar los índices como triángulos
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
 
         glDisableClientState(GL_VERTEX_ARRAY);
     }
 
-    glFlush();  // Asegurarse de que se envíen los comandos de dibujo
+    glPopMatrix();
+    glFlush();
 }
 
 int main(int argc, char** argv) {
