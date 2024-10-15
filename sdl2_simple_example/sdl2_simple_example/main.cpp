@@ -38,10 +38,12 @@ bool rotatingCamera = false;
 bool movingCamera = false;
 
 // Cargar modelo FBX
-const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
+//const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
+const char* file = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
+    std::vector<GLfloat> texCoords;  // Coordenadas de la textura
     std::vector<GLuint> indices;
 };
 
@@ -68,6 +70,17 @@ void loadFBX(const std::string& filePath) {
             mesh.vertices.push_back(aimesh->mVertices[v].x);
             mesh.vertices.push_back(aimesh->mVertices[v].y);
             mesh.vertices.push_back(aimesh->mVertices[v].z);
+
+            // Almacenar coordenadas de textura si están disponibles
+            if (aimesh->HasTextureCoords(0)) {  // Usa el primer conjunto de UV
+                mesh.texCoords.push_back(aimesh->mTextureCoords[0][v].x);
+                mesh.texCoords.push_back(aimesh->mTextureCoords[0][v].y);
+            }
+            else {
+                // Si no tiene coordenadas de textura, usa (0, 0) como valor por defecto
+                mesh.texCoords.push_back(0.0f);
+                mesh.texCoords.push_back(0.0f);
+            }
         }
 
         // Almacenar índices (caras)
@@ -145,13 +158,20 @@ void render() {
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, textureID);
+     
+    //Renderizar cada malla del modelo
+    for (const auto& mesh : meshes) {
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
 
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);  
-    glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);  
-    glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);  
-    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 0.0f);  
-    glEnd();
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);  // Habilitar coordenadas de textura
+        glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());  // Pasar coordenadas de textura
+
+        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
+
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
 
     glDisable(GL_TEXTURE_2D);
 
@@ -166,20 +186,9 @@ void render() {
     // Transformación del modelo
     glPushMatrix();  // Guardar la matriz actual
     glTranslatef(0.0f, 0.0f, 0.0f);  // Aquí puedes ajustar  X y Z
-
-
-     //Renderizar cada malla del modelo
-    for (const auto& mesh : meshes) {
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
-
-
-        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
-
-        glDisableClientState(GL_VERTEX_ARRAY);
-    }
-
     glPopMatrix();
+
+
     glFlush();
 }
 
