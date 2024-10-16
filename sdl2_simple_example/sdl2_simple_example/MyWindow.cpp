@@ -7,8 +7,11 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include <SDL2/SDL.h>
+#include <nfd.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
 
-// Variables de la cámara (declaradas en main.cpp)
 extern GLfloat cameraX;
 extern GLfloat cameraY;
 extern GLfloat cameraZ;
@@ -18,12 +21,10 @@ extern GLfloat cameraAngleZ;
 extern bool rotatingCamera;
 extern bool movingCamera;
 
-
-
 using namespace std;
 
-MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height)
-{
+
+MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height) {
     open(title, width, height);
 }
 
@@ -68,6 +69,19 @@ void MyWindow::swapBuffers() const {
         ImGui::EndMainMenuBar();
     }
 
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("Assets")) {
+            if (ImGui::MenuItem("Textura")) {
+                openFileDialog("Textura");
+            }
+            if (ImGui::MenuItem("FBX")) {
+                openFileDialog("FBX"); 
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(static_cast<SDL_Window*>(_window));
@@ -81,24 +95,6 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
         switch (event.type) {
         case SDL_QUIT:
             return false;
-
-        case SDL_MOUSEBUTTONDOWN:
-            if (event.button.button == SDL_BUTTON_LEFT) {
-                if (SDL_GetModState() & KMOD_ALT) {
-                    rotatingCamera = true; // Iniciar la rotación de la cámara
-                }
-                else if (SDL_GetModState() & KMOD_CTRL) {
-                    movingCamera = true; // Iniciar movimiento de la cámara
-                }
-            }
-            break;
-
-        case SDL_MOUSEBUTTONUP:
-            if (event.button.button == SDL_BUTTON_LEFT) {
-                rotatingCamera = false; // Detener la rotación de la cámara
-                movingCamera = false; // Detener el movimiento de la cámara
-            }
-            break;
 
         case SDL_MOUSEMOTION:
             if (rotatingCamera) {
@@ -128,7 +124,33 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
     return true;
 }
 
+void MyWindow::openFileDialog(const char* fileType) {
+    
+    NFD_Init();
 
+    nfdu8char_t* outPath;
+    nfdu8filteritem_t filters[2] = { { "Textures", "png" }, { "FBX", "fbx" } };
+    nfdopendialogu8args_t args = { 0 };
+    args.filterList = filters;
+    args.filterCount = 2;
+    nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
+    if (result == NFD_OKAY)
+    {
+        puts("Success!");
+        puts(outPath);
+        NFD_FreePathU8(outPath);
+    }
+    else if (result == NFD_CANCEL)
+    {
+        puts("User pressed cancel.");
+    }
+    else
+    {
+        printf("Error: %s\n", NFD_GetError());
+    }
+
+    NFD_Quit();
+}
 
 void MyWindow::close() {
     // Cerrar recursos
