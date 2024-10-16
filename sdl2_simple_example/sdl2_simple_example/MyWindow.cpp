@@ -7,7 +7,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include <SDL2/SDL.h>
-#include <nfd.h> 
+#include "nfd.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -52,7 +52,7 @@ void MyWindow::open(const char* title, unsigned short width, unsigned short heig
     ImGui_ImplOpenGL3_Init("#version 130");
 }
 
-void MyWindow::swapBuffers() const {
+void MyWindow::swapBuffers() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
@@ -71,11 +71,12 @@ void MyWindow::swapBuffers() const {
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("Assets")) {
-            if (ImGui::MenuItem("Textura")) {
+            if (ImGui::MenuItem("Abrir textura")) {
+                //Llamar a la funcion de abrir dialogo
                 openFileDialog("Textura");
             }
-            if (ImGui::MenuItem("FBX")) {
-                openFileDialog("FBX"); 
+            if (ImGui::MenuItem("Abrir FBX")) {
+                //openFileDialog("FBX"); 
             }
             ImGui::EndMenu();
         }
@@ -126,32 +127,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 
 void MyWindow::openFileDialog(const char* fileType) {
     
-    NFD_Init();
-
-    nfdu8char_t* outPath;
-    nfdu8filteritem_t filters[2] = { { "Textures", "png" }, { "FBX", "fbx" } };
-    nfdopendialogu8args_t args = { 0 };
-    args.filterList = filters;
-    args.filterCount = 2;
-    nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
-    if (result == NFD_OKAY)
-    {
-        puts("Success!");
-        puts(outPath);
-        NFD_FreePathU8(outPath);
-    }
-    else if (result == NFD_CANCEL)
-    {
-        puts("User pressed cancel.");
-    }
-    else
-    {
-        printf("Error: %s\n", NFD_GetError());
-    }
-
-    NFD_Quit();
 }
-
 void MyWindow::close() {
     // Cerrar recursos
 }
