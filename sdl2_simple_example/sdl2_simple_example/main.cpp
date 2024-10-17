@@ -39,7 +39,7 @@ bool movingCamera = false;
 
 // Cargar modelo FBX
 //const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
-const char* file = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
+const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;

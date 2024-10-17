@@ -36,6 +36,8 @@ public:
 	bool isOpen() const { return _window; }
 
 	bool processEvents(IEventProcessor* event_processor = nullptr);
-	void swapBuffers() const;
+	void swapBuffers();
+
+	void openFileDialog(const char* fileType);
 
 };
