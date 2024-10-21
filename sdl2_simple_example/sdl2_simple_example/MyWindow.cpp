@@ -117,6 +117,12 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             }
             break;
 
+        case SDL_DROPFILE: {
+            char* droppedFile = event.drop.file;
+            printf("Archivo arrastrado: %s\n", droppedFile);
+            SDL_free(droppedFile);
+            break;
+        }
         default:
             ImGui_ImplSDL2_ProcessEvent(&event);
             break;
