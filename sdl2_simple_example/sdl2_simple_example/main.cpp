@@ -39,7 +39,7 @@ bool movingCamera = false;
 
 // Cargar modelo FBX
 //const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/notdeletedcube.fbx";
-const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
+//const char* file = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
@@ -192,7 +192,51 @@ void render() {
     glFlush();
 }
 
+bool MyWindow::processEvents(IEventProcessor* event_processor) {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event_processor) event_processor->processEvent(event);
 
+        switch (event.type) {
+        case SDL_QUIT:
+            return false;
+
+        case SDL_MOUSEMOTION:
+            if (rotatingCamera) {
+                cameraAngleX += event.motion.xrel * 0.2f;
+                cameraAngleY += event.motion.yrel * 0.2f;
+                cameraAngleZ += event.motion.yrel * 0.2f;
+            }
+            else if (movingCamera) {
+                cameraZ += event.motion.yrel * 0.2f;
+            }
+            break;
+
+        case SDL_MOUSEWHEEL:
+            if (event.wheel.y > 0) {
+                cameraZ -= 1.0f;
+            }
+            else if (event.wheel.y < 0) {
+                cameraZ += 1.0f;
+            }
+            break;
+
+        case SDL_DROPFILE: {  
+            // Obtenemos el archivo arrastrado
+            char* droppedFile = event.drop.file;
+            printf("Archivo arrastrado: %s\n", droppedFile);
+
+            loadFBX(droppedFile);
+            break;
+        }
+
+        default:
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            break;
+        }
+    }
+    return true;
+}
 
 int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
@@ -201,7 +245,7 @@ int main(int argc, char** argv) {
 
     Texturegenerator();
 
-    loadFBX(file);
+    //loadFBX(file);
 
     while (window.processEvents() && window.isOpen()) {
         const auto t0 = hrclock::now();
