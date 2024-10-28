@@ -38,6 +38,9 @@ public:
 	bool processEvents(IEventProcessor* event_processor = nullptr);
 	void swapBuffers();
 
+	void update();  
+	void render();
+
 	void openFileDialog(const char* fileType);
 
 };

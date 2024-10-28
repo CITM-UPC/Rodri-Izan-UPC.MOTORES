@@ -1,16 +1,12 @@
-#include <exception>
-#include <SDL2/SDL_video.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_opengl.h>
 #include "MyWindow.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h> // Asegúrate de incluir esto
 #include "nfd.h" 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string>
+#include <stdexcept> // Para std::exception
 
 using namespace std;
 
@@ -23,30 +19,46 @@ MyWindow::~MyWindow() {
 }
 
 void MyWindow::open(const char* title, unsigned short width, unsigned short height) {
-    if (isOpen()) return;
+    if (_window) return; // Si ya está abierto, no hacer nada
+
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
     _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
-    if (!_window) throw exception(SDL_GetError());
+    if (!_window) throw std::runtime_error(SDL_GetError()); // Cambiado a std::runtime_error
 
     _ctx = SDL_GL_CreateContext(_window);
-    if (!_ctx) throw exception(SDL_GetError());
-    if (SDL_GL_MakeCurrent(_window, _ctx) != 0) throw exception(SDL_GetError());
-    if (SDL_GL_SetSwapInterval(1) != 0) throw exception(SDL_GetError());
+    if (!_ctx) throw std::runtime_error(SDL_GetError()); // Cambiado a std::runtime_error
+    if (SDL_GL_MakeCurrent(_window, _ctx) != 0) throw std::runtime_error(SDL_GetError()); // Cambiado a std::runtime_error
+    if (SDL_GL_SetSwapInterval(1) != 0) throw std::runtime_error(SDL_GetError()); // Cambiado a std::runtime_error
 
     ImGui::CreateContext();
     ImGui_ImplSDL2_InitForOpenGL(_window, _ctx);
     ImGui_ImplOpenGL3_Init("#version 130");
 }
 
-void MyWindow::swapBuffers() {
+void MyWindow::update() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        if (event.type == SDL_QUIT) {
+            close(); // Cerrar la ventana si se recibe un evento de salir
+        }
+    }
+}
+
+void MyWindow::render() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Asegúrate de que esto funcione correctamente
+
+    // ImGui renderizado
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
+    // Crear barra de menú
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("Menu")) {
             if (ImGui::MenuItem("Adeu")) {
@@ -59,67 +71,20 @@ void MyWindow::swapBuffers() {
         ImGui::EndMainMenuBar();
     }
 
-    //if (ImGui::BeginMainMenuBar()) {
-    //    if (ImGui::BeginMenu("Assets")) {
-    //        if (ImGui::MenuItem("Abrir textura")) {
-    //            
-    //            openFileDialog("Textura");
-    //        }
-    //        if (ImGui::MenuItem("Abrir FBX")) {
-    //           
-    //            openFileDialog("FBX");
-    //        }
-    //        ImGui::EndMenu();
-    //    }
-    //    ImGui::EndMainMenuBar();
-    //}
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    SDL_GL_SwapWindow(static_cast<SDL_Window*>(_window));
 }
 
-
-
-//void MyWindow::openFileDialog(const char* fileType) {
-//    NFD_Init(); // Inicializamos NFD
-//
-//    nfdu8char_t* outPath = NULL;
-//    nfdresult_t result;
-//
-//    if (strcmp(fileType, "Textura") == 0) {
-//        // Abrir dialogo para seleccionar texturas (archivos de imagen)
-//        nfdu8filteritem_t filters[1] = { { "Imágenes", "png,jpg" } };
-//        nfdopendialogu8args_t args = { 0 };
-//        args.filterList = filters;
-//        args.filterCount = 1;
-//        result = NFD_OpenDialogU8_With(&outPath, &args);
-//    }
-//    else if (strcmp(fileType, "FBX") == 0) {
-//        // Abrir dialogo para archivos FBX
-//        nfdu8filteritem_t filters[1] = { { "Modelos 3D", "fbx" } };
-//        nfdopendialogu8args_t args = { 0 };
-//        args.filterList = filters;
-//        args.filterCount = 1;
-//        result = NFD_OpenDialogU8_With(&outPath, &args);
-//    }
-//
-//    if (result == NFD_OKAY) {
-//        puts("Archivo seleccionado:");
-//        puts(outPath);
-//        NFD_FreePathU8(outPath); // Liberar la memoria después de usarla
-//    }
-//    else if (result == NFD_CANCEL) {
-//        puts("El usuario canceló el diálogo.");
-//    }
-//    else {
-//        printf("Error al abrir el diálogo: %s\n", NFD_GetError());
-//    }
-//
-//    NFD_Quit(); // Finalizamos NFD
-//}
+void MyWindow::swapBuffers() {
+    SDL_GL_SwapWindow(_window);
+}
 
 void MyWindow::close() {
-    // Cerrar recursos
-}
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
+    SDL_GL_DeleteContext(_ctx);
+    SDL_DestroyWindow(_window);
+    _window = nullptr;
+}
