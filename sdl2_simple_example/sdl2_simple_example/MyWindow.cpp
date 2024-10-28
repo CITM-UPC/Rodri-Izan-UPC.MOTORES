@@ -12,15 +12,6 @@
 #include <stdlib.h>
 #include <string>
 
-extern GLfloat cameraX;
-extern GLfloat cameraY;
-extern GLfloat cameraZ;
-extern GLfloat cameraAngleX;
-extern GLfloat cameraAngleY;
-extern GLfloat cameraAngleZ;
-extern bool rotatingCamera;
-extern bool movingCamera;
-
 using namespace std;
 
 MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height) {
@@ -68,100 +59,65 @@ void MyWindow::swapBuffers() {
         ImGui::EndMainMenuBar();
     }
 
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Assets")) {
-            if (ImGui::MenuItem("Abrir textura")) {
-                
-                openFileDialog("Textura");
-            }
-            if (ImGui::MenuItem("Abrir FBX")) {
-               
-                openFileDialog("FBX");
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
+    //if (ImGui::BeginMainMenuBar()) {
+    //    if (ImGui::BeginMenu("Assets")) {
+    //        if (ImGui::MenuItem("Abrir textura")) {
+    //            
+    //            openFileDialog("Textura");
+    //        }
+    //        if (ImGui::MenuItem("Abrir FBX")) {
+    //           
+    //            openFileDialog("FBX");
+    //        }
+    //        ImGui::EndMenu();
+    //    }
+    //    ImGui::EndMainMenuBar();
+    //}
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(static_cast<SDL_Window*>(_window));
 }
 
-bool MyWindow::processEvents(IEventProcessor* event_processor) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event_processor) event_processor->processEvent(event);
 
-        switch (event.type) {
-        case SDL_QUIT:
-            return false;
 
-        case SDL_MOUSEMOTION:
-            if (rotatingCamera) {
-                cameraAngleX += event.motion.xrel * 0.2f; 
-                cameraAngleY += event.motion.yrel * 0.2f;
-                cameraAngleZ += event.motion.yrel * 0.2f;
-            }
-            else if (movingCamera) {
-                cameraZ += event.motion.yrel * 0.2f; 
-            }
-            break;
-
-        case SDL_MOUSEWHEEL:
-            if (event.wheel.y > 0) {
-                cameraZ -= 1.0f; 
-            }
-            else if (event.wheel.y < 0) {
-                cameraZ += 1.0f; 
-            }
-            break;
-
-        default:
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            break;
-        }
-    }
-    return true;
-}
-
-void MyWindow::openFileDialog(const char* fileType) {
-    NFD_Init(); // Inicializamos NFD
-
-    nfdu8char_t* outPath = NULL;
-    nfdresult_t result;
-
-    if (strcmp(fileType, "Textura") == 0) {
-        // Abrir dialogo para seleccionar texturas (archivos de imagen)
-        nfdu8filteritem_t filters[1] = { { "Imágenes", "png,jpg" } };
-        nfdopendialogu8args_t args = { 0 };
-        args.filterList = filters;
-        args.filterCount = 1;
-        result = NFD_OpenDialogU8_With(&outPath, &args);
-    }
-    else if (strcmp(fileType, "FBX") == 0) {
-        // Abrir dialogo para archivos FBX
-        nfdu8filteritem_t filters[1] = { { "Modelos 3D", "fbx" } };
-        nfdopendialogu8args_t args = { 0 };
-        args.filterList = filters;
-        args.filterCount = 1;
-        result = NFD_OpenDialogU8_With(&outPath, &args);
-    }
-
-    if (result == NFD_OKAY) {
-        puts("Archivo seleccionado:");
-        puts(outPath);
-        NFD_FreePathU8(outPath); // Liberar la memoria después de usarla
-    }
-    else if (result == NFD_CANCEL) {
-        puts("El usuario canceló el diálogo.");
-    }
-    else {
-        printf("Error al abrir el diálogo: %s\n", NFD_GetError());
-    }
-
-    NFD_Quit(); // Finalizamos NFD
-}
+//void MyWindow::openFileDialog(const char* fileType) {
+//    NFD_Init(); // Inicializamos NFD
+//
+//    nfdu8char_t* outPath = NULL;
+//    nfdresult_t result;
+//
+//    if (strcmp(fileType, "Textura") == 0) {
+//        // Abrir dialogo para seleccionar texturas (archivos de imagen)
+//        nfdu8filteritem_t filters[1] = { { "Imágenes", "png,jpg" } };
+//        nfdopendialogu8args_t args = { 0 };
+//        args.filterList = filters;
+//        args.filterCount = 1;
+//        result = NFD_OpenDialogU8_With(&outPath, &args);
+//    }
+//    else if (strcmp(fileType, "FBX") == 0) {
+//        // Abrir dialogo para archivos FBX
+//        nfdu8filteritem_t filters[1] = { { "Modelos 3D", "fbx" } };
+//        nfdopendialogu8args_t args = { 0 };
+//        args.filterList = filters;
+//        args.filterCount = 1;
+//        result = NFD_OpenDialogU8_With(&outPath, &args);
+//    }
+//
+//    if (result == NFD_OKAY) {
+//        puts("Archivo seleccionado:");
+//        puts(outPath);
+//        NFD_FreePathU8(outPath); // Liberar la memoria después de usarla
+//    }
+//    else if (result == NFD_CANCEL) {
+//        puts("El usuario canceló el diálogo.");
+//    }
+//    else {
+//        printf("Error al abrir el diálogo: %s\n", NFD_GetError());
+//    }
+//
+//    NFD_Quit(); // Finalizamos NFD
+//}
 
 void MyWindow::close() {
     // Cerrar recursos
