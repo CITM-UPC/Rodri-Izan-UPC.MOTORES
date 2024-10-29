@@ -26,10 +26,10 @@ static const ivec2 WINDOW_SIZE(1024, 1024);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
 
-// También necesitamos modificar los valores iniciales de la cámara
+
 GLfloat cameraX = 0.0f;
-GLfloat cameraY = 5.0f;  // Altura inicial más baja para ver mejor el grid
-GLfloat cameraZ = 10.0f; // Alejamos la cámara para tener mejor vista
+GLfloat cameraY = 5.0f;  
+GLfloat cameraZ = 10.0f; 
 GLfloat cameraSpeed = 0.1f;
 
 GLfloat cameraAngleX = 0.0f;
@@ -39,13 +39,13 @@ bool rotatingCamera = false;
 bool movingCamera = false;
 bool movingCameraWithMouse = false;
 
-// Añade estas variables globales para el sistema de cámara
-GLfloat targetX = 0.0f;  // Punto objetivo al que mira la cámara
+
+GLfloat targetX = 0.0f;  
 GLfloat targetY = 0.0f;
 GLfloat targetZ = 0.0f;
-GLfloat orbitRadius = 15.0f;  // Distancia de la cámara al objetivo
-GLfloat orbitAngleHorizontal = 0.0f;  // Ángulo horizontal de la órbita
-GLfloat orbitAngleVertical = 30.0f;   // Ángulo vertical de la órbita
+GLfloat orbitRadius = 10.0f;  
+GLfloat orbitAngleHorizontal = 0.0f;  
+GLfloat orbitAngleVertical = 30.0f;   
 
 
 //const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
@@ -152,32 +152,32 @@ void MoveCamera(const Uint8* keystate) {
     // Calcular el vector up real
     glm::vec3 up = glm::normalize(glm::cross(right, forward));
 
-    // Movimiento adelante/atrás (W/S)
-    if (keystate[SDL_SCANCODE_W]) {
+    
+    if (keystate[SDL_SCANCODE_S]) {
         cameraX += forward.x * adjustedSpeed;
         cameraY += forward.y * adjustedSpeed;
         cameraZ += forward.z * adjustedSpeed;
-        // Actualizar el punto objetivo
+        
         targetX += forward.x * adjustedSpeed;
         targetY += forward.y * adjustedSpeed;
         targetZ += forward.z * adjustedSpeed;
     }
-    if (keystate[SDL_SCANCODE_S]) {
+    if (keystate[SDL_SCANCODE_W]) {
         cameraX -= forward.x * adjustedSpeed;
         cameraY -= forward.y * adjustedSpeed;
         cameraZ -= forward.z * adjustedSpeed;
-        // Actualizar el punto objetivo
+     
         targetX -= forward.x * adjustedSpeed;
         targetY -= forward.y * adjustedSpeed;
         targetZ -= forward.z * adjustedSpeed;
     }
 
-    // Movimiento lateral (A/D)
+
     if (keystate[SDL_SCANCODE_D]) {
         cameraX -= right.x * adjustedSpeed;
         cameraY -= right.y * adjustedSpeed;
         cameraZ -= right.z * adjustedSpeed;
-        // Actualizar el punto objetivo
+    
         targetX -= right.x * adjustedSpeed;
         targetY -= right.y * adjustedSpeed;
         targetZ -= right.z * adjustedSpeed;
@@ -186,13 +186,12 @@ void MoveCamera(const Uint8* keystate) {
         cameraX += right.x * adjustedSpeed;
         cameraY += right.y * adjustedSpeed;
         cameraZ += right.z * adjustedSpeed;
-        // Actualizar el punto objetivo
+
         targetX += right.x * adjustedSpeed;
         targetY += right.y * adjustedSpeed;
         targetZ += right.z * adjustedSpeed;
     }
 
-    // Movimiento vertical (Q/E)
     if (keystate[SDL_SCANCODE_Q]) {
         cameraY += adjustedSpeed;
         targetY += adjustedSpeed;
@@ -206,43 +205,40 @@ void MoveCamera(const Uint8* keystate) {
 void MoveCameraWithMouse(int xrel, int yrel) {
     float sensitivity = cameraSpeed * 0.5f; // Ajusta este valor según necesites
 
-    // Calcular la dirección de vista de la cámara usando los ángulos de órbita
+
     float horizontalRad = glm::radians(orbitAngleHorizontal);
     float verticalRad = glm::radians(orbitAngleVertical);
 
-    // Calcular los vectores de dirección
+
     glm::vec3 forward(
         cos(verticalRad) * sin(horizontalRad),
         sin(verticalRad),
         cos(verticalRad) * cos(horizontalRad)
     );
 
-    // Calcular el vector derecho (perpendicular a forward y up)
+
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-    // Mover la cámara basado en el movimiento del ratón
-    float moveX = -xrel * sensitivity; // Movimiento lateral
-    float moveZ = -yrel * sensitivity; // Movimiento adelante/atrás
+    float moveX = -xrel * sensitivity; 
+    float moveZ = -yrel * sensitivity; 
 
-    // Aplicar el movimiento en la dirección correcta
     cameraX += right.x * moveX + forward.x * moveZ;
     cameraY += right.y * moveX + forward.y * moveZ;
     cameraZ += right.z * moveX + forward.z * moveZ;
 
-    // Actualizar también el punto objetivo para mantener la orientación
     targetX += right.x * moveX + forward.x * moveZ;
     targetY += right.y * moveX + forward.y * moveZ;
     targetZ += right.z * moveX + forward.z * moveZ;
 }
 
 
-// Modifica la función RotateCamera para una rotación orbital
+
 void RotateCamera(int xrel, int yrel) {
     const float sensitivity = 0.3f;
     orbitAngleHorizontal += xrel * sensitivity;
     orbitAngleVertical = glm::clamp(orbitAngleVertical + yrel * sensitivity, -89.0f, 89.0f);
 
-    // Calcula la nueva posición de la cámara usando coordenadas esféricas
+
     float horizontalRad = glm::radians(orbitAngleHorizontal);
     float verticalRad = glm::radians(orbitAngleVertical);
 
@@ -251,18 +247,15 @@ void RotateCamera(int xrel, int yrel) {
     cameraZ = targetZ + orbitRadius * cos(verticalRad) * cos(horizontalRad);
 }
 
-// Añade esta función para enfocar al objeto
 void FocusOnObject() {
-    // Reset la posición objetivo al origen (o donde esté tu objeto)
+
     targetX = 0.0f;
     targetY = 0.0f;
     targetZ = 0.0f;
 
-    // Reset los ángulos de órbita a una vista predeterminada
     orbitAngleHorizontal = 0.0f;
     orbitAngleVertical = 30.0f;
 
-    // Actualiza la posición de la cámara
     RotateCamera(0, 0);
 }
 
