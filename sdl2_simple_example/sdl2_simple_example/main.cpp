@@ -11,8 +11,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#define CHECKERS_HEIGHT 64
-#define CHECKERS_WIDTH 64
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 GLuint textureID;
 
@@ -47,7 +47,9 @@ GLfloat orbitAngleHorizontal = 0.0f;  // Ángulo horizontal de la órbita
 GLfloat orbitAngleVertical = 30.0f;   // Ángulo vertical de la órbita
 
 
-const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
+//const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
+const char* filefbx = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/BakerHouse.fbx";
+const char* filetex = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/Baker_house.png";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
@@ -105,18 +107,17 @@ static void init_openGL() {
     glClearColor(0.5, 0.5, 0.5, 1.0);
 }
 
-void Texturegenerator() {
-    GLubyte checkerImage[CHECKERS_HEIGHT][CHECKERS_WIDTH][4];
-    for (int i = 0; i < CHECKERS_HEIGHT; i++) {
-        for (int j = 0; j < CHECKERS_WIDTH; j++) {
-            int c = ((((i & 0x8) == 0) ^ (((j & 0x8)) == 0))) * 255;
-            checkerImage[i][j][0] = (GLubyte)c;
-            checkerImage[i][j][1] = (GLubyte)c;
-            checkerImage[i][j][2] = (GLubyte)c;
-            checkerImage[i][j][3] = (GLubyte)255;
-        }
-    }
+void loadTexture(const char* filename) {
 
+    int width, height, channels;
+
+    unsigned char* imageData = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
+    
+    if (imageData == nullptr) {
+        std::cerr << "Error: No se pudo cargar la textura " << filename << std::endl;
+        return;
+    }
+    
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -125,7 +126,9 @@ void Texturegenerator() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CHECKERS_WIDTH, CHECKERS_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+
+    stbi_image_free(imageData);
 }
 
 void MoveCamera(const Uint8* keystate) {
@@ -292,6 +295,13 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             RotateCamera(0, 0); // Actualiza la posición de la cámara
             break;
 
+        case SDL_DROPFILE: {
+            char* dropped_filedir = event.drop.file;
+            std::cout << "Archivo arrastrado: " << dropped_filedir << std::endl;
+
+            loadFBX(dropped_filedir);
+            break;
+        }
         default:
             ImGui_ImplSDL2_ProcessEvent(&event);
             break;
@@ -316,8 +326,8 @@ int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
 
     init_openGL();
-    Texturegenerator();
-    loadFBX(file);
+    loadTexture(filetex);
+    loadFBX(filefbx);
 
     while (window.processEvents() && window.isOpen()) {
         const auto t0 = hrclock::now();
