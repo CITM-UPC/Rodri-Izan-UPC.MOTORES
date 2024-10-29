@@ -37,6 +37,7 @@ GLfloat cameraAngleY = 0.0f;
 GLfloat cameraAngleZ = 0.0f;
 bool rotatingCamera = false;
 bool movingCamera = false;
+bool movingCameraWithMouse = false;
 
 // Añade estas variables globales para el sistema de cámara
 GLfloat targetX = 0.0f;  // Punto objetivo al que mira la cámara
@@ -132,28 +133,108 @@ void loadTexture(const char* filename) {
 }
 
 void MoveCamera(const Uint8* keystate) {
-    float adjustedSpeed = cameraSpeed * 0.1f; 
+    float adjustedSpeed = cameraSpeed;
 
-  
+    // Calcular la dirección de vista de la cámara usando los ángulos de órbita
+    float horizontalRad = glm::radians(orbitAngleHorizontal);
+    float verticalRad = glm::radians(orbitAngleVertical);
+
+    // Calcular los vectores de dirección
+    glm::vec3 forward(
+        cos(verticalRad) * sin(horizontalRad),
+        sin(verticalRad),
+        cos(verticalRad) * cos(horizontalRad)
+    );
+
+    // Calcular el vector derecho (perpendicular a forward y up)
+    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    // Calcular el vector up real
+    glm::vec3 up = glm::normalize(glm::cross(right, forward));
+
+    // Movimiento adelante/atrás (W/S)
     if (keystate[SDL_SCANCODE_W]) {
-        cameraX += sin(glm::radians(cameraAngleX)) * adjustedSpeed;
-        cameraZ -= cos(glm::radians(cameraAngleX)) * adjustedSpeed;
+        cameraX += forward.x * adjustedSpeed;
+        cameraY += forward.y * adjustedSpeed;
+        cameraZ += forward.z * adjustedSpeed;
+        // Actualizar el punto objetivo
+        targetX += forward.x * adjustedSpeed;
+        targetY += forward.y * adjustedSpeed;
+        targetZ += forward.z * adjustedSpeed;
     }
     if (keystate[SDL_SCANCODE_S]) {
-        cameraX -= sin(glm::radians(cameraAngleX)) * adjustedSpeed;
-        cameraZ += cos(glm::radians(cameraAngleX)) * adjustedSpeed;
+        cameraX -= forward.x * adjustedSpeed;
+        cameraY -= forward.y * adjustedSpeed;
+        cameraZ -= forward.z * adjustedSpeed;
+        // Actualizar el punto objetivo
+        targetX -= forward.x * adjustedSpeed;
+        targetY -= forward.y * adjustedSpeed;
+        targetZ -= forward.z * adjustedSpeed;
+    }
+
+    // Movimiento lateral (A/D)
+    if (keystate[SDL_SCANCODE_D]) {
+        cameraX -= right.x * adjustedSpeed;
+        cameraY -= right.y * adjustedSpeed;
+        cameraZ -= right.z * adjustedSpeed;
+        // Actualizar el punto objetivo
+        targetX -= right.x * adjustedSpeed;
+        targetY -= right.y * adjustedSpeed;
+        targetZ -= right.z * adjustedSpeed;
     }
     if (keystate[SDL_SCANCODE_A]) {
-        cameraX -= cos(glm::radians(cameraAngleX)) * adjustedSpeed;
-        cameraZ -= sin(glm::radians(cameraAngleX)) * adjustedSpeed;
+        cameraX += right.x * adjustedSpeed;
+        cameraY += right.y * adjustedSpeed;
+        cameraZ += right.z * adjustedSpeed;
+        // Actualizar el punto objetivo
+        targetX += right.x * adjustedSpeed;
+        targetY += right.y * adjustedSpeed;
+        targetZ += right.z * adjustedSpeed;
     }
-    if (keystate[SDL_SCANCODE_D]) {
-        cameraX += cos(glm::radians(cameraAngleX)) * adjustedSpeed;
-        cameraZ += sin(glm::radians(cameraAngleX)) * adjustedSpeed;
+
+    // Movimiento vertical (Q/E)
+    if (keystate[SDL_SCANCODE_Q]) {
+        cameraY += adjustedSpeed;
+        targetY += adjustedSpeed;
     }
-    if (keystate[SDL_SCANCODE_Q]) cameraY += adjustedSpeed;
-    if (keystate[SDL_SCANCODE_E]) cameraY -= adjustedSpeed;
+    if (keystate[SDL_SCANCODE_E]) {
+        cameraY -= adjustedSpeed;
+        targetY -= adjustedSpeed;
+    }
 }
+
+void MoveCameraWithMouse(int xrel, int yrel) {
+    float sensitivity = cameraSpeed * 0.5f; // Ajusta este valor según necesites
+
+    // Calcular la dirección de vista de la cámara usando los ángulos de órbita
+    float horizontalRad = glm::radians(orbitAngleHorizontal);
+    float verticalRad = glm::radians(orbitAngleVertical);
+
+    // Calcular los vectores de dirección
+    glm::vec3 forward(
+        cos(verticalRad) * sin(horizontalRad),
+        sin(verticalRad),
+        cos(verticalRad) * cos(horizontalRad)
+    );
+
+    // Calcular el vector derecho (perpendicular a forward y up)
+    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    // Mover la cámara basado en el movimiento del ratón
+    float moveX = -xrel * sensitivity; // Movimiento lateral
+    float moveZ = -yrel * sensitivity; // Movimiento adelante/atrás
+
+    // Aplicar el movimiento en la dirección correcta
+    cameraX += right.x * moveX + forward.x * moveZ;
+    cameraY += right.y * moveX + forward.y * moveZ;
+    cameraZ += right.z * moveX + forward.z * moveZ;
+
+    // Actualizar también el punto objetivo para mantener la orientación
+    targetX += right.x * moveX + forward.x * moveZ;
+    targetY += right.y * moveX + forward.y * moveZ;
+    targetZ += right.z * moveX + forward.z * moveZ;
+}
+
 
 // Modifica la función RotateCamera para una rotación orbital
 void RotateCamera(int xrel, int yrel) {
@@ -257,6 +338,8 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
     while (SDL_PollEvent(&event)) {
         if (event_processor) event_processor->processEvent(event);
 
+        MoveCamera(keystate);
+
         switch (event.type) {
         case SDL_QUIT:
             return false;
@@ -270,18 +353,38 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
                 rotatingCamera = true;
+            } 
+            
+            if (event.button.button == SDL_BUTTON_MIDDLE && keystate[SDL_SCANCODE_LALT]) {
+                movingCameraWithMouse = true;
+            }
+            else
+            {
+                !movingCameraWithMouse;
+            }
+
+            if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LCTRL])
+            {
+                movingCamera = true;
             }
             break;
 
         case SDL_MOUSEBUTTONUP:
             if (event.button.button == SDL_BUTTON_LEFT) {
                 rotatingCamera = false;
+                movingCameraWithMouse = false;
             }
             break;
 
         case SDL_MOUSEMOTION:
             if (rotatingCamera) {
                 RotateCamera(event.motion.xrel, event.motion.yrel);
+            }if (movingCamera)
+            {
+                MoveCamera(keystate);
+            }if (movingCameraWithMouse)
+            {
+                MoveCameraWithMouse(event.motion.xrel, event.motion.yrel);
             }
             break;
 
@@ -306,18 +409,6 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             ImGui_ImplSDL2_ProcessEvent(&event);
             break;
         }
-    }
-
-    // Movimiento de la cámara con WASD
-    if (keystate[SDL_SCANCODE_W]) targetY += 0.1f;
-    if (keystate[SDL_SCANCODE_S]) targetY -= 0.1f;
-    if (keystate[SDL_SCANCODE_A]) {
-        targetX -= cos(glm::radians(orbitAngleHorizontal)) * 0.1f;
-        targetZ += sin(glm::radians(orbitAngleHorizontal)) * 0.1f;
-    }
-    if (keystate[SDL_SCANCODE_D]) {
-        targetX += cos(glm::radians(orbitAngleHorizontal)) * 0.1f;
-        targetZ -= sin(glm::radians(orbitAngleHorizontal)) * 0.1f;
     }
 
     return true;
