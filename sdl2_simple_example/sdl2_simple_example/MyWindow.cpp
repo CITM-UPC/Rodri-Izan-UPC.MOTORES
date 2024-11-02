@@ -4,6 +4,7 @@
 #include "imgui_impl_opengl3.h"
 #include <stdexcept>
 
+
 MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height) {
     open(title, width, height);
 }
@@ -242,6 +243,18 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             }
             RotateCamera(0, 0);
             break;
+
+        case SDL_DROPFILE: {
+
+            char* droppedFile = event.drop.file;
+            printf("Archivo arrastrado: %s\n", droppedFile);
+
+  /*        importer->ImportFBX(droppedFile);
+
+            delete importer;*/
+
+            break;
+        }
         }
     }
     return true;
