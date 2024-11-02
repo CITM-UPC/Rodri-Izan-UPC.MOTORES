@@ -41,8 +41,8 @@ public:
 
     // Funciones para manejo de texturas
     bool ImportTexture(const std::string& filePath);          // Importar textura desde archivo
-    bool SaveTextureToCustomFormat(const std::string& outputPath); // Guardar textura en formato personalizado
-    bool LoadTextureFromCustomFormat(const std::string& filePath); // Cargar textura desde formato personalizado
+    //bool SaveTextureToCustomFormat(const std::string& outputPath); // Guardar textura en formato personalizado
+    //bool LoadTextureFromCustomFormat(const std::string& filePath); // Cargar textura desde formato personalizado
 
     // Getters para obtener información de las mallas y texturas cargadas
     const std::vector<Mesh>& GetMeshes() const { return meshes; }   // Obtener mallas cargadas

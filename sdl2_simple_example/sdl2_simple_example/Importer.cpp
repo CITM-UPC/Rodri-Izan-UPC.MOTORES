@@ -29,7 +29,6 @@ bool Importer::Init() {
     return CreateRequiredDirectories();
 }
 
-
 bool Importer::CreateRequiredDirectories() {
     namespace fs = std::filesystem;  
 
@@ -57,27 +56,50 @@ bool Importer::CreateRequiredDirectories() {
 }
 
 bool Importer::ImportFBX(const std::string& filePath) {
-    auto startTime = std::chrono::high_resolution_clock::now();  // Medir tiempo de inicio
+    // Construir la ruta del archivo custom
+    std::string customPath = "Library/Meshes/" +
+        std::filesystem::path(filePath).stem().string() + ".custom";
+
+    // Intentar cargar el archivo custom primero
+    if (std::filesystem::exists(customPath)) {
+        std::cout << "Custom format found, loading " << customPath << std::endl;
+        auto startTime = std::chrono::high_resolution_clock::now();
+
+        bool success = LoadMeshFromCustomFormat(customPath);
+
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Custom format loading time: " << duration.count() << "ms" << std::endl;
+
+        return success;
+    }
+
+    // Si no existe el archivo custom, procesar el FBX
+    std::cout << "No custom format found, processing FBX..." << std::endl;
+    auto startTime = std::chrono::high_resolution_clock::now();
 
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filePath,
-        aiProcess_Triangulate |  // Triangular la geometría
-        aiProcess_FlipUVs |      // Invertir coordenadas UV
-        aiProcess_GenNormals);   // Generar normales si no existen
+        aiProcess_Triangulate |
+        aiProcess_FlipUVs |
+        aiProcess_GenNormals);
 
-    // Verificar si la carga fue exitosa
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         std::cerr << "Error loading FBX: " << importer.GetErrorString() << std::endl;
         return false;
     }
 
-    meshes.clear();  // Limpiar las mallas anteriores
-    bool success = ProcessNode(scene->mRootNode, scene);  // Procesar nodos de la escena
+    meshes.clear();
+    bool success = ProcessNode(scene->mRootNode, scene);
 
-    // Calcular tiempo de carga y mostrarlo
+    // Si el procesamiento fue exitoso, guardar en formato custom
+    if (success) {
+        SaveMeshToCustomFormat(customPath);
+    }
+
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    std::cout << "FBX Loading time: " << duration.count() << "ms" << std::endl;
+    std::cout << "FBX processing time: " << duration.count() << "ms" << std::endl;
 
     return success;
 }
@@ -131,25 +153,26 @@ bool Importer::ProcessMesh(aiMesh* aimesh, const aiScene* scene) {
 }
 
 bool Importer::SaveMeshToCustomFormat(const std::string& outputPath) {
-    std::ofstream outFile(outputPath, std::ios::binary); // Abrir archivo en modo binario
+    std::ofstream outFile(outputPath, std::ios::binary);
     if (!outFile.is_open()) {
         std::cerr << "Error opening file for saving: " << outputPath << std::endl;
         return false;
     }
 
-    size_t meshCount = meshes.size(); // Obtener cantidad de mallas
-    outFile.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount)); // Escribir cantidad de mallas
+    size_t meshCount = meshes.size();
+    outFile.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
 
-    for (const auto& mesh : meshes) { // Recorrer cada malla y escribir sus datos en el archivo binario
+    for (const auto& mesh : meshes) {
         size_t vertexCount = mesh.vertices.size();
+        size_t texCoordCount = mesh.texCoords.size();
+        size_t indexCount = mesh.indices.size();
+
         outFile.write(reinterpret_cast<const char*>(&vertexCount), sizeof(vertexCount));
         outFile.write(reinterpret_cast<const char*>(mesh.vertices.data()), vertexCount * sizeof(GLfloat));
 
-        size_t texCoordCount = mesh.texCoords.size();
         outFile.write(reinterpret_cast<const char*>(&texCoordCount), sizeof(texCoordCount));
         outFile.write(reinterpret_cast<const char*>(mesh.texCoords.data()), texCoordCount * sizeof(GLfloat));
 
-        size_t indexCount = mesh.indices.size();
         outFile.write(reinterpret_cast<const char*>(&indexCount), sizeof(indexCount));
         outFile.write(reinterpret_cast<const char*>(mesh.indices.data()), indexCount * sizeof(GLuint));
     }
@@ -158,17 +181,18 @@ bool Importer::SaveMeshToCustomFormat(const std::string& outputPath) {
 }
 
 bool Importer::LoadMeshFromCustomFormat(const std::string& filePath) {
-    std::ifstream inFile(filePath, std::ios::binary); // Abrir archivo en modo binario
+    auto startTime = std::chrono::high_resolution_clock::now();  // Medir tiempo de inicio
+    std::ifstream inFile(filePath, std::ios::binary);
     if (!inFile.is_open()) {
         std::cerr << "Error opening file for loading: " << filePath << std::endl;
         return false;
     }
 
     meshes.clear();
-    size_t meshCount; 
-    inFile.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount)); // Leer cantidad de mallas
+    size_t meshCount;
+    inFile.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
 
-    for (size_t i = 0; i < meshCount; i++) { // Leer cada malla y cargar sus datos  desde el archivo binario
+    for (size_t i = 0; i < meshCount; i++) {
         Mesh mesh;
         size_t vertexCount, texCoordCount, indexCount;
 
@@ -186,6 +210,11 @@ bool Importer::LoadMeshFromCustomFormat(const std::string& filePath) {
 
         meshes.push_back(mesh);
     }
+
+    // Calcular tiempo de carga y mostrarlo
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "FBX Loading time: " << duration.count() << "ms" << std::endl;
 
     return true;
 }

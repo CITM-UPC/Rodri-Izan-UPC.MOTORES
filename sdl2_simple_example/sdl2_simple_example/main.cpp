@@ -352,13 +352,10 @@ int main(int argc, char** argv) {
     importer = new Importer();
     importer->Init();
 
-    // Cargar los recursos iniciales
-    importer->ImportTexture(filetex);
     importer->ImportFBX(filefbx);
+    importer->ImportTexture(filetex);
 
-    importer->SaveMeshToCustomFormat("Library/Meshes/baker_house.custom");
-    importer->LoadMeshFromCustomFormat("Library/Meshes/baker_house.custom");
-
+    importer->ImportTexture(filetex);
     while (window.processEvents() && window.isOpen()) {
         const auto t0 = hrclock::now();
         render();
