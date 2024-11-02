@@ -264,33 +264,57 @@ void render(MyWindow& window) {
 }
 
 int main(int argc, char** argv) {
+    // Inicializa la ventana usando SDL
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
 
+    // Inicializa OpenGL
     init_openGL();
+
+    // Crear el contexto de Dear ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    // Configurar estilo de Dear ImGui
+    ImGui::StyleColorsDark();
+
+    // Inicializar el backend de SDL y OpenGL para Dear ImGui
+    ImGui_ImplSDL2_InitForOpenGL(window.getSDLWindow(), window.contextPtr());
+    ImGui_ImplOpenGL3_Init("#version 130"); // Asegúrate de que la versión de OpenGL sea la adecuada
 
     // Inicializar el Importer
     importer = new Importer();
     importer->Init();
-
     importer->ImportFBX(filefbx);
     importer->ImportTexture(filetex);
 
-
+    // Bucle principal
     while (window.processEvents() && window.isOpen()) {
+        // Comienza un nuevo frame de ImGui
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplSDL2_NewFrame();  // Pasa la ventana de SDL
         ImGui::NewFrame();
 
+        // Renderiza la interfaz de usuario usando Dear ImGui
         RenderEditor();
-        render(window);  
 
+        // Renderiza la escena 3D
+        render(window);
+
+        // Renderiza los datos de Dear ImGui
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+        // Intercambia buffers
         window.swapBuffers();
     }
 
-    // Limpieza
+    // Limpieza de Dear ImGui
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
+    // Limpieza del Importer
     delete importer;
     return 0;
 }
+
