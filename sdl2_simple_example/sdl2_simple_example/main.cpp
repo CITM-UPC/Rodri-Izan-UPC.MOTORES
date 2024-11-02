@@ -355,7 +355,6 @@ int main(int argc, char** argv) {
     importer->ImportFBX(filefbx);
     importer->ImportTexture(filetex);
 
-    importer->ImportTexture(filetex);
     while (window.processEvents() && window.isOpen()) {
         const auto t0 = hrclock::now();
         render();
