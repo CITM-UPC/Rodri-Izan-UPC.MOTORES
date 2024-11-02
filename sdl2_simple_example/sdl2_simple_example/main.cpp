@@ -5,7 +5,10 @@
 #include <exception>
 #include <glm/glm.hpp>
 #include "MyWindow.h"
-#include <imgui_impl_sdl2.h>
+#include "EditScene.h"
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
 #include <assimp/cimport.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -281,7 +284,7 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-void render() {
+void render(MyWindow& window) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -291,12 +294,14 @@ void render() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Nueva configuración de la cámara
-    gluLookAt(cameraX, cameraY, cameraZ,  // Posición de la cámara
-        targetX, targetY, targetZ,   // Punto al que mira
-        0.0f, 1.0f, 0.0f);          // Vector "up"
+    // Get camera position from window
+    auto camPos = window.GetCameraPosition();
+    auto targetPos = window.GetTargetPosition();
 
-    // El resto del código de render permanece igual...
+    gluLookAt(camPos.x, camPos.y, camPos.z,
+        targetPos.x, targetPos.y, targetPos.z,
+        0.0f, 1.0f, 0.0f);
+
     drawGrid(10.0f, 20);
 
     glPushMatrix();
@@ -324,104 +329,28 @@ void render() {
     glPopMatrix();
     glFlush();
 }
-bool MyWindow::processEvents(IEventProcessor* event_processor) {
-    SDL_Event event;
-    const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
-    while (SDL_PollEvent(&event)) {
-        if (event_processor) event_processor->processEvent(event);
-
-        MoveCamera(keystate);
-
-        switch (event.type) {
-        case SDL_QUIT:
-            return false;
-
-        case SDL_KEYDOWN:
-            if (event.key.keysym.sym == SDLK_f) {
-                FocusOnObject();
-            }
-            break;
-
-        case SDL_MOUSEBUTTONDOWN:
-            if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
-                rotatingCamera = true;
-            } 
-            
-            if (event.button.button == SDL_BUTTON_MIDDLE && keystate[SDL_SCANCODE_LALT]) {
-                movingCameraWithMouse = true;
-            }
-            else
-            {
-                !movingCameraWithMouse;
-            }
-
-            if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LCTRL])
-            {
-                movingCamera = true;
-            }
-            break;
-
-        case SDL_MOUSEBUTTONUP:
-            if (event.button.button == SDL_BUTTON_LEFT) {
-                rotatingCamera = false;
-                movingCameraWithMouse = false;
-            }
-            break;
-
-        case SDL_MOUSEMOTION:
-            if (rotatingCamera) {
-                RotateCamera(event.motion.xrel, event.motion.yrel);
-            }if (movingCamera)
-            {
-                MoveCamera(keystate);
-            }if (movingCameraWithMouse)
-            {
-                MoveCameraWithMouse(event.motion.xrel, event.motion.yrel);
-            }
-            break;
-
-        case SDL_MOUSEWHEEL:
-            if (event.wheel.y > 0) {
-                orbitRadius = glm::max(orbitRadius - 1.0f, 2.0f);
-            }
-            else if (event.wheel.y < 0) {
-                orbitRadius = glm::min(orbitRadius + 1.0f, 30.0f);
-            }
-            RotateCamera(0, 0); // Actualiza la posición de la cámara
-            break;
-
-        case SDL_DROPFILE: {
-            char* dropped_filedir = event.drop.file;
-            std::cout << "Archivo arrastrado: " << dropped_filedir << std::endl;
-
-            loadFBX(dropped_filedir);
-            break;
-        }
-        default:
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            break;
-        }
-    }
-
-    return true;
-}
 int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
 
     init_openGL();
+    window.initImGui();
+
     loadTexture(filetex);
     loadFBX(filefbx);
 
     while (window.processEvents() && window.isOpen()) {
-        const auto t0 = hrclock::now();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
 
-        render();
+        RenderEditor();
+        render(window);  
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         window.swapBuffers();
-        const auto t1 = hrclock::now();
-        const auto dt = t1 - t0;
-        if (dt < FRAME_DT) this_thread::sleep_for(FRAME_DT - dt);
     }
 
     return 0;

@@ -1,46 +1,71 @@
 #pragma once
-
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_events.h>
-
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 
 class IEventProcessor {
 public:
-	virtual void processEvent(const SDL_Event& event) = 0;
+    virtual void processEvent(const SDL_Event& event) = 0;
 };
 
 class MyWindow {
+private:
+    SDL_Window* _window = nullptr;
+    SDL_GLContext _ctx = nullptr;
+    unsigned short _width = 800;
+    unsigned short _height = 600;
+    bool _imguiInitialized = false;
 
-	SDL_Window* _window = nullptr;
-	void* _ctx = nullptr;
+    // Camera properties
+    GLfloat cameraX = 0.0f;
+    GLfloat cameraY = 5.0f;
+    GLfloat cameraZ = 10.0f;
+    GLfloat cameraSpeed = 0.1f;
 
-	unsigned short _width = 800;
-	unsigned short _height = 600;
+    GLfloat cameraAngleX = 0.0f;
+    GLfloat cameraAngleY = 0.0f;
+    GLfloat cameraAngleZ = 0.0f;
+    bool rotatingCamera = false;
+    bool movingCamera = false;
+    bool movingCameraWithMouse = false;
+
+    GLfloat targetX = 0.0f;
+    GLfloat targetY = 0.0f;
+    GLfloat targetZ = 0.0f;
+    GLfloat orbitRadius = 10.0f;
+    GLfloat orbitAngleHorizontal = 0.0f;
+    GLfloat orbitAngleVertical = 30.0f;
+
+    // Private camera methods
+    void MoveCamera(const Uint8* keystate);
+    void MoveCameraWithMouse(int xrel, int yrel);
+    void RotateCamera(int xrel, int yrel);
+    void FocusOnObject();
 
 public:
-	int width() const { return _width; }
-	int height() const { return _height; }
-	double aspect() const { return static_cast<double>(_width) / _height; }
+    // Getters for camera properties
+    glm::vec3 GetCameraPosition() const { return glm::vec3(cameraX, cameraY, cameraZ); }
+    glm::vec3 GetTargetPosition() const { return glm::vec3(targetX, targetY, targetZ); }
 
-	auto* windowPtr() const { return _window; }
-	auto* contextPtr() const { return _ctx; }
+    int width() const { return _width; }
+    int height() const { return _height; }
+    double aspect() const { return static_cast<double>(_width) / _height; }
+    SDL_Window* windowPtr() const { return _window; }
+    void* contextPtr() const { return _ctx; }
 
-	MyWindow(const char* title, unsigned short width, unsigned short height);
-	MyWindow(MyWindow&&) noexcept = delete;
-	MyWindow(const MyWindow&) = delete;
-	MyWindow& operator=(const MyWindow&) = delete;
-	~MyWindow();
+    MyWindow(const char* title, unsigned short width, unsigned short height);
+    MyWindow(MyWindow&&) noexcept = delete;
+    MyWindow(const MyWindow&) = delete;
+    MyWindow& operator=(const MyWindow&) = delete;
+    ~MyWindow();
 
-	void open(const char* title, unsigned short width, unsigned short height);
-	void close();
-	bool isOpen() const { return _window; }
-
-	bool processEvents(IEventProcessor* event_processor = nullptr);
-	void swapBuffers();
-
-	void update();  
-	void render();
-
-	void openFileDialog(const char* fileType);
-
+    void open(const char* title, unsigned short width, unsigned short height);
+    void close();
+    bool isOpen() const { return _window; }
+    void initImGui();
+    void shutdownImGui();
+    bool processEvents(IEventProcessor* event_processor = nullptr);
+    void swapBuffers();
+    SDL_Window* getSDLWindow() const { return _window; }
 };
