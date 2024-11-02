@@ -5,14 +5,14 @@
 #include <exception>
 #include <glm/glm.hpp>
 #include "MyWindow.h"
+#include "Importer.h"
 #include <imgui_impl_sdl2.h>
 #include <assimp/cimport.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+Importer* importer = nullptr;
 
 GLuint textureID;
 
@@ -49,8 +49,8 @@ GLfloat orbitAngleVertical = 30.0f;
 
 
 //const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
-const char* filefbx = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/BakerHouse.fbx";
-const char* filetex = "C:/Users/izansl/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/Baker_house.png";
+const char* filefbx = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/BakerHouse.fbx";
+const char* filetex = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/Baker_house.png";
 
 struct Mesh {
     std::vector<GLfloat> vertices;
@@ -60,76 +60,11 @@ struct Mesh {
 
 std::vector<Mesh> meshes;
 
-void loadFBX(const std::string& filePath) {
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
-
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        std::cerr << "Error al cargar el modelo: " << importer.GetErrorString() << std::endl;
-        return;
-    }
-
-    for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-        const aiMesh* aimesh = scene->mMeshes[i];
-        std::cout << "Malla " << i << " cargada con " << aimesh->mNumVertices << " vértices." << std::endl;
-
-        Mesh mesh;
-
-        for (unsigned int v = 0; v < aimesh->mNumVertices; v++) {
-            mesh.vertices.push_back(aimesh->mVertices[v].x);
-            mesh.vertices.push_back(aimesh->mVertices[v].y);
-            mesh.vertices.push_back(aimesh->mVertices[v].z);
-
-            if (aimesh->HasTextureCoords(0)) {
-                mesh.texCoords.push_back(aimesh->mTextureCoords[0][v].x);
-                mesh.texCoords.push_back(aimesh->mTextureCoords[0][v].y);
-            }
-            else {
-                mesh.texCoords.push_back(0.0f);
-                mesh.texCoords.push_back(0.0f);
-            }
-        }
-
-        for (unsigned int f = 0; f < aimesh->mNumFaces; f++) {
-            const aiFace& face = aimesh->mFaces[f];
-            for (unsigned int j = 0; j < face.mNumIndices; j++) {
-                mesh.indices.push_back(face.mIndices[j]);
-            }
-        }
-
-        meshes.push_back(mesh);
-    }
-}
-
 static void init_openGL() {
     glewInit();
     if (!GLEW_VERSION_3_0) throw exception("OpenGL 3.0 API is not available.");
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.5, 0.5, 0.5, 1.0);
-}
-
-void loadTexture(const char* filename) {
-
-    int width, height, channels;
-
-    unsigned char* imageData = stbi_load(filename, &width, &height, &channels, STBI_rgb_alpha);
-    
-    if (imageData == nullptr) {
-        std::cerr << "Error: No se pudo cargar la textura " << filename << std::endl;
-        return;
-    }
-    
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-
-    stbi_image_free(imageData);
 }
 
 void MoveCamera(const Uint8* keystate) {
@@ -231,8 +166,6 @@ void MoveCameraWithMouse(int xrel, int yrel) {
     targetZ += right.z * moveX + forward.z * moveZ;
 }
 
-
-
 void RotateCamera(int xrel, int yrel) {
     const float sensitivity = 0.3f;
     orbitAngleHorizontal += xrel * sensitivity;
@@ -291,12 +224,10 @@ void render() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Nueva configuración de la cámara
-    gluLookAt(cameraX, cameraY, cameraZ,  // Posición de la cámara
-        targetX, targetY, targetZ,   // Punto al que mira
-        0.0f, 1.0f, 0.0f);          // Vector "up"
+    gluLookAt(cameraX, cameraY, cameraZ,
+        targetX, targetY, targetZ,
+        0.0f, 1.0f, 0.0f);
 
-    // El resto del código de render permanece igual...
     drawGrid(10.0f, 20);
 
     glPushMatrix();
@@ -304,10 +235,10 @@ void render() {
     glScalef(0.1f, 0.1f, 0.1f);
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
 
-    // Renderizado del modelo...
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    for (const auto& mesh : meshes) {
+    glBindTexture(GL_TEXTURE_2D, importer->GetTextureID());
+
+    for (const auto& mesh : importer->GetMeshes()) {
         glEnableClientState(GL_VERTEX_ARRAY);
         glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
 
@@ -319,11 +250,12 @@ void render() {
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
-    glDisable(GL_TEXTURE_2D);
 
+    glDisable(GL_TEXTURE_2D);
     glPopMatrix();
     glFlush();
 }
+
 bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -395,7 +327,11 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             char* dropped_filedir = event.drop.file;
             std::cout << "Archivo arrastrado: " << dropped_filedir << std::endl;
 
-            loadFBX(dropped_filedir);
+            importer->ImportFBX(dropped_filedir);
+
+            //importer->SaveMeshToCustomFormat("Library/Meshes/dropped_mesh.custom");
+
+            SDL_free(dropped_filedir);
             break;
         }
         default:
@@ -406,23 +342,34 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 
     return true;
 }
+
 int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
 
     init_openGL();
-    loadTexture(filetex);
-    loadFBX(filefbx);
+
+    // Inicializar el Importer
+    importer = new Importer();
+    importer->Init();
+
+    // Cargar los recursos iniciales
+    importer->ImportTexture(filetex);
+    importer->ImportFBX(filefbx);
+
+    importer->SaveMeshToCustomFormat("Library/Meshes/baker_house.custom");
+    importer->LoadMeshFromCustomFormat("Library/Meshes/baker_house.custom");
 
     while (window.processEvents() && window.isOpen()) {
         const auto t0 = hrclock::now();
-
         render();
-
         window.swapBuffers();
+
         const auto t1 = hrclock::now();
         const auto dt = t1 - t0;
         if (dt < FRAME_DT) this_thread::sleep_for(FRAME_DT - dt);
     }
 
+    // Limpieza
+    delete importer;
     return 0;
 }
