@@ -3,7 +3,7 @@
 #include <SDL2/SDL_events.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-
+#include "Importer.h"
 class IEventProcessor {
 public:
     virtual void processEvent(const SDL_Event& event) = 0;
@@ -11,6 +11,8 @@ public:
 
 class MyWindow {
 private:
+    Importer* importer;
+
     SDL_Window* _window = nullptr;
     SDL_GLContext _ctx = nullptr;
     unsigned short _width = 800;
@@ -54,7 +56,7 @@ public:
     SDL_Window* windowPtr() const { return _window; }
     void* contextPtr() const { return _ctx; }
 
-    MyWindow(const char* title, unsigned short width, unsigned short height);
+    MyWindow(const char* title, unsigned short width, unsigned short height, Importer* importer);
     MyWindow(MyWindow&&) noexcept = delete;
     MyWindow(const MyWindow&) = delete;
     MyWindow& operator=(const MyWindow&) = delete;

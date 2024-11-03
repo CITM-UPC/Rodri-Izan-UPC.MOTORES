@@ -15,8 +15,6 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-Importer* importer = nullptr;
-
 GLuint textureID;
 
 using namespace std;
@@ -94,7 +92,7 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-void render(MyWindow& window) {
+void render(MyWindow& window, Importer* importer) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -141,8 +139,9 @@ void render(MyWindow& window) {
 }
 
 int main(int argc, char** argv) {
+    Importer importer;  
     // Inicializa la ventana usando SDL
-    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y);
+    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);  // Pasar importer a MyWindow
 
     // Inicializa OpenGL
     init_openGL();
@@ -159,11 +158,10 @@ int main(int argc, char** argv) {
     ImGui_ImplOpenGL3_Init("#version 130"); // Asegúrate de que la versión de OpenGL sea la adecuada
 
     // Inicializar el Importer
-    importer = new Importer();
-    importer->Init();
-    importer->ImportFBX(filefbx);
-    importer->ImportFBX(filefbx1);
-    importer->ImportTexture(filetex);
+    importer.Init();
+    importer.ImportFBX(filefbx);
+    //importer.ImportFBX(filefbx1);
+    importer.ImportTexture(filetex);
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
@@ -176,7 +174,7 @@ int main(int argc, char** argv) {
         RenderEditor();
 
         // Renderiza la escena 3D
-        render(window);
+        render(window, &importer);
 
         // Renderiza los datos de Dear ImGui
         ImGui::Render();
@@ -191,8 +189,6 @@ int main(int argc, char** argv) {
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
-    // Limpieza del Importer
-    delete importer;
     return 0;
 }
 

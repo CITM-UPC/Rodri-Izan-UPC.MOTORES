@@ -5,7 +5,8 @@
 #include <stdexcept>
 
 
-MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height) {
+MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height, Importer* importer)
+    : importer(importer) {  
     open(title, width, height);
 }
 
@@ -249,9 +250,9 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             char* droppedFile = event.drop.file;
             printf("Archivo arrastrado: %s\n", droppedFile);
 
-  /*        importer->ImportFBX(droppedFile);
+            importer->ImportFBX(droppedFile);
 
-            delete importer;*/
+            SDL_free(droppedFile);
 
             break;
         }
