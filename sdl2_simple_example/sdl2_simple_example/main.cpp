@@ -53,6 +53,7 @@ GLfloat orbitAngleVertical = 30.0f;
 
 //const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
 const char* filefbx = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/BakerHouse.fbx";
+const char* filefbx1 = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
 const char* filetex = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/Baker_house.png";
 
 struct Mesh {
@@ -161,6 +162,7 @@ int main(int argc, char** argv) {
     importer = new Importer();
     importer->Init();
     importer->ImportFBX(filefbx);
+    importer->ImportFBX(filefbx1);
     importer->ImportTexture(filetex);
 
     // Bucle principal

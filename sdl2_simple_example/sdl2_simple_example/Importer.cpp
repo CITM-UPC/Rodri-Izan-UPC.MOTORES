@@ -89,7 +89,7 @@ bool Importer::ImportFBX(const std::string& filePath) {
         return false;
     }
 
-    meshes.clear();
+    //meshes.clear();
     bool success = ProcessNode(scene->mRootNode, scene);
 
     // Si el procesamiento fue exitoso, guardar en formato custom
@@ -188,7 +188,7 @@ bool Importer::LoadMeshFromCustomFormat(const std::string& filePath) {
         return false;
     }
 
-    meshes.clear();
+    //meshes.clear();
     size_t meshCount;
     inFile.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
 
