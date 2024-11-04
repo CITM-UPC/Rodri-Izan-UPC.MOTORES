@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include "MyWindow.h"
 #include "Importer.h"
+#include "Transform.h"
+#include "Hierarchy.h"
 #include <imgui_impl_sdl2.h>
 #include "EditScene.h"
 #include "imgui.h"
@@ -143,11 +145,13 @@ int main(int argc, char** argv) {
         ImGui_ImplSDL2_NewFrame();  // Pasa la ventana de SDL
         ImGui::NewFrame();
 
-        // Renderiza la interfaz de usuario usando Dear ImGui
-        editor.RenderEditor();
 
         // Renderiza la escena 3D
         render(window, &importer);
+        editor.RenderSceneWindow(window, &importer);       // Ventana de la escena principal
+        editor.RenderInspectorWindow();                    // Ventana del inspector
+        editor.RenderHierarchyWindow();                    // Ventana de la jerarquía
+        editor.RenderAssetsWindow();                       // Ventana de assets o transformaciones
 
         // Renderiza los datos de Dear ImGui
         ImGui::Render();
