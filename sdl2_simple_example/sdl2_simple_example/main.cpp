@@ -25,42 +25,11 @@ using vec3 = glm::dvec3;
 
 static const ivec2 WINDOW_SIZE(1024, 1024);
 static const unsigned int FPS = 60;
-static const auto FRAME_DT = 1.0s / FPS;
+static const auto FRAME_DT = 1.0s / FPS;  
 
-
-GLfloat cameraX = 0.0f;
-GLfloat cameraY = 5.0f;  
-GLfloat cameraZ = 10.0f; 
-GLfloat cameraSpeed = 0.1f;
-
-GLfloat cameraAngleX = 0.0f;
-GLfloat cameraAngleY = 0.0f;
-GLfloat cameraAngleZ = 0.0f;
-bool rotatingCamera = false;
-bool movingCamera = false;
-bool movingCameraWithMouse = false;
-
-
-GLfloat targetX = 0.0f;  
-GLfloat targetY = 0.0f;
-GLfloat targetZ = 0.0f;
-GLfloat orbitRadius = 10.0f;  
-GLfloat orbitAngleHorizontal = 0.0f;  
-GLfloat orbitAngleVertical = 30.0f;   
-
-
-//const char* file = "C:/Users/rodrigoam/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
-const char* filefbx = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/BakerHouse.fbx";
-const char* filefbx1 = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/masterchief.fbx";
-const char* filetex = "C:/Users/G513/Documents/GitHub/Rodri-Izan-UPC.MOTORES/Assets/Baker_house.png";
-
-struct Mesh {
-    std::vector<GLfloat> vertices;
-    std::vector<GLfloat> texCoords;
-    std::vector<GLuint> indices;
-};
-
-std::vector<Mesh> meshes;
+const char* filefbx = "../Assets/BakerHouse.fbx";
+const char* filefbx1 = "../Assets/masterchief.fbx";
+const char* filetex = "../Assets/Baker_house.png";
 
 static void init_openGL() {
     glewInit();
