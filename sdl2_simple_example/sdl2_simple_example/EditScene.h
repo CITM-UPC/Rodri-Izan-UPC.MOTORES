@@ -1,17 +1,15 @@
 #pragma once
-// EditScene.h
-#ifndef EDIT_SCENE_H
-#define EDIT_SCENE_H
+#include "Hierarchy.h"
+#include "Inspector.h"
+#include "Transform.h"
 
-// Declaraciones de variables globales
-extern int selectedGameObject;
-extern bool isActive;
+class EditScene {
+public:
+    EditScene();
+    void RenderEditor();
 
-// Declaraciones de funciones
-void DrawHierarchyWindow();
-void DrawInspectorWindow();
-void DrawAssetWindow();
-void RenderEditor();
-
-#endif // EDIT_SCENE_H
-
+private:
+    Hierarchy hierarchy;
+    Inspector inspector;
+    Transform assets;
+};

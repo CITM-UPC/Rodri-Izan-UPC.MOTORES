@@ -31,6 +31,10 @@ const char* filefbx = "../Assets/BakerHouse.fbx";
 const char* filefbx1 = "../Assets/masterchief.fbx";
 const char* filetex = "../Assets/Baker_house.png";
 
+EditScene editor;
+
+
+
 static void init_openGL() {
     glewInit();
     if (!GLEW_VERSION_3_0) throw exception("OpenGL 3.0 API is not available.");
@@ -140,7 +144,7 @@ int main(int argc, char** argv) {
         ImGui::NewFrame();
 
         // Renderiza la interfaz de usuario usando Dear ImGui
-        RenderEditor();
+        editor.RenderEditor();
 
         // Renderiza la escena 3D
         render(window, &importer);
