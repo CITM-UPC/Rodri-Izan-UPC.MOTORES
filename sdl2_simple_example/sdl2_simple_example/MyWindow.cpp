@@ -44,7 +44,10 @@ void MyWindow::initImGui() {
     if (_imguiInitialized) return;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io = ImGui::GetIO();
+
+    io.ConfigFlags != ImGuiConfigFlags_DockingEnable;
+    
     ImGui_ImplSDL2_InitForOpenGL(_window, _ctx);
     ImGui_ImplOpenGL3_Init("#version 130");
     _imguiInitialized = true;
@@ -202,6 +205,10 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             if (event.key.keysym.sym == SDLK_f) {
                 FocusOnObject();
             }
+            break;
+        case SDL_WINDOWEVENT_RESIZED:
+            //event te retorna el tamaño nuevo
+            glViewport(0, 0, 128, 128);
             break;
 
         case SDL_MOUSEBUTTONDOWN:

@@ -25,7 +25,7 @@ using u8vec4 = glm::u8vec4;
 using ivec2 = glm::ivec2;
 using vec3 = glm::dvec3;
 
-static const ivec2 WINDOW_SIZE(1024, 1024);
+static const ivec2 WINDOW_SIZE(720, 720);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;  
 
@@ -111,6 +111,8 @@ void render(MyWindow& window, Importer* importer) {
     glDisable(GL_TEXTURE_2D);
     glPopMatrix();
     glFlush();
+
+
 }
 
 int main(int argc, char** argv) {
@@ -120,17 +122,8 @@ int main(int argc, char** argv) {
 
     // Inicializa OpenGL
     init_openGL();
-
-    // Crear el contexto de Dear ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-
-    // Configurar estilo de Dear ImGui
-    ImGui::StyleColorsDark();
-
-    // Inicializar el backend de SDL y OpenGL para Dear ImGui
-    ImGui_ImplSDL2_InitForOpenGL(window.getSDLWindow(), window.contextPtr());
-    ImGui_ImplOpenGL3_Init("#version 130"); // Asegúrate de que la versión de OpenGL sea la adecuada
+    
+    window.initImGui();
 
     // Inicializar el Importer
     importer.Init();
@@ -146,8 +139,7 @@ int main(int argc, char** argv) {
         ImGui::NewFrame();
 
 
-        // Renderiza la escena 3D
-        render(window, &importer);
+
         editor.RenderSceneWindow(window, &importer);       // Ventana de la escena principal
         editor.RenderInspectorWindow();                    // Ventana del inspector
         editor.RenderHierarchyWindow();                    // Ventana de la jerarquía
