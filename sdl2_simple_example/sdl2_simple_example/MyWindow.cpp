@@ -4,9 +4,8 @@
 #include "imgui_impl_opengl3.h"
 #include <stdexcept>
 
-
 MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height, Importer* importer)
-    : importer(importer) {  
+    : importer(importer) {
     open(title, width, height);
 }
 
@@ -17,35 +16,14 @@ MyWindow::~MyWindow() {
     close();
 }
 
-void MyWindow::open(const char* title, unsigned short width, unsigned short height) {
-    if (_window) return;
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-    _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if (!_window) throw std::runtime_error(SDL_GetError());
-
-    _ctx = SDL_GL_CreateContext(_window);
-    if (!_ctx) throw std::runtime_error(SDL_GetError());
-
-    if (SDL_GL_MakeCurrent(_window, _ctx) != 0)
-        throw std::runtime_error(SDL_GetError());
-
-    if (SDL_GL_SetSwapInterval(1) != 0)
-        throw std::runtime_error(SDL_GetError());
-}
-
 void MyWindow::initImGui() {
     if (_imguiInitialized) return;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
     ImGui_ImplSDL2_InitForOpenGL(_window, _ctx);
     ImGui_ImplOpenGL3_Init("#version 130");
     _imguiInitialized = true;
@@ -59,7 +37,37 @@ void MyWindow::shutdownImGui() {
     _imguiInitialized = false;
 }
 
+void MyWindow::open(const char* title, unsigned short width, unsigned short height) {
+    if (_window) return;
+
+    // Configurar atributos de OpenGL antes de crear la ventana
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    // Crear la ventana
+    _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if (!_window) throw std::runtime_error(SDL_GetError());
+
+    // Crear el contexto OpenGL
+    _ctx = SDL_GL_CreateContext(_window);
+    if (!_ctx) throw std::runtime_error(SDL_GetError());
+
+    if (SDL_GL_MakeCurrent(_window, _ctx) != 0)
+        throw std::runtime_error(SDL_GetError());
+
+    if (SDL_GL_SetSwapInterval(1) != 0)
+        throw std::runtime_error(SDL_GetError());
+
+    // Llamar a initImGui() después de que se hayan creado _window y _ctx
+    initImGui();
+}
+
 void MyWindow::close() {
+    shutdownImGui();
     if (_ctx) {
         SDL_GL_DeleteContext(_ctx);
         _ctx = nullptr;
@@ -102,7 +110,6 @@ void MyWindow::MoveCamera(const Uint8* keystate) {
         targetY -= forward.y * adjustedSpeed;
         targetZ -= forward.z * adjustedSpeed;
     }
-
 
     if (keystate[SDL_SCANCODE_D]) {
         cameraX -= right.x * adjustedSpeed;
@@ -207,7 +214,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
         case SDL_WINDOWEVENT_RESIZED: {
             int newWidth = event.window.data1;
             int newHeight = event.window.data2;
-            glViewport(0, 0, newWidth, newHeight);  
+            glViewport(0, 0, newWidth, newHeight);
             break;
         }
 
@@ -253,14 +260,10 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             break;
 
         case SDL_DROPFILE: {
-
             char* droppedFile = event.drop.file;
             printf("Archivo arrastrado: %s\n", droppedFile);
-
             importer->ImportFBX(droppedFile);
-
             SDL_free(droppedFile);
-
             break;
         }
         }

@@ -53,8 +53,8 @@ public:
     int width() const { return _width; }
     int height() const { return _height; }
     double aspect() const { return static_cast<double>(_width) / _height; }
-    SDL_Window* windowPtr() const { return _window; }
-    void* contextPtr() const { return _ctx; }
+    SDL_Window* getSDLWindow() const { return _window; }
+    SDL_GLContext getSDLContext() const { return _ctx; }
 
     MyWindow(const char* title, unsigned short width, unsigned short height, Importer* importer);
     MyWindow(MyWindow&&) noexcept = delete;
@@ -69,5 +69,5 @@ public:
     void shutdownImGui();
     bool processEvents(IEventProcessor* event_processor = nullptr);
     void swapBuffers();
-    SDL_Window* getSDLWindow() const { return _window; }
+
 };

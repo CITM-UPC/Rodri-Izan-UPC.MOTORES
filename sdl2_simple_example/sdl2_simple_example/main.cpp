@@ -116,38 +116,36 @@ void render(MyWindow& window, Importer* importer) {
 }
 
 int main(int argc, char** argv) {
-    Importer importer;  
+    Importer importer;
     // Inicializa la ventana usando SDL
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);  // Pasar importer a MyWindow
 
-    // Inicializa OpenGL
     init_openGL();
-    
-    window.initImGui();
 
-    // Inicializar el Importer
     importer.Init();
     importer.ImportFBX(filefbx);
-    //importer.ImportFBX(filefbx1);
     importer.ImportTexture(filetex);
 
-    // Bucle principal
     while (window.processEvents() && window.isOpen()) {
-        // Comienza un nuevo frame de ImGui
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();  // Pasa la ventana de SDL
+        ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-
-
+        // Renderizar las ventanas de tu editor
         editor.RenderSceneWindow(window, &importer);       // Ventana de la escena principal
         editor.RenderInspectorWindow();                    // Ventana del inspector
         editor.RenderHierarchyWindow();                    // Ventana de la jerarquía
         editor.RenderAssetsWindow();                       // Ventana de assets o transformaciones
 
-        // Renderiza los datos de Dear ImGui
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Llamadas para manejar ventanas externas si ViewportsEnable está activado
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            SDL_GL_MakeCurrent(window.getSDLWindow(), window.getSDLContext()); // Asegúrate de usar el contexto correcto
+        }
 
         // Intercambia buffers
         window.swapBuffers();
