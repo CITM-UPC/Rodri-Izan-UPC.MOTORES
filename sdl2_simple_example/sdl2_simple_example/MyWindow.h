@@ -17,7 +17,15 @@ private:
     SDL_GLContext _ctx = nullptr;
     unsigned short _width = 800;
     unsigned short _height = 600;
+
     bool _imguiInitialized = false;
+
+    GLuint framebuffer = 0;
+    GLuint renderedTexture = 0;
+    GLuint depthRenderbuffer = 0;
+
+    int _viewportWidth = 0;
+    int _viewportHeight = 0;
 
     // Camera properties
     GLfloat cameraX = 0.0f;
@@ -50,6 +58,7 @@ public:
     glm::vec3 GetCameraPosition() const { return glm::vec3(cameraX, cameraY, cameraZ); }
     glm::vec3 GetTargetPosition() const { return glm::vec3(targetX, targetY, targetZ); }
 
+
     int width() const { return _width; }
     int height() const { return _height; }
     double aspect() const { return static_cast<double>(_width) / _height; }
@@ -67,6 +76,11 @@ public:
     bool isOpen() const { return _window; }
     void initImGui();
     void shutdownImGui();
+    void resizeFramebuffer(int width, int height);
+    void initFramebuffer(unsigned short width, unsigned short height);
+    GLuint getRenderedTexture() const;
+    void unbindFramebuffer();
+    void bindFramebuffer();
     bool processEvents(IEventProcessor* event_processor = nullptr);
     void swapBuffers();
 

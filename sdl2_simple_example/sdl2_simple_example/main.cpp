@@ -68,8 +68,13 @@ void drawGrid(float gridSize, int gridDivisions) {
 }
 
 void render(MyWindow& window, Importer* importer) {
+    // Enlazar el framebuffer antes de renderizar la escena
+    glBindFramebuffer(GL_FRAMEBUFFER, window.getRenderedTexture());
+    glViewport(0, 0, WINDOW_SIZE.x, WINDOW_SIZE.y);  // Ajusta el viewport al tamaño del framebuffer
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Configuración de proyección y vista como en tu renderizado normal
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0f, 1.0f, 0.1f, 100.0f);
@@ -77,16 +82,13 @@ void render(MyWindow& window, Importer* importer) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Get camera position from window
     auto camPos = window.GetCameraPosition();
     auto targetPos = window.GetTargetPosition();
-
-    gluLookAt(camPos.x, camPos.y, camPos.z,
-        targetPos.x, targetPos.y, targetPos.z,
-        0.0f, 1.0f, 0.0f);
+    gluLookAt(camPos.x, camPos.y, camPos.z, targetPos.x, targetPos.y, targetPos.z, 0.0f, 1.0f, 0.0f);
 
     drawGrid(10.0f, 20);
 
+    // Renderizado de objetos de la escena
     glPushMatrix();
     glTranslatef(0.0f, 0.0f, 0.0f);
     glScalef(0.1f, 0.1f, 0.1f);
@@ -112,13 +114,15 @@ void render(MyWindow& window, Importer* importer) {
     glPopMatrix();
     glFlush();
 
-
+    // Desenlazar el framebuffer para volver a dibujar en la pantalla principal
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
 
 int main(int argc, char** argv) {
     Importer importer;
     // Inicializa la ventana usando SDL
-    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);  // Pasar importer a MyWindow
+    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);  
 
     init_openGL();
 
@@ -140,11 +144,11 @@ int main(int argc, char** argv) {
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // Llamadas para manejar ventanas externas si ViewportsEnable está activado
+        // Si tienes configurado ConfigFlags para ViewportsEnable, asegúrate de actualizar las ventanas de plataforma
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
-            SDL_GL_MakeCurrent(window.getSDLWindow(), window.getSDLContext()); // Asegúrate de usar el contexto correcto
+            SDL_GL_MakeCurrent(window.getSDLWindow(), window.getSDLContext());  // Vuelve al contexto principal
         }
 
         // Intercambia buffers

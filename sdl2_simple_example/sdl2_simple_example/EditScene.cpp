@@ -9,11 +9,24 @@ void render(MyWindow& window, Importer* importer);
 
 EditScene::EditScene() : hierarchy(), inspector(), assets() {}
 
-
-
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer) {
     ImGui::Begin("Scene");
-    render(window, importer); 
+
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+
+    // Actualizar el framebuffer si es necesario
+    window.resizeFramebuffer(static_cast<int>(contentRegion.x),
+        static_cast<int>(contentRegion.y));
+
+    // Renderizar la escena en el framebuffer
+    window.bindFramebuffer();
+    render(window, importer);
+    window.unbindFramebuffer();
+
+    // Mostrar la textura renderizada
+    ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())),
+        contentRegion);
+
     ImGui::End();
 }
 
