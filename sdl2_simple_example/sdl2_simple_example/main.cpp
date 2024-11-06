@@ -14,8 +14,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-GLuint textureID;
+#include "GameObject.h"
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace std;
 using hrclock = chrono::high_resolution_clock;
@@ -37,7 +37,6 @@ static void init_openGL() {
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.5, 0.5, 0.5, 1.0);
 }
-
 
 void drawGrid(float gridSize, int gridDivisions) {
     float halfSize = gridSize * 0.5f;
@@ -61,7 +60,7 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-void render(MyWindow& window, Importer* importer) {
+void render(MyWindow& window, Importer* importer, const std::vector<RenderableGameObject>& gameObjects) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -81,29 +80,45 @@ void render(MyWindow& window, Importer* importer) {
 
     drawGrid(10.0f, 20);
 
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, 0.0f);
-    glScalef(0.1f, 0.1f, 0.1f);
-    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+    // Renderizar cada GameObject
+    for (const auto& gameObject : gameObjects) {
+        if (!gameObject.IsActive()) continue;
 
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, importer->GetTextureID());
+        glPushMatrix();
 
-    for (const auto& mesh : importer->GetMeshes()) {
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+        // Aplicar transformación del GameObject
+        glm::mat4 transform = gameObject.GetTransformMatrix();
+        glMultMatrixf(glm::value_ptr(transform));
 
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
+        // Activar textura si existe
+        if (gameObject.GetTextureID() != 0) {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, gameObject.GetTextureID());
+        }
 
-        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
+        // Renderizar la malla asociada
+        const auto& meshes = importer->GetMeshes();
+        if (gameObject.GetMeshIndex() >= 0 && gameObject.GetMeshIndex() < meshes.size()) {
+            const auto& mesh = meshes[gameObject.GetMeshIndex()];
 
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
+
+            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
+
+            glDisableClientState(GL_VERTEX_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
+
+        if (gameObject.GetTextureID() != 0) {
+            glDisable(GL_TEXTURE_2D);
+        }
+
+        glPopMatrix();
     }
-
-    glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
     glFlush();
 }
 
@@ -132,6 +147,17 @@ int main(int argc, char** argv) {
     //importer.ImportFBX(filefbx1);
     importer.ImportTexture(filetex);
 
+    // Crear GameObjects de ejemplo
+    std::vector<RenderableGameObject> gameObjects;
+
+    // Crear casa
+    RenderableGameObject house("House");
+    house.SetMeshIndex(0);
+    house.SetTextureID(importer.GetTextureID());
+    house.SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+    house.SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+    gameObjects.push_back(house);
+
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
         // Comienza un nuevo frame de ImGui
@@ -142,8 +168,8 @@ int main(int argc, char** argv) {
         // Renderiza la interfaz de usuario usando Dear ImGui
         RenderEditor();
 
-        // Renderiza la escena 3D
-        render(window, &importer);
+        // Renderizar la escena con GameObjects
+        render(window, &importer, gameObjects);
 
         // Renderiza los datos de Dear ImGui
         ImGui::Render();
