@@ -3,6 +3,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include <stdexcept>
+#include "GameObjectManager.h"
 
 MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height, Importer* importer)
     : importer(importer) {
@@ -336,13 +337,63 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
         case SDL_DROPFILE: {
             char* droppedFile = event.drop.file;
             printf("Archivo arrastrado: %s\n", droppedFile);
-            importer->ImportFBX(droppedFile);
+            HandleDroppedFile(droppedFile);
             SDL_free(droppedFile);
             break;
         }
         }
     }
     return true;
+}
+
+void MyWindow::HandleDroppedFile(const char* droppedFile) {
+    std::string fileExtension = std::string(droppedFile);
+    fileExtension = fileExtension.substr(fileExtension.find_last_of(".") + 1);
+
+    // Convertir a minúsculas para comparación
+    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
+
+    if (fileExtension == "fbx") {
+        // Importar el modelo
+        if (importer->ImportFBX(droppedFile)) {
+            // Obtener el nombre base del archivo sin extensión ni ruta
+            std::string fileName = std::string(droppedFile);
+            size_t lastSlash = fileName.find_last_of("/\\");
+            if (lastSlash != std::string::npos) {
+                fileName = fileName.substr(lastSlash + 1);
+            }
+            fileName = fileName.substr(0, fileName.find_last_of("."));
+
+            // Obtener el GameObjectManager
+            auto& manager = GameObjectManager::GetInstance();
+
+            // Crear GameObjects para cada malla importada
+            const auto& meshes = importer->GetMeshes();
+            for (size_t i = 0; i < meshes.size(); i++) {
+                std::string objName = fileName + "_Part_" + std::to_string(i);
+                auto* obj = manager.CreateGameObject<RenderableGameObject>(objName);
+
+                if (obj) {
+                    // Configurar el objeto
+                    obj->SetMeshIndex(i);
+
+                    // Si hay una textura asociada, establecerla
+                    GLuint textureId = importer->GetTextureID();
+                    if (textureId != 0) {
+                        obj->SetTextureID(textureId);
+                    }
+
+                    // Configurar transformaciones iniciales
+                    obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));  // Escala por defecto
+                    obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));  // Rotación por defecto
+                    obj->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));  // Posición inicial
+                }
+            }
+
+            // Opcional: Enfocar la cámara en el nuevo objeto
+            FocusOnObject();
+        }
+    }
 }
 
 void MyWindow::swapBuffers() {

@@ -52,6 +52,7 @@ private:
     void MoveCameraWithMouse(int xrel, int yrel);
     void RotateCamera(int xrel, int yrel);
     void FocusOnObject();
+    void HandleDroppedFile(const char* droppedFile);
 
 public:
     // Getters for camera properties
