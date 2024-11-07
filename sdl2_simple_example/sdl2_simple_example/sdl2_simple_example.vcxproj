@@ -134,7 +134,7 @@
     <ClCompile Include="Inspector.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyWindow.cpp" />
-    <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="Biblio.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hierarchy.h" />
@@ -142,7 +142,7 @@
     <ClInclude Include="EditScene.h" />
     <ClInclude Include="Inspector.h" />
     <ClInclude Include="MyWindow.h" />
-    <ClInclude Include="Transform.h" />
+    <ClInclude Include="Biblio.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -12,7 +12,7 @@ void Inspector::DrawInspectorWindow() {
     if (selectedGameObject != -1) {
         ImGui::Text("Properties of GameObject %d", selectedGameObject);
         ImGui::Checkbox("Active", &isActive);
-        if (ImGui::CollapsingHeader("Transform")) {
+        if (ImGui::CollapsingHeader("Biblio")) {
             static float position[3] = { 0.0f, 0.0f, 0.0f };
             static float rotation[3] = { 0.0f, 0.0f, 0.0f };
             static float scale[3] = { 1.0f, 1.0f, 1.0f };

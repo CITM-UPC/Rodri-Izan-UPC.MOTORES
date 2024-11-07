@@ -3,7 +3,7 @@
 #include "MyWindow.h"
 #include "Hierarchy.h"
 #include "Inspector.h"
-#include "Transform.h"
+#include "Biblio.h"
 
 class EditScene {
 public:
@@ -17,5 +17,5 @@ public:
 private:
     Hierarchy hierarchy;
     Inspector inspector;
-    Transform assets;
+    Biblio assets;
 };

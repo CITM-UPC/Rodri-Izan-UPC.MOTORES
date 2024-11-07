@@ -1,9 +1,9 @@
-#include "Transform.h"
+#include "Biblio.h"
 #include "imgui.h"
 
-Transform::Transform() {}
+Biblio::Biblio() {}
 
-void Transform::DrawTransformWindow() {
+void Biblio::DrawTransformWindow() {
     ImGui::Begin("Assets");
     if (ImGui::TreeNode("Textures")) {
         ImGui::Text("texture1.png");

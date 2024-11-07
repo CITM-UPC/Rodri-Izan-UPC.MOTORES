@@ -1,7 +1,7 @@
 #pragma once
 
-class Transform {
+class Biblio {
 public:
-    Transform();
+    Biblio();
     void DrawTransformWindow();
 };
