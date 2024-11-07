@@ -1,32 +1,49 @@
 #include "EditScene.h"
-#include "MyWindow.h" 
+#include "MyWindow.h"
 #include "Importer.h"
 #include "imgui.h"
-#include <SDL2/SDL_events.h>
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
 
+EditScene::EditScene() {
+    // Implementación del constructor
+}
 
-void render(MyWindow& window, Importer* importer); 
+void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*)) {
+    // Habilitar el docking global
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-EditScene::EditScene() : hierarchy(), inspector(), assets() {}
+    // Obtener el ID del viewport principal
+    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGuiID dockspace_id = main_viewport->ID;
 
-void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer) {
+    // Crear el espacio de anclaje
+    ImGui::DockSpaceOverViewport(dockspace_id);
+
+    // Renderizar las ventanas del editor
+    RenderSceneWindow(window, importer, renderSceneContent);
+    RenderInspectorWindow();
+    RenderHierarchyWindow();
+    RenderAssetsWindow();
+}
+
+void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*)) {
     ImGui::Begin("Scene");
-
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+    window.resizeFramebuffer(static_cast<int>(contentRegion.x), static_cast<int>(contentRegion.y));
 
-    // Actualizar el framebuffer si es necesario
-    window.resizeFramebuffer(static_cast<int>(contentRegion.x),
-        static_cast<int>(contentRegion.y));
-
-    // Renderizar la escena en el framebuffer
+    // Enlazar el framebuffer antes de renderizar la escena
     window.bindFramebuffer();
-    render(window, importer);
+
+    // Llamar a la función de renderizado
+    renderSceneContent(window, importer);
+
+    // Desenlazar el framebuffer para volver a dibujar en la pantalla principal
     window.unbindFramebuffer();
 
-    // Mostrar la textura renderizada
-    ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())),
-        contentRegion);
-
+    // Mostrar la textura renderizada en la ventana
+    ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())), contentRegion);
     ImGui::End();
 }
 

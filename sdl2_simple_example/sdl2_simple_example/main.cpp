@@ -27,7 +27,7 @@ using vec3 = glm::dvec3;
 
 static const ivec2 WINDOW_SIZE(720, 720);
 static const unsigned int FPS = 60;
-static const auto FRAME_DT = 1.0s / FPS;  
+static const auto FRAME_DT = 1.0s / FPS;
 
 const char* filefbx = "../Assets/BakerHouse.fbx";
 const char* filefbx1 = "../Assets/masterchief.fbx";
@@ -35,15 +35,12 @@ const char* filetex = "../Assets/Baker_house.png";
 
 EditScene editor;
 
-
-
 static void init_openGL() {
     glewInit();
     if (!GLEW_VERSION_3_0) throw exception("OpenGL 3.0 API is not available.");
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.5, 0.5, 0.5, 1.0);
 }
-
 
 void drawGrid(float gridSize, int gridDivisions) {
     float halfSize = gridSize * 0.5f;
@@ -67,11 +64,7 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-void render(MyWindow& window, Importer* importer) {
-    // Enlazar el framebuffer antes de renderizar la escena
-    glBindFramebuffer(GL_FRAMEBUFFER, window.getRenderedTexture());
-    glViewport(0, 0, WINDOW_SIZE.x, WINDOW_SIZE.y);  // Ajusta el viewport al tamaño del framebuffer
-
+void renderSceneContent(MyWindow& window, Importer* importer) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Configuración de proyección y vista como en tu renderizado normal
@@ -113,19 +106,13 @@ void render(MyWindow& window, Importer* importer) {
     glDisable(GL_TEXTURE_2D);
     glPopMatrix();
     glFlush();
-
-    // Desenlazar el framebuffer para volver a dibujar en la pantalla principal
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
 
 int main(int argc, char** argv) {
     Importer importer;
-    // Inicializa la ventana usando SDL
-    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);  
+    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);
 
     init_openGL();
-
     importer.Init();
     importer.ImportFBX(filefbx);
     importer.ImportTexture(filetex);
@@ -135,31 +122,23 @@ int main(int argc, char** argv) {
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        // Renderizar las ventanas de tu editor
-        editor.RenderSceneWindow(window, &importer);       // Ventana de la escena principal
-        editor.RenderInspectorWindow();                    // Ventana del inspector
-        editor.RenderHierarchyWindow();                    // Ventana de la jerarquía
-        editor.RenderAssetsWindow();                       // Ventana de assets o transformaciones
+        editor.RenderEditorWindows(window, &importer, renderSceneContent);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // Si tienes configurado ConfigFlags para ViewportsEnable, asegúrate de actualizar las ventanas de plataforma
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
-            SDL_GL_MakeCurrent(window.getSDLWindow(), window.getSDLContext());  // Vuelve al contexto principal
+            SDL_GL_MakeCurrent(window.getSDLWindow(), window.getSDLContext());
         }
 
-        // Intercambia buffers
         window.swapBuffers();
     }
 
-    // Limpieza de Dear ImGui
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
     return 0;
 }
-

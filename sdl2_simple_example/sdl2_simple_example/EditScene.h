@@ -8,7 +8,8 @@
 class EditScene {
 public:
     EditScene();
-    void RenderSceneWindow(MyWindow& window, Importer* importer);
+    void RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*));
+    void RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*));
     void RenderInspectorWindow();
     void RenderHierarchyWindow();
     void RenderAssetsWindow();
