@@ -4,12 +4,13 @@
 #include "Hierarchy.h"
 #include "Inspector.h"
 #include "Biblio.h"
+#include "GameObject.h"
 
 class EditScene {
 public:
     EditScene();
-    void RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*));
-    void RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*));
+    void RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects);
+    void RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects);
     void RenderInspectorWindow();
     void RenderHierarchyWindow();
     void RenderAssetsWindow();

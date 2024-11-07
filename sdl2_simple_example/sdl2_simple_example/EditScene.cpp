@@ -9,40 +9,29 @@ EditScene::EditScene() {
     // Implementación del constructor
 }
 
-void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*)) {
-    // Habilitar el docking global
+void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects) {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    // Obtener el ID del viewport principal
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     ImGuiID dockspace_id = main_viewport->ID;
-
-    // Crear el espacio de anclaje
     ImGui::DockSpaceOverViewport(dockspace_id);
 
-    // Renderizar las ventanas del editor
-    RenderSceneWindow(window, importer, renderSceneContent);
+    RenderSceneWindow(window, importer, renderSceneContent, gameObjects);
     RenderInspectorWindow();
     RenderHierarchyWindow();
     RenderAssetsWindow();
 }
 
-void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*)) {
+void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects) {
     ImGui::Begin("Scene");
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();
     window.resizeFramebuffer(static_cast<int>(contentRegion.x), static_cast<int>(contentRegion.y));
 
-    // Enlazar el framebuffer antes de renderizar la escena
     window.bindFramebuffer();
-
-    // Llamar a la función de renderizado
-    renderSceneContent(window, importer);
-
-    // Desenlazar el framebuffer para volver a dibujar en la pantalla principal
+    renderSceneContent(window, importer, gameObjects);
     window.unbindFramebuffer();
 
-    // Mostrar la textura renderizada en la ventana
     ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())), contentRegion);
     ImGui::End();
 }

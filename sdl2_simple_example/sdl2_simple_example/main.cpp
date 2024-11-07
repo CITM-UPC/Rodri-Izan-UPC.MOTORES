@@ -152,10 +152,7 @@ int main(int argc, char** argv) {
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        // Renderiza la interfaz de usuario usando Dear ImGui
-        RenderEditor();
 
-        // Renderizar la escena con GameObjects
 
         editor.RenderEditorWindows(window, &importer, renderSceneContent, gameObjects);
 
