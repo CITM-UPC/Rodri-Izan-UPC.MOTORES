@@ -150,13 +150,15 @@ int main(int argc, char** argv) {
     // Crear GameObjects de ejemplo
     std::vector<RenderableGameObject> gameObjects;
 
-    // Crear casa
-    RenderableGameObject house("House");
-    house.SetMeshIndex(0);
-    house.SetTextureID(importer.GetTextureID());
-    house.SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-    house.SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-    gameObjects.push_back(house);
+    const auto& meshes = importer.GetMeshes();
+    for (size_t i = 0; i < meshes.size(); i++) {
+        RenderableGameObject obj("House_Part_" + std::to_string(i));
+        obj.SetMeshIndex(i);
+        obj.SetTextureID(importer.GetTextureID());
+        obj.SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+        obj.SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+        gameObjects.push_back(obj);
+    }
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
