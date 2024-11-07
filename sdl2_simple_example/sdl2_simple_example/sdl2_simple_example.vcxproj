@@ -137,13 +137,6 @@
     <ClCompile Include="Biblio.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GameObject.h" />
-    <ClInclude Include="Importer.h" />
-    <ClInclude Include="EditScene.h" />
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MyWindow.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Transform.h" />
     <ClInclude Include="Hierarchy.h" />
     <ClInclude Include="Importer.h" />
     <ClInclude Include="EditScene.h" />
