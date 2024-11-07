@@ -45,7 +45,7 @@ public:
     //bool LoadTextureFromCustomFormat(const std::string& filePath); // Cargar textura desde formato personalizado
 
     // Getters para obtener información de las mallas y texturas cargadas
-    const std::vector<Mesh>& GetMeshes() const { return meshes; }   // Obtener mallas cargadas
+    const std::vector<Mesh>& GetMeshes() const { return meshes; }  // Obtener mallas cargadas
     const Texture& GetTexture() const { return texture; }           // Obtener textura cargada
     GLuint GetTextureID() const { return texture.textureID; }       // Obtener ID de textura para OpenGL
     bool ProcessMesh(aiMesh* mesh, const aiScene* scene); // Procesar una malla 
