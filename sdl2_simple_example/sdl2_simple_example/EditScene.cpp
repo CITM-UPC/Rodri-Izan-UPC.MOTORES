@@ -1,75 +1,55 @@
-// EditScene.cpp
 #include "EditScene.h"
+#include "MyWindow.h"
+#include "Importer.h"
 #include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
 
-// Definición de variables globales
-int selectedGameObject = -1;
-bool isActive = true;
-
-void DrawHierarchyWindow() {
-    if (ImGui::Begin("Hierarchy")) { 
-        if (ImGui::TreeNodeEx("GameObject 1", ImGuiTreeNodeFlags_DefaultOpen)) {
-            if (ImGui::IsItemClicked()) {
-                selectedGameObject = 1;
-            }
-            if (ImGui::TreeNode("Child 1")) {
-                if (ImGui::IsItemClicked()) {
-                    selectedGameObject = 2;
-                }
-                ImGui::TreePop();
-            }
-            ImGui::TreePop();
-        }
-        ImGui::End();
-    }
+EditScene::EditScene() {
+    // Implementación del constructor
 }
 
+void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-void DrawInspectorWindow() {
+    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGuiID dockspace_id = main_viewport->ID;
+    ImGui::DockSpaceOverViewport(dockspace_id);
+
+    RenderSceneWindow(window, importer, renderSceneContent, gameObjects);
+    RenderInspectorWindow();
+    RenderHierarchyWindow();
+    RenderAssetsWindow();
+}
+
+void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects) {
+    ImGui::Begin("Scene");
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+    window.resizeFramebuffer(static_cast<int>(contentRegion.x), static_cast<int>(contentRegion.y));
+
+    window.bindFramebuffer();
+    renderSceneContent(window, importer, gameObjects);
+    window.unbindFramebuffer();
+
+    ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())), contentRegion);
+    ImGui::End();
+}
+
+void EditScene::RenderInspectorWindow() {
     ImGui::Begin("Inspector");
-    if (selectedGameObject != -1) {
-        ImGui::Text("Properties of GameObject %d", selectedGameObject);
-        ImGui::Checkbox("Active", &isActive);
-        if (ImGui::CollapsingHeader("Transform")) {
-            ImGui::DragFloat3("Position", new float[3] {0.0f, 0.0f, 0.0f});
-            ImGui::DragFloat3("Rotation", new float[3] {0.0f, 0.0f, 0.0f});
-            ImGui::DragFloat3("Scale", new float[3] {1.0f, 1.0f, 1.0f});
-        }
-        if (ImGui::CollapsingHeader("Mesh")) {
-            ImGui::Text("Mesh properties here");
-        }
-        if (ImGui::CollapsingHeader("Material")) {
-            ImGui::Text("Material properties here");
-        }
-    }
-    else {
-        ImGui::Text("Select a GameObject to see details.");
-    }
+    inspector.DrawInspectorWindow();
     ImGui::End();
 }
 
-void DrawAssetWindow() {
+void EditScene::RenderHierarchyWindow() {
+    ImGui::Begin("Hierarchy");
+    hierarchy.DrawHierarchyWindow();
+    ImGui::End();
+}
+
+void EditScene::RenderAssetsWindow() {
     ImGui::Begin("Assets");
-    if (ImGui::TreeNode("Textures")) {
-        ImGui::Text("texture1.png");
-        ImGui::Text("texture2.jpg");
-        ImGui::TreePop();
-    }
-    if (ImGui::TreeNode("Scripts")) {
-        ImGui::Text("PlayerController.cs");
-        ImGui::Text("EnemyAI.cs");
-        ImGui::TreePop();
-    }
-    if (ImGui::TreeNode("Prefabs")) {
-        ImGui::Text("Player.prefab");
-        ImGui::Text("Enemy.prefab");
-        ImGui::TreePop();
-    }
+    assets.DrawTransformWindow();
     ImGui::End();
-}
-
-void RenderEditor() {
-    DrawHierarchyWindow();
-    DrawInspectorWindow();
-    DrawAssetWindow();
 }

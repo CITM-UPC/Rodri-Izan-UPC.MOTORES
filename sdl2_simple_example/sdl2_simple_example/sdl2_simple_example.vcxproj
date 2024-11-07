@@ -128,15 +128,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Hierarchy.cpp" />
     <ClCompile Include="Importer.cpp" />
     <ClCompile Include="EditScene.cpp" />
+    <ClCompile Include="Inspector.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyWindow.cpp" />
+    <ClCompile Include="Biblio.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Hierarchy.h" />
     <ClInclude Include="Importer.h" />
     <ClInclude Include="EditScene.h" />
+    <ClInclude Include="Inspector.h" />
     <ClInclude Include="MyWindow.h" />
+    <ClInclude Include="Biblio.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

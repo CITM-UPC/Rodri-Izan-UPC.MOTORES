@@ -1,17 +1,22 @@
 #pragma once
-// EditScene.h
-#ifndef EDIT_SCENE_H
-#define EDIT_SCENE_H
+#include "Importer.h"
+#include "MyWindow.h"
+#include "Hierarchy.h"
+#include "Inspector.h"
+#include "Biblio.h"
+#include "GameObject.h"
 
-// Declaraciones de variables globales
-extern int selectedGameObject;
-extern bool isActive;
+class EditScene {
+public:
+    EditScene();
+    void RenderEditorWindows(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects);
+    void RenderSceneWindow(MyWindow& window, Importer* importer, void(*renderSceneContent)(MyWindow&, Importer*, const std::vector<RenderableGameObject>&), const std::vector<RenderableGameObject>& gameObjects);
+    void RenderInspectorWindow();
+    void RenderHierarchyWindow();
+    void RenderAssetsWindow();
 
-// Declaraciones de funciones
-void DrawHierarchyWindow();
-void DrawInspectorWindow();
-void DrawAssetWindow();
-void RenderEditor();
-
-#endif // EDIT_SCENE_H
-
+private:
+    Hierarchy hierarchy;
+    Inspector inspector;
+    Biblio assets;
+};

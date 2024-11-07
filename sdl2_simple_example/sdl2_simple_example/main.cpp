@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include "MyWindow.h"
 #include "Importer.h"
+#include "Biblio.h"
+#include "Hierarchy.h"
 #include <imgui_impl_sdl2.h>
 #include "EditScene.h"
 #include "imgui.h"
@@ -14,8 +16,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-GLuint textureID;
+#include "GameObject.h"
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace std;
 using hrclock = chrono::high_resolution_clock;
@@ -23,13 +25,15 @@ using u8vec4 = glm::u8vec4;
 using ivec2 = glm::ivec2;
 using vec3 = glm::dvec3;
 
-static const ivec2 WINDOW_SIZE(1024, 1024);
+static const ivec2 WINDOW_SIZE(720, 720);
 static const unsigned int FPS = 60;
-static const auto FRAME_DT = 1.0s / FPS;  
+static const auto FRAME_DT = 1.0s / FPS;
 
 const char* filefbx = "../Assets/BakerHouse.fbx";
 const char* filefbx1 = "../Assets/masterchief.fbx";
 const char* filetex = "../Assets/Baker_house.png";
+
+EditScene editor;
 
 static void init_openGL() {
     glewInit();
@@ -37,7 +41,6 @@ static void init_openGL() {
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.5, 0.5, 0.5, 1.0);
 }
-
 
 void drawGrid(float gridSize, int gridDivisions) {
     float halfSize = gridSize * 0.5f;
@@ -61,9 +64,11 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-void render(MyWindow& window, Importer* importer) {
+
+void renderSceneContent(MyWindow& window, Importer* importer, const std::vector<RenderableGameObject>& gameObjects) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Configuración de proyección y vista como en tu renderizado normal
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0f, 1.0f, 0.1f, 100.0f);
@@ -71,93 +76,101 @@ void render(MyWindow& window, Importer* importer) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Get camera position from window
     auto camPos = window.GetCameraPosition();
     auto targetPos = window.GetTargetPosition();
-
-    gluLookAt(camPos.x, camPos.y, camPos.z,
-        targetPos.x, targetPos.y, targetPos.z,
-        0.0f, 1.0f, 0.0f);
+    gluLookAt(camPos.x, camPos.y, camPos.z, targetPos.x, targetPos.y, targetPos.z, 0.0f, 1.0f, 0.0f);
 
     drawGrid(10.0f, 20);
 
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, 0.0f);
-    glScalef(0.1f, 0.1f, 0.1f);
-    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+    // Renderizar cada GameObject
+    for (const auto& gameObject : gameObjects) {
+        if (!gameObject.IsActive()) continue;
 
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, importer->GetTextureID());
+        glPushMatrix();
 
-    for (const auto& mesh : importer->GetMeshes()) {
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+        // Aplicar transformación del GameObject
+        glm::mat4 transform = gameObject.GetTransformMatrix();
+        glMultMatrixf(glm::value_ptr(transform));
 
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
+        // Activar textura si existe
+        if (gameObject.GetTextureID() != 0) {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, gameObject.GetTextureID());
+        }
 
-        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
+        // Renderizar la malla asociada
+        const auto& meshes = importer->GetMeshes();
+        if (gameObject.GetMeshIndex() >= 0 && gameObject.GetMeshIndex() < meshes.size()) {
+            const auto& mesh = meshes[gameObject.GetMeshIndex()];
 
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
+
+            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
+
+            glDisableClientState(GL_VERTEX_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
+
+        if (gameObject.GetTextureID() != 0) {
+            glDisable(GL_TEXTURE_2D);
+        }
+
+        glPopMatrix();
     }
-
-    glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
     glFlush();
 }
 
 int main(int argc, char** argv) {
-    Importer importer;  
-    // Inicializa la ventana usando SDL
-    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);  // Pasar importer a MyWindow
+    Importer importer;
+    MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);
 
-    // Inicializa OpenGL
     init_openGL();
-
-    // Crear el contexto de Dear ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-
-    // Configurar estilo de Dear ImGui
-    ImGui::StyleColorsDark();
-
-    // Inicializar el backend de SDL y OpenGL para Dear ImGui
-    ImGui_ImplSDL2_InitForOpenGL(window.getSDLWindow(), window.contextPtr());
-    ImGui_ImplOpenGL3_Init("#version 130"); // Asegúrate de que la versión de OpenGL sea la adecuada
-
-    // Inicializar el Importer
     importer.Init();
     importer.ImportFBX(filefbx);
-    //importer.ImportFBX(filefbx1);
     importer.ImportTexture(filetex);
+
+    // Crear GameObjects de ejemplo
+    std::vector<RenderableGameObject> gameObjects;
+
+    const auto& meshes = importer.GetMeshes();
+    for (size_t i = 0; i < meshes.size(); i++) {
+        RenderableGameObject obj("House_Part_" + std::to_string(i));
+        obj.SetMeshIndex(i);
+        obj.SetTextureID(importer.GetTextureID());
+        obj.SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+        obj.SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+        gameObjects.push_back(obj);
+    }
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
-        // Comienza un nuevo frame de ImGui
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();  // Pasa la ventana de SDL
+        ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        // Renderiza la interfaz de usuario usando Dear ImGui
-        RenderEditor();
 
-        // Renderiza la escena 3D
-        render(window, &importer);
 
-        // Renderiza los datos de Dear ImGui
+        editor.RenderEditorWindows(window, &importer, renderSceneContent, gameObjects);
+
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // Intercambia buffers
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            SDL_GL_MakeCurrent(window.getSDLWindow(), window.getSDLContext());
+        }
+
         window.swapBuffers();
     }
 
-    // Limpieza de Dear ImGui
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
     return 0;
 }
-
