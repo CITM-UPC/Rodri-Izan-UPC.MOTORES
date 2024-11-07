@@ -4,50 +4,36 @@
 #include "imgui_impl_opengl3.h"
 #include <stdexcept>
 
-
 MyWindow::MyWindow(const char* title, unsigned short width, unsigned short height, Importer* importer)
-    : importer(importer) {  
+    : importer(importer) {
     open(title, width, height);
-}
-
-MyWindow::~MyWindow() {
-    if (_imguiInitialized) {
-        shutdownImGui();
-    }
-    close();
-}
-
-void MyWindow::open(const char* title, unsigned short width, unsigned short height) {
-    if (_window) return;
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-    _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if (!_window) throw std::runtime_error(SDL_GetError());
-
-    _ctx = SDL_GL_CreateContext(_window);
-    if (!_ctx) throw std::runtime_error(SDL_GetError());
-
-    if (SDL_GL_MakeCurrent(_window, _ctx) != 0)
-        throw std::runtime_error(SDL_GetError());
-
-    if (SDL_GL_SetSwapInterval(1) != 0)
-        throw std::runtime_error(SDL_GetError());
 }
 
 void MyWindow::initImGui() {
     if (_imguiInitialized) return;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
     ImGui_ImplSDL2_InitForOpenGL(_window, _ctx);
     ImGui_ImplOpenGL3_Init("#version 130");
     _imguiInitialized = true;
+}
+
+MyWindow::~MyWindow() {
+    if (_imguiInitialized) {
+        shutdownImGui();
+    }
+
+    if (framebuffer) {
+        glDeleteFramebuffers(1, &framebuffer);
+        glDeleteTextures(1, &renderedTexture);
+        glDeleteRenderbuffers(1, &depthRenderbuffer);
+    }
+
+    close();
 }
 
 void MyWindow::shutdownImGui() {
@@ -58,7 +44,96 @@ void MyWindow::shutdownImGui() {
     _imguiInitialized = false;
 }
 
+void MyWindow::initFramebuffer(unsigned short width, unsigned short height) {
+    _viewportWidth = width;
+    _viewportHeight = height;
+
+    // Si ya existe un framebuffer, lo eliminamos
+    if (framebuffer) {
+        glDeleteFramebuffers(1, &framebuffer);
+        glDeleteTextures(1, &renderedTexture);
+        glDeleteRenderbuffers(1, &depthRenderbuffer);
+    }
+
+    // Crear el framebuffer
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    // Crear la textura a la que renderizaremos
+    glGenTextures(1, &renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Crear un renderbuffer para el buffer de profundidad
+    glGenRenderbuffers(1, &depthRenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer);
+
+    // Adjuntar la textura al framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Error: El framebuffer no está completo.");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void MyWindow::resizeFramebuffer(int width, int height) {
+    if (width != _viewportWidth || height != _viewportHeight) {
+        initFramebuffer(width, height);
+    }
+}
+
+
+GLuint MyWindow::getRenderedTexture() const {
+    return renderedTexture;
+}
+
+void MyWindow::bindFramebuffer() {
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glViewport(0, 0, _width, _height);  // Ajusta el viewport al tamaño del framebuffer
+}
+
+void MyWindow::unbindFramebuffer() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);  // Vuelve a renderizar en el framebuffer por defecto
+}
+
+void MyWindow::open(const char* title, unsigned short width, unsigned short height) {
+    if (_window) return;
+
+    // Configurar atributos de OpenGL antes de crear la ventana
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    // Crear la ventana
+    _window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if (!_window) throw std::runtime_error(SDL_GetError());
+
+    // Crear el contexto OpenGL
+    _ctx = SDL_GL_CreateContext(_window);
+    if (!_ctx) throw std::runtime_error(SDL_GetError());
+
+    if (SDL_GL_MakeCurrent(_window, _ctx) != 0)
+        throw std::runtime_error(SDL_GetError());
+
+    if (SDL_GL_SetSwapInterval(1) != 0)
+        throw std::runtime_error(SDL_GetError());
+
+   
+    initImGui();
+}
+
 void MyWindow::close() {
+    shutdownImGui();
     if (_ctx) {
         SDL_GL_DeleteContext(_ctx);
         _ctx = nullptr;
@@ -101,7 +176,6 @@ void MyWindow::MoveCamera(const Uint8* keystate) {
         targetY -= forward.y * adjustedSpeed;
         targetZ -= forward.z * adjustedSpeed;
     }
-
 
     if (keystate[SDL_SCANCODE_D]) {
         cameraX -= right.x * adjustedSpeed;
@@ -198,11 +272,25 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
         case SDL_QUIT:
             return false;
 
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                _width = event.window.data1;
+                _height = event.window.data2;
+                resizeFramebuffer(_width, _height);
+            }
+            break;
+
         case SDL_KEYDOWN:
             if (event.key.keysym.sym == SDLK_f) {
                 FocusOnObject();
             }
             break;
+        //case SDL_WINDOWEVENT_RESIZED: {
+        //    int newWidth = event.window.data1;
+        //    int newHeight = event.window.data2;
+        //    glViewport(0, 0, newWidth, newHeight);
+        //    break;
+        //}
 
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
@@ -246,14 +334,10 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             break;
 
         case SDL_DROPFILE: {
-
             char* droppedFile = event.drop.file;
             printf("Archivo arrastrado: %s\n", droppedFile);
-
             importer->ImportFBX(droppedFile);
-
             SDL_free(droppedFile);
-
             break;
         }
         }

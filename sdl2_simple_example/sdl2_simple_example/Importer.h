@@ -48,12 +48,13 @@ public:
     const std::vector<Mesh>& GetMeshes() const { return meshes; }  // Obtener mallas cargadas
     const Texture& GetTexture() const { return texture; }           // Obtener textura cargada
     GLuint GetTextureID() const { return texture.textureID; }       // Obtener ID de textura para OpenGL
+    bool ProcessMesh(aiMesh* mesh, const aiScene* scene); // Procesar una malla 
 
 private:
     // Funciones internas
     bool CreateRequiredDirectories();                     // Crear directorios requeridos para guardar recursos
     bool ProcessNode(aiNode* node, const aiScene* scene); // Procesar un nodo de la escena 
-    bool ProcessMesh(aiMesh* mesh, const aiScene* scene); // Procesar una malla 
+
 
 
     std::vector<Mesh> meshes;       
