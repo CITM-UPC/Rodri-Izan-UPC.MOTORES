@@ -377,12 +377,6 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
                     // Configurar el objeto
                     obj->SetMeshIndex(i);
 
-                    // Si hay una textura asociada, establecerla
-                    GLuint textureId = importer->GetTextureID();
-                    if (textureId != 0) {
-                        obj->SetTextureID(textureId);
-                    }
-
                     // Configurar transformaciones iniciales
                     obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));  // Escala por defecto
                     obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));  // Rotación por defecto
@@ -392,6 +386,18 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
 
             // Opcional: Enfocar la cámara en el nuevo objeto
             FocusOnObject();
+        }
+    }
+    else if (fileExtension == "png" || fileExtension == "dds") {  // Corregido el operador lógico de && a ||
+        if (importer->ImportTexture(droppedFile)) {
+            auto& manager = GameObjectManager::GetInstance();
+            auto objects = manager.GetGameObjectsOfType<RenderableGameObject>();
+
+            if (!objects.empty()) {
+                // Obtener el último objeto renderable creado
+                RenderableGameObject* lastObject = objects.back();
+                lastObject->SetTextureID(importer->GetTextureID());
+            }
         }
     }
 }
