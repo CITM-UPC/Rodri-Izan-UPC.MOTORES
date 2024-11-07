@@ -5,8 +5,6 @@ Inspector::Inspector() : selectedGameObject(-1), isActive(true) {}
 
 void Inspector::DrawInspectorWindow() {
 
-    // TEMPORAL
-    ImGui::ShowDemoWindow();
 
     ImGui::Begin("Inspector");
     if (selectedGameObject != -1) {
