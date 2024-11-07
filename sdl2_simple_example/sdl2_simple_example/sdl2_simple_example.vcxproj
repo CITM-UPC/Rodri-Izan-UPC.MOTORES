@@ -137,6 +137,8 @@
     <ClCompile Include="Biblio.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Hierarchy.h" />
     <ClInclude Include="Importer.h" />
     <ClInclude Include="EditScene.h" />

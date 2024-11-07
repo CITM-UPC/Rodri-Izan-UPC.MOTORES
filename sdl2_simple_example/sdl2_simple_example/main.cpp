@@ -16,8 +16,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "GameObject.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "GameObjectManager.h"
 
 using namespace std;
 using hrclock = chrono::high_resolution_clock;
@@ -65,10 +65,10 @@ void drawGrid(float gridSize, int gridDivisions) {
 }
 
 
-void renderSceneContent(MyWindow& window, Importer* importer, const std::vector<RenderableGameObject>& gameObjects) {
+void renderSceneContent(MyWindow& window, Importer* importer) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Configuración de proyección y vista como en tu renderizado normal
+    // Configuración de proyección y vista
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0f, 1.0f, 0.1f, 100.0f);
@@ -82,26 +82,30 @@ void renderSceneContent(MyWindow& window, Importer* importer, const std::vector<
 
     drawGrid(10.0f, 20);
 
+    // Obtener los objetos renderizables del manager
+    auto& manager = GameObjectManager::GetInstance();
+    auto renderableObjects = manager.GetGameObjectsOfType<RenderableGameObject>();
+
     // Renderizar cada GameObject
-    for (const auto& gameObject : gameObjects) {
-        if (!gameObject.IsActive()) continue;
+    for (const auto* gameObject : renderableObjects) {
+        if (!gameObject->IsActive()) continue;
 
         glPushMatrix();
 
         // Aplicar transformación del GameObject
-        glm::mat4 transform = gameObject.GetTransformMatrix();
+        glm::mat4 transform = gameObject->GetTransformMatrix();
         glMultMatrixf(glm::value_ptr(transform));
 
         // Activar textura si existe
-        if (gameObject.GetTextureID() != 0) {
+        if (gameObject->GetTextureID() != 0) {
             glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, gameObject.GetTextureID());
+            glBindTexture(GL_TEXTURE_2D, gameObject->GetTextureID());
         }
 
         // Renderizar la malla asociada
         const auto& meshes = importer->GetMeshes();
-        if (gameObject.GetMeshIndex() >= 0 && gameObject.GetMeshIndex() < meshes.size()) {
-            const auto& mesh = meshes[gameObject.GetMeshIndex()];
+        if (gameObject->GetMeshIndex() >= 0 && gameObject->GetMeshIndex() < meshes.size()) {
+            const auto& mesh = meshes[gameObject->GetMeshIndex()];
 
             glEnableClientState(GL_VERTEX_ARRAY);
             glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
@@ -115,7 +119,7 @@ void renderSceneContent(MyWindow& window, Importer* importer, const std::vector<
             glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         }
 
-        if (gameObject.GetTextureID() != 0) {
+        if (gameObject->GetTextureID() != 0) {
             glDisable(GL_TEXTURE_2D);
         }
 
@@ -134,18 +138,17 @@ int main(int argc, char** argv) {
     importer.ImportTexture(filetex);
 
     // Crear GameObjects de ejemplo
-    std::vector<RenderableGameObject> gameObjects;
+    auto& manager = GameObjectManager::GetInstance();
 
+    // Crear objetos renderizables
     const auto& meshes = importer.GetMeshes();
     for (size_t i = 0; i < meshes.size(); i++) {
-        RenderableGameObject obj("House_Part_" + std::to_string(i));
-        obj.SetMeshIndex(i);
-        obj.SetTextureID(importer.GetTextureID());
-        obj.SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-        obj.SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-        gameObjects.push_back(obj);
+        auto* obj = manager.CreateGameObject<RenderableGameObject>("House_Part_" + std::to_string(i));
+        obj->SetMeshIndex(i);
+        obj->SetTextureID(importer.GetTextureID());
+        obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+        obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
     }
-
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
         ImGui_ImplOpenGL3_NewFrame();
@@ -154,7 +157,7 @@ int main(int argc, char** argv) {
 
 
 
-        editor.RenderEditorWindows(window, &importer, renderSceneContent, gameObjects);
+        editor.RenderEditorWindows(window, &importer, renderSceneContent);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
