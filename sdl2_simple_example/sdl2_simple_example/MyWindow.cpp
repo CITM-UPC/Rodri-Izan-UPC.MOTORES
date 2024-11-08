@@ -250,7 +250,7 @@ void MyWindow::FocusOnObject() {
     targetY = 0.0f;
     targetZ = 0.0f;
     orbitAngleHorizontal = 0.0f;
-    orbitAngleVertical = 30.0f;
+    orbitAngleVertical = -30.0f;
     RotateCamera(0, 0);
 }
 
@@ -286,12 +286,6 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
                 FocusOnObject();
             }
             break;
-        //case SDL_WINDOWEVENT_RESIZED: {
-        //    int newWidth = event.window.data1;
-        //    int newHeight = event.window.data2;
-        //    glViewport(0, 0, newWidth, newHeight);
-        //    break;
-        //}
 
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
@@ -349,27 +343,22 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 void MyWindow::HandleDroppedFile(const char* droppedFile) {
     std::string fileExtension = std::string(droppedFile);
     fileExtension = fileExtension.substr(fileExtension.find_last_of(".") + 1);
-
     // Convertir a minúsculas para comparación
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
-
     if (fileExtension == "fbx") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
             // Obtener el GameObjectManager
             auto& manager = GameObjectManager::GetInstance();
-
             // Crear un único objeto renderizable para todas las mallas
             auto* obj = manager.CreateGameObject<RenderableGameObject>("Empty");
             const auto& meshes = importer->GetMeshes();
             for (size_t i = 0; i < meshes.size(); i++) {
                 obj->SetMeshIndex(i);
             }
-
             obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
             obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
             obj->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-
             // Opcional: Enfocar la cámara en el nuevo objeto
             FocusOnObject();
         }
@@ -377,12 +366,14 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     else if (fileExtension == "png" || fileExtension == "dds") {
         if (importer->ImportTexture(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();
-            auto objects = manager.GetGameObjectsOfType<RenderableGameObject>();
-
-            if (!objects.empty()) {
-                // Obtener el último objeto renderizable creado
-                RenderableGameObject* lastObject = objects.back();
-                lastObject->SetTextureID(importer->GetTextureID());
+            // Obtener el GameObject seleccionado
+            GameObject* selectedGameObject = manager.GetSelectedGameObject();
+            if (selectedGameObject) {
+                // Comprobar si el GameObject seleccionado es de tipo RenderableGameObject
+                if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
+                    // Asignar la textura al objeto renderizable seleccionado
+                    renderableObj->SetTextureID(importer->GetTextureID());
+                }
             }
         }
     }
