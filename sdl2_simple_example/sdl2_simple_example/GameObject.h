@@ -55,15 +55,22 @@ protected:
 class RenderableGameObject : public GameObject {
 public:
     RenderableGameObject(const std::string& name = "RenderableGameObject")
-        : GameObject(name), m_meshIndex(-1), m_textureID(0) {}
+        : GameObject(name), m_textureID(0) {}
 
-    void SetMeshIndex(int index) { m_meshIndex = index; }
+    void SetMeshIndex(int index) {
+        m_meshIndices.push_back(index);
+    }
     void SetTextureID(GLuint textureID) { m_textureID = textureID; }
 
-    int GetMeshIndex() const { return m_meshIndex; }
-    GLuint GetTextureID() const { return m_textureID; }
+    const std::vector<int>& GetMeshIndices() const {
+        return m_meshIndices;
+    }
+
+    GLuint GetTextureID() const {
+        return m_textureID;
+    }
 
 private:
-    int m_meshIndex;      // Índice de la malla en el Importer
+    std::vector<int> m_meshIndices;   // Índice de la malla en el Importer
     GLuint m_textureID;   // ID de la textura
 };

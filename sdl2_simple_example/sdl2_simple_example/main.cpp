@@ -86,7 +86,6 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     auto& manager = GameObjectManager::GetInstance();
     auto renderableObjects = manager.GetGameObjectsOfType<RenderableGameObject>();
 
-    // Renderizar cada GameObject
     for (const auto* gameObject : renderableObjects) {
         if (!gameObject->IsActive()) continue;
 
@@ -102,21 +101,23 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
             glBindTexture(GL_TEXTURE_2D, gameObject->GetTextureID());
         }
 
-        // Renderizar la malla asociada
+        // Renderizar todas las mallas asociadas
         const auto& meshes = importer->GetMeshes();
-        if (gameObject->GetMeshIndex() >= 0 && gameObject->GetMeshIndex() < meshes.size()) {
-            const auto& mesh = meshes[gameObject->GetMeshIndex()];
+        for (int meshIndex : gameObject->GetMeshIndices()) {
+            if (meshIndex >= 0 && meshIndex < meshes.size()) {
+                const auto& mesh = meshes[meshIndex];
 
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
 
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
 
-            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
+                glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
 
-            glDisableClientState(GL_VERTEX_ARRAY);
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+                glDisableClientState(GL_VERTEX_ARRAY);
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            }
         }
 
         if (gameObject->GetTextureID() != 0) {
@@ -140,22 +141,21 @@ int main(int argc, char** argv) {
     // Crear GameObjects de ejemplo
     auto& manager = GameObjectManager::GetInstance();
 
-    // Crear objetos renderizables
+    // Crear un único objeto renderizable para todas las mallas
+    auto* obj = manager.CreateGameObject<RenderableGameObject>("Chuchu_House");
     const auto& meshes = importer.GetMeshes();
     for (size_t i = 0; i < meshes.size(); i++) {
-        auto* obj = manager.CreateGameObject<RenderableGameObject>("House_Part_" + std::to_string(i));
         obj->SetMeshIndex(i);
-        obj->SetTextureID(importer.GetTextureID());
-        obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-        obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
     }
+    obj->SetTextureID(importer.GetTextureID());
+    obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+    obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-
-
 
         editor.RenderEditorWindows(window, &importer, renderSceneContent);
 

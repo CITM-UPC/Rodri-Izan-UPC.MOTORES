@@ -356,51 +356,38 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     if (fileExtension == "fbx") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
-            // Obtener el nombre base del archivo sin extensión ni ruta
-            std::string fileName = std::string(droppedFile);
-            size_t lastSlash = fileName.find_last_of("/\\");
-            if (lastSlash != std::string::npos) {
-                fileName = fileName.substr(lastSlash + 1);
-            }
-            fileName = fileName.substr(0, fileName.find_last_of("."));
-
             // Obtener el GameObjectManager
             auto& manager = GameObjectManager::GetInstance();
 
-            // Crear GameObjects para cada malla importada
+            // Crear un único objeto renderizable para todas las mallas
+            auto* obj = manager.CreateGameObject<RenderableGameObject>("Empty");
             const auto& meshes = importer->GetMeshes();
             for (size_t i = 0; i < meshes.size(); i++) {
-                std::string objName = fileName + "_Part_" + std::to_string(i);
-                auto* obj = manager.CreateGameObject<RenderableGameObject>(objName);
-
-                if (obj) {
-                    // Configurar el objeto
-                    obj->SetMeshIndex(i);
-
-                    // Configurar transformaciones iniciales
-                    obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));  // Escala por defecto
-                    obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));  // Rotación por defecto
-                    obj->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));  // Posición inicial
-                }
+                obj->SetMeshIndex(i);
             }
+
+            obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+            obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+            obj->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 
             // Opcional: Enfocar la cámara en el nuevo objeto
             FocusOnObject();
         }
     }
-    else if (fileExtension == "png" || fileExtension == "dds") {  // Corregido el operador lógico de && a ||
+    else if (fileExtension == "png" || fileExtension == "dds") {
         if (importer->ImportTexture(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();
             auto objects = manager.GetGameObjectsOfType<RenderableGameObject>();
 
             if (!objects.empty()) {
-                // Obtener el último objeto renderable creado
+                // Obtener el último objeto renderizable creado
                 RenderableGameObject* lastObject = objects.back();
                 lastObject->SetTextureID(importer->GetTextureID());
             }
         }
     }
 }
+
 
 void MyWindow::swapBuffers() {
     SDL_GL_SwapWindow(_window);
