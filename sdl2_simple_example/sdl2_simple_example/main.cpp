@@ -171,9 +171,6 @@ int main(int argc, char** argv) {
         window.swapBuffers();
     }
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
 
     return 0;
 }

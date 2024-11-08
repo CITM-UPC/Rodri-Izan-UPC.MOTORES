@@ -10,6 +10,8 @@ MyWindow::MyWindow(const char* title, unsigned short width, unsigned short heigh
     open(title, width, height);
 }
 
+
+
 void MyWindow::initImGui() {
     if (_imguiInitialized) return;
     IMGUI_CHECKVERSION();
@@ -271,12 +273,19 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 
         switch (event.type) {
         case SDL_QUIT:
+            close();
             return false;
 
         case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
                 _width = event.window.data1;
                 _height = event.window.data2;
+                resizeFramebuffer(_width, _height);
+            }
+            else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+                unbindFramebuffer();
+            }
+            else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
                 resizeFramebuffer(_width, _height);
             }
             break;
