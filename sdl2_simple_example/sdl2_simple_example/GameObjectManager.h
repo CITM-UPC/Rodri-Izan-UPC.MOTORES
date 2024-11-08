@@ -87,9 +87,17 @@ public:
         m_nextId = 0;
     }
 
+    GameObject* GetSelectedGameObject() {
+        return m_selectedGameObject;
+    }
+
+    void SetSelectedGameObject(GameObject* gameObject) {
+        m_selectedGameObject = gameObject;
+    }
+
 private:
     GameObjectManager() : m_nextId(0) {}
-
+    GameObject* m_selectedGameObject = nullptr;
     std::unordered_map<size_t, std::unique_ptr<GameObject>> m_gameObjects;
     std::unordered_map<std::string, size_t> m_objectIds;
     size_t m_nextId;

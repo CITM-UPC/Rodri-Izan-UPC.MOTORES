@@ -1,32 +1,40 @@
 #include "Inspector.h"
+#include "GameObjectManager.h"
 #include "imgui.h"
 
-Inspector::Inspector() : selectedGameObject(-1), isActive(true) {}
+Inspector::Inspector() {}
 
 void Inspector::DrawInspectorWindow() {
-
-
     ImGui::Begin("Inspector");
-    if (selectedGameObject != -1) {
-        ImGui::Text("Properties of GameObject %d", selectedGameObject);
-        ImGui::Checkbox("Active", &isActive);
-        if (ImGui::CollapsingHeader("Biblio")) {
-            static float position[3] = { 0.0f, 0.0f, 0.0f };
-            static float rotation[3] = { 0.0f, 0.0f, 0.0f };
-            static float scale[3] = { 1.0f, 1.0f, 1.0f };
-            ImGui::DragFloat3("Position", position);
-            ImGui::DragFloat3("Rotation", rotation);
-            ImGui::DragFloat3("Scale", scale);
+
+    auto& gameObjectManager = GameObjectManager::GetInstance();
+    GameObject* selectedGameObject = gameObjectManager.GetSelectedGameObject();
+
+    if (selectedGameObject) {
+        ImGui::Text("Properties of %s", selectedGameObject->GetName().c_str());
+
+        bool isActive = selectedGameObject->IsActive();
+        if (ImGui::Checkbox("Active", &isActive)) {
+            selectedGameObject->SetActive(isActive);
         }
-        if (ImGui::CollapsingHeader("Mesh")) {
-            ImGui::Text("Mesh properties here");
+
+        glm::vec3 position = selectedGameObject->GetPosition();
+        glm::vec3 rotation = selectedGameObject->GetRotation();
+        glm::vec3 scale = selectedGameObject->GetScale();
+
+        if (ImGui::DragFloat3("Position", &position[0], 0.1f)) {
+            selectedGameObject->SetPosition(position);
         }
-        if (ImGui::CollapsingHeader("Material")) {
-            ImGui::Text("Material properties here");
+        if (ImGui::DragFloat3("Rotation", &rotation[0], 0.1f)) {
+            selectedGameObject->SetRotation(rotation);
+        }
+        if (ImGui::DragFloat3("Scale", &scale[0], 0.1f)) {
+            selectedGameObject->SetScale(scale);
         }
     }
     else {
         ImGui::Text("Select a GameObject to see details.");
     }
+
     ImGui::End();
 }
