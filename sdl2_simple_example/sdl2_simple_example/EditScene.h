@@ -6,6 +6,7 @@
 #include "Biblio.h"
 #include "GameObject.h"
 #include "GameObjectManager.h"
+#include "Performance.h"
 
 class EditScene {
 public:
@@ -19,9 +20,11 @@ public:
     void RenderInspectorWindow();
     void RenderHierarchyWindow();
     void RenderAssetsWindow();
+    void RenderPerformanceWindow();
 
 private:
     Hierarchy hierarchy;
     Inspector inspector;
     Biblio assets;
+    PerformanceWindow performance;
 };

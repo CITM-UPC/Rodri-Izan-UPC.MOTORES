@@ -21,6 +21,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     RenderInspectorWindow();
     RenderHierarchyWindow();
     RenderAssetsWindow();
+    RenderPerformanceWindow();
 }
 
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
@@ -63,4 +64,10 @@ void EditScene::RenderAssetsWindow() {
     ImGui::Begin("Assets");
     assets.DrawTransformWindow();
     ImGui::End();
+}
+
+void EditScene::RenderPerformanceWindow() {
+    ImGui::Begin("Performance Monitor");
+	performance.DrawPerformanceWindow();
+	ImGui::End();
 }
