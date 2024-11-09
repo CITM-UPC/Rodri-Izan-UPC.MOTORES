@@ -52,6 +52,7 @@ private:
     void MoveCameraWithMouse(int xrel, int yrel);
     void RotateCamera(int xrel, int yrel);
     void FocusOnObject();
+    void MoveCameraWithMouseWheel(int wheelDirection, const Uint8* keystate);
     void HandleDroppedFile(const char* droppedFile);
 
 public:

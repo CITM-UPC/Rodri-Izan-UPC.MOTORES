@@ -148,7 +148,7 @@ void MyWindow::close() {
 }
 
 void MyWindow::MoveCamera(const Uint8* keystate) {
-    float adjustedSpeed = cameraSpeed;
+    float adjustedSpeed = (keystate[SDL_SCANCODE_LSHIFT] ? cameraSpeed * 2.0f : cameraSpeed);
     float horizontalRad = glm::radians(orbitAngleHorizontal);
     float verticalRad = glm::radians(orbitAngleVertical);
 
@@ -159,101 +159,76 @@ void MyWindow::MoveCamera(const Uint8* keystate) {
     );
 
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-    glm::vec3 up = glm::normalize(glm::cross(right, forward));
 
-    if (keystate[SDL_SCANCODE_S]) {
-        cameraX += forward.x * adjustedSpeed;
-        cameraY += forward.y * adjustedSpeed;
-        cameraZ += forward.z * adjustedSpeed;
-
-        targetX += forward.x * adjustedSpeed;
-        targetY += forward.y * adjustedSpeed;
-        targetZ += forward.z * adjustedSpeed;
-    }
+    // Movimiento adelante y atrás
     if (keystate[SDL_SCANCODE_W]) {
         cameraX -= forward.x * adjustedSpeed;
         cameraY -= forward.y * adjustedSpeed;
         cameraZ -= forward.z * adjustedSpeed;
-
-        targetX -= forward.x * adjustedSpeed;
-        targetY -= forward.y * adjustedSpeed;
-        targetZ -= forward.z * adjustedSpeed;
+    }
+    if (keystate[SDL_SCANCODE_S]) {
+        cameraX += forward.x * adjustedSpeed;
+        cameraY += forward.y * adjustedSpeed;
+        cameraZ += forward.z * adjustedSpeed;
     }
 
+    // Movimiento lateral
     if (keystate[SDL_SCANCODE_D]) {
         cameraX -= right.x * adjustedSpeed;
         cameraY -= right.y * adjustedSpeed;
         cameraZ -= right.z * adjustedSpeed;
-
-        targetX -= right.x * adjustedSpeed;
-        targetY -= right.y * adjustedSpeed;
-        targetZ -= right.z * adjustedSpeed;
     }
     if (keystate[SDL_SCANCODE_A]) {
         cameraX += right.x * adjustedSpeed;
         cameraY += right.y * adjustedSpeed;
         cameraZ += right.z * adjustedSpeed;
-
-        targetX += right.x * adjustedSpeed;
-        targetY += right.y * adjustedSpeed;
-        targetZ += right.z * adjustedSpeed;
     }
-
-    if (keystate[SDL_SCANCODE_Q]) {
-        cameraY += adjustedSpeed;
-        targetY += adjustedSpeed;
-    }
-    if (keystate[SDL_SCANCODE_E]) {
-        cameraY -= adjustedSpeed;
-        targetY -= adjustedSpeed;
-    }
-}
-
-void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
-    float sensitivity = cameraSpeed * 0.5f;
-    float horizontalRad = glm::radians(orbitAngleHorizontal);
-    float verticalRad = glm::radians(orbitAngleVertical);
-
-    glm::vec3 forward(
-        cos(verticalRad) * sin(horizontalRad),
-        sin(verticalRad),
-        cos(verticalRad) * cos(horizontalRad)
-    );
-
-    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-
-    float moveX = -xrel * sensitivity;
-    float moveZ = -yrel * sensitivity;
-
-    cameraX += right.x * moveX + forward.x * moveZ;
-    cameraY += right.y * moveX + forward.y * moveZ;
-    cameraZ += right.z * moveX + forward.z * moveZ;
-
-    targetX += right.x * moveX + forward.x * moveZ;
-    targetY += right.y * moveX + forward.y * moveZ;
-    targetZ += right.z * moveX + forward.z * moveZ;
 }
 
 void MyWindow::RotateCamera(int xrel, int yrel) {
     const float sensitivity = 0.3f;
     orbitAngleHorizontal += xrel * sensitivity;
-    orbitAngleVertical = glm::clamp(orbitAngleVertical + yrel * sensitivity, -89.0f, 89.0f);
+
+    // Remover el clamp en el eje horizontal para rotación sin límites
+    orbitAngleVertical += yrel * sensitivity;
+
 
     float horizontalRad = glm::radians(orbitAngleHorizontal);
     float verticalRad = glm::radians(orbitAngleVertical);
 
+    // Actualizar la posición de la cámara basada en los ángulos
     cameraX = targetX + orbitRadius * cos(verticalRad) * sin(horizontalRad);
     cameraY = targetY + orbitRadius * sin(verticalRad);
     cameraZ = targetZ + orbitRadius * cos(verticalRad) * cos(horizontalRad);
 }
 
 void MyWindow::FocusOnObject() {
+    // Cambia targetX, Y, Z según el objeto que deseas centrar
     targetX = 0.0f;
     targetY = 0.0f;
     targetZ = 0.0f;
     orbitAngleHorizontal = 0.0f;
     orbitAngleVertical = -30.0f;
+    orbitRadius = 10.0f;  // Ajusta el radio según el tamaño del objeto
     RotateCamera(0, 0);
+}
+void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
+    float sensitivity = 0.05f;  // Ajusta la sensibilidad al valor que prefieras
+    glm::vec3 up(0.0f, 1.0f, 0.0f);  // Eje vertical para mover en el eje Y
+    glm::vec3 right(-1.0f, 0.0f, 0.0f);  // Eje vertical para mover en el eje X
+
+    // Cálculo del desplazamiento en el eje horizontal y vertical
+    glm::vec3 horizontalMovement = right * (-xrel * sensitivity);  // Hacia los lados
+    glm::vec3 verticalMovement = up * (yrel * sensitivity);        // Hacia arriba y abajo
+
+    // Actualizar la posición de la cámara y el objetivo
+    cameraX += horizontalMovement.x + verticalMovement.x;
+    cameraY += horizontalMovement.y + verticalMovement.y;
+    cameraZ += horizontalMovement.z + verticalMovement.z;
+
+    targetX += horizontalMovement.x + verticalMovement.x;
+    targetY += horizontalMovement.y + verticalMovement.y;
+    targetZ += horizontalMovement.z + verticalMovement.z;
 }
 
 bool MyWindow::processEvents(IEventProcessor* event_processor) {
@@ -282,12 +257,6 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
                 _height = event.window.data2;
                 resizeFramebuffer(_width, _height);
             }
-            else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) {
-                unbindFramebuffer();
-            }
-            else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
-                resizeFramebuffer(_width, _height);
-            }
             break;
 
         case SDL_KEYDOWN:
@@ -297,30 +266,25 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             break;
 
         case SDL_MOUSEBUTTONDOWN:
+            if (event.button.button == SDL_BUTTON_RIGHT) {
+                rotatingCamera = true;
+            }
             if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
                 rotatingCamera = true;
             }
             if (event.button.button == SDL_BUTTON_MIDDLE && keystate[SDL_SCANCODE_LALT]) {
                 movingCameraWithMouse = true;
             }
-            if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LCTRL]) {
-                movingCamera = true;
-            }
             break;
 
         case SDL_MOUSEBUTTONUP:
-            if (event.button.button == SDL_BUTTON_LEFT) {
-                rotatingCamera = false;
-                movingCameraWithMouse = false;
-            }
+            rotatingCamera = false;
+            movingCameraWithMouse = false;
             break;
 
         case SDL_MOUSEMOTION:
             if (rotatingCamera) {
                 RotateCamera(event.motion.xrel, event.motion.yrel);
-            }
-            if (movingCamera) {
-                MoveCamera(keystate);
             }
             if (movingCameraWithMouse) {
                 MoveCameraWithMouse(event.motion.xrel, event.motion.yrel);
@@ -343,12 +307,11 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             HandleDroppedFile(droppedFile);
             SDL_free(droppedFile);
             break;
-        }
+            }
         }
     }
     return true;
 }
-
 void MyWindow::HandleDroppedFile(const char* droppedFile) {
     std::string fileExtension = std::string(droppedFile);
     fileExtension = fileExtension.substr(fileExtension.find_last_of(".") + 1);
