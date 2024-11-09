@@ -189,9 +189,8 @@ void MyWindow::RotateCamera(int xrel, int yrel) {
     const float sensitivity = 0.3f;
     orbitAngleHorizontal += xrel * sensitivity;
 
-    // Remover el clamp en el eje horizontal para rotación sin límites
-    orbitAngleVertical += yrel * sensitivity;
-
+    // Añadir límites al ángulo vertical entre -89 y 89 grados
+    orbitAngleVertical = glm::clamp(orbitAngleVertical + yrel * sensitivity, -89.0f, 89.0f);
 
     float horizontalRad = glm::radians(orbitAngleHorizontal);
     float verticalRad = glm::radians(orbitAngleVertical);
@@ -201,7 +200,6 @@ void MyWindow::RotateCamera(int xrel, int yrel) {
     cameraY = targetY + orbitRadius * sin(verticalRad);
     cameraZ = targetZ + orbitRadius * cos(verticalRad) * cos(horizontalRad);
 }
-
 void MyWindow::FocusOnObject() {
     // Cambia targetX, Y, Z según el objeto que deseas centrar
     targetX = 0.0f;
