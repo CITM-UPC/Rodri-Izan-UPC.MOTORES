@@ -99,7 +99,8 @@ GLuint MyWindow::getRenderedTexture() const {
 
 void MyWindow::bindFramebuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glViewport(0, 0, _width, _height);  // Ajusta el viewport al tamaño del framebuffer
+    // Usar el tamaño del viewport específico en lugar del tamaño de la ventana
+    glViewport(0, 0, _viewportWidth, _viewportHeight);
 }
 
 void MyWindow::unbindFramebuffer() {
@@ -187,9 +188,8 @@ void MyWindow::MoveCamera(const Uint8* keystate) {
 
 void MyWindow::RotateCamera(int xrel, int yrel) {
     const float sensitivity = 0.3f;
-    orbitAngleHorizontal += xrel * sensitivity;
 
-    // Remover el clamp en el eje horizontal para rotación sin límites
+    orbitAngleHorizontal += xrel * sensitivity;
     orbitAngleVertical += yrel * sensitivity;
 
 
@@ -213,13 +213,13 @@ void MyWindow::FocusOnObject() {
     RotateCamera(0, 0);
 }
 void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
-    float sensitivity = 0.05f;  // Ajusta la sensibilidad al valor que prefieras
+    float sensitivity = 0.05f; 
     glm::vec3 up(0.0f, 1.0f, 0.0f);  // Eje vertical para mover en el eje Y
     glm::vec3 right(-1.0f, 0.0f, 0.0f);  // Eje vertical para mover en el eje X
 
     // Cálculo del desplazamiento en el eje horizontal y vertical
-    glm::vec3 horizontalMovement = right * (-xrel * sensitivity);  // Hacia los lados
-    glm::vec3 verticalMovement = up * (yrel * sensitivity);        // Hacia arriba y abajo
+    glm::vec3 horizontalMovement = right * (-xrel * sensitivity); 
+    glm::vec3 verticalMovement = up * (yrel * sensitivity);        
 
     // Actualizar la posición de la cámara y el objetivo
     cameraX += horizontalMovement.x + verticalMovement.x;

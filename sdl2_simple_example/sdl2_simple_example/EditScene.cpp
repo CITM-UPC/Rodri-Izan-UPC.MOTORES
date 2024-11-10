@@ -4,7 +4,6 @@
 #include "imgui_impl_opengl3.h"
 
 EditScene::EditScene() {
-    // Implementación del constructor
 }
 
 void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
@@ -25,18 +24,21 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
 
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
     void(*renderSceneContent)(MyWindow&, Importer*)) {
-
     ImGui::Begin("Scene");
 
     ImVec2 contentRegion = ImGui::GetContentRegionAvail();
-    window.resizeFramebuffer(static_cast<int>(contentRegion.x), static_cast<int>(contentRegion.y));
+    if (contentRegion.x > 0 && contentRegion.y > 0) {
+        window.resizeFramebuffer(static_cast<int>(contentRegion.x),
+            static_cast<int>(contentRegion.y));
 
-    window.bindFramebuffer();
-    renderSceneContent(window, importer);
-    window.unbindFramebuffer();
+        window.bindFramebuffer();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        renderSceneContent(window, importer);
+        window.unbindFramebuffer();
 
-    ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())),
-        contentRegion);
+        ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())),
+            contentRegion);
+    }
 
     ImGui::End();
 }
