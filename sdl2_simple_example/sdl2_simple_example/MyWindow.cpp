@@ -79,7 +79,7 @@ void MyWindow::initFramebuffer(unsigned short width, unsigned short height) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        throw std::runtime_error("Error: El framebuffer no está completo.");
+        throw std::runtime_error("Error: El framebuffer no estï¿½ completo.");
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -99,7 +99,7 @@ GLuint MyWindow::getRenderedTexture() const {
 
 void MyWindow::bindFramebuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    // Usar el tamaño del viewport específico en lugar del tamaño de la ventana
+    // Usar el tamaï¿½o del viewport especï¿½fico en lugar del tamaï¿½o de la ventana
     glViewport(0, 0, _viewportWidth, _viewportHeight);
 }
 
@@ -161,7 +161,7 @@ void MyWindow::MoveCamera(const Uint8* keystate) {
 
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-    // Movimiento adelante y atrás
+    // Movimiento adelante y atrï¿½s
     if (keystate[SDL_SCANCODE_W]) {
         cameraX -= forward.x * adjustedSpeed;
         cameraY -= forward.y * adjustedSpeed;
@@ -192,24 +192,22 @@ void MyWindow::RotateCamera(int xrel, int yrel) {
     orbitAngleHorizontal += xrel * sensitivity;
     orbitAngleVertical += yrel * sensitivity;
 
-
     float horizontalRad = glm::radians(orbitAngleHorizontal);
     float verticalRad = glm::radians(orbitAngleVertical);
 
-    // Actualizar la posición de la cámara basada en los ángulos
+    // Actualizar la posiciï¿½n de la cï¿½mara basada en los ï¿½ngulos
     cameraX = targetX + orbitRadius * cos(verticalRad) * sin(horizontalRad);
     cameraY = targetY + orbitRadius * sin(verticalRad);
     cameraZ = targetZ + orbitRadius * cos(verticalRad) * cos(horizontalRad);
 }
-
 void MyWindow::FocusOnObject() {
-    // Cambia targetX, Y, Z según el objeto que deseas centrar
+    // Cambia targetX, Y, Z segï¿½n el objeto que deseas centrar
     targetX = 0.0f;
     targetY = 0.0f;
     targetZ = 0.0f;
     orbitAngleHorizontal = 0.0f;
     orbitAngleVertical = -30.0f;
-    orbitRadius = 10.0f;  // Ajusta el radio según el tamaño del objeto
+    orbitRadius = 10.0f;  // Ajusta el radio segï¿½n el tamaï¿½o del objeto
     RotateCamera(0, 0);
 }
 void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
@@ -217,11 +215,11 @@ void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
     glm::vec3 up(0.0f, 1.0f, 0.0f);  // Eje vertical para mover en el eje Y
     glm::vec3 right(-1.0f, 0.0f, 0.0f);  // Eje vertical para mover en el eje X
 
-    // Cálculo del desplazamiento en el eje horizontal y vertical
+    // Cï¿½lculo del desplazamiento en el eje horizontal y vertical
     glm::vec3 horizontalMovement = right * (-xrel * sensitivity); 
     glm::vec3 verticalMovement = up * (yrel * sensitivity);        
 
-    // Actualizar la posición de la cámara y el objetivo
+    // Actualizar la posiciï¿½n de la cï¿½mara y el objetivo
     cameraX += horizontalMovement.x + verticalMovement.x;
     cameraY += horizontalMovement.y + verticalMovement.y;
     cameraZ += horizontalMovement.z + verticalMovement.z;
@@ -315,14 +313,14 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 void MyWindow::HandleDroppedFile(const char* droppedFile) {
     std::string fileExtension = std::string(droppedFile);
     fileExtension = fileExtension.substr(fileExtension.find_last_of(".") + 1);
-    // Convertir a minúsculas para comparación
+    // Convertir a minï¿½sculas para comparaciï¿½n
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
     if (fileExtension == "fbx") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
             // Obtener el GameObjectManager
             auto& manager = GameObjectManager::GetInstance();
-            // Crear un único objeto renderizable para todas las mallas
+            // Crear un ï¿½nico objeto renderizable para todas las mallas
             auto* obj = manager.CreateGameObject<RenderableGameObject>("Empty");
             const auto& meshes = importer->GetMeshes();
             for (size_t i = 0; i < meshes.size(); i++) {
@@ -331,7 +329,7 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
             obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
             obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
             obj->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-            // Opcional: Enfocar la cámara en el nuevo objeto
+            // Opcional: Enfocar la cï¿½mara en el nuevo objeto
             FocusOnObject();
         }
     }
