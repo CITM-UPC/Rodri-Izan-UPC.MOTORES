@@ -4,11 +4,14 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "Importer.h"
+
+// Clase abstracta que se encarga de procesar eventos
 class IEventProcessor {
 public:
     virtual void processEvent(const SDL_Event& event) = 0;
 };
 
+// Clase que se encarga de mostrar la ventana principal
 class MyWindow {
 private:
     Importer* importer;
