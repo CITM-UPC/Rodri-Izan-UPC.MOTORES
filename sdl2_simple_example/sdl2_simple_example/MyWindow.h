@@ -50,6 +50,7 @@ private:
     // Private camera methods
     void MoveCamera(const Uint8* keystate);
     void MoveCameraWithMouse(int xrel, int yrel);
+
     void RotateCamera(int xrel, int yrel);
     void FocusOnObject();
     void MoveCameraWithMouseWheel(int wheelDirection, const Uint8* keystate);

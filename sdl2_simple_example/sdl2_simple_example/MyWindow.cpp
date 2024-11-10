@@ -18,7 +18,7 @@ void MyWindow::initImGui() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
 
     ImGui_ImplSDL2_InitForOpenGL(_window, _ctx);
     ImGui_ImplOpenGL3_Init("#version 130");
@@ -229,6 +229,7 @@ void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
     targetZ += horizontalMovement.z + verticalMovement.z;
 }
 
+
 bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -308,6 +309,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             }
         }
     }
+
     return true;
 }
 void MyWindow::HandleDroppedFile(const char* droppedFile) {

@@ -151,20 +151,22 @@ int main(int argc, char** argv) {
     // Crear GameObjects de ejemplo
     auto& manager = GameObjectManager::GetInstance();
 
-    auto* obj = manager.CreateGameObject<RenderableGameObject>("Chuchu_House"); 
-    const auto& meshes = importer.GetMeshes(); // Obtener las mallas del Importer
-    for (size_t i = 0; i < meshes.size(); i++) { // Asignar todas las mallas al GameObject
+    auto* obj = manager.CreateGameObject<RenderableGameObject>("Chuchu_House");
+    const auto& meshes = importer.GetMeshes();
+    for (size_t i = 0; i < meshes.size(); i++) {
         obj->SetMeshIndex(i);
     }
-    obj->SetTextureID(importer.GetTextureID()); // Asignar la textura al GameObject
+    obj->SetTextureID(importer.GetTextureID());
     obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
     obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
-        ImGui_ImplOpenGL3_NewFrame(); 
-        ImGui_ImplSDL2_NewFrame(); 
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
+
+
 
         // Llamar a la función de renderizado de la escena, que esta llama al renderizado de los GameObjects
         editor.RenderEditorWindows(window, &importer, renderSceneContent);
@@ -180,7 +182,6 @@ int main(int argc, char** argv) {
 
         window.swapBuffers();
     }
-
 
     return 0;
 }

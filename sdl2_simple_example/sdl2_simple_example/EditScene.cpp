@@ -9,19 +9,83 @@ EditScene::EditScene() {
 void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     void(*renderSceneContent)(MyWindow&, Importer*)) {
 
+    // 1. Configurar ImGui
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    ImGuiID dockspace_id = main_viewport->ID;
-    ImGui::DockSpaceOverViewport(dockspace_id);
+    // 2. Renderizar MenuBar primero
+    RenderMenuBar();
 
+    // 3. Crear DockSpace después del MenuBar
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(viewport->WorkSize);
+    ImGui::SetNextWindowViewport(viewport->ID);
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse;
+    window_flags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+    ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+    ImGui::PopStyleVar(3);
+
+    ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+    // 4. Renderizar las demás ventanas
     RenderSceneWindow(window, importer, renderSceneContent);
     RenderInspectorWindow();
     RenderHierarchyWindow();
     RenderAssetsWindow();
     RenderPerformanceWindow();
+
+    ImGui::End();
 }
+
+void EditScene::RenderMenuBar() {
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("New Scene", "Ctrl+N")) {
+                // Handle New Scene
+            }
+            if (ImGui::MenuItem("Open Scene", "Ctrl+O")) {
+                // Handle Open Scene
+            }
+            if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
+                // Handle Save Scene
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Exit", "Alt+F4")) {
+                // Handle Exit
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::MenuItem("Undo", "Ctrl+Z")) {}
+            if (ImGui::MenuItem("Redo", "Ctrl+Y")) {}
+            ImGui::Separator();
+            if (ImGui::MenuItem("Select All", "Ctrl+A")) {}
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("View")) {
+            if (ImGui::MenuItem("Scene", nullptr, true)) {}
+            if (ImGui::MenuItem("Game", nullptr, false)) {}
+            if (ImGui::MenuItem("Inspector", nullptr, true)) {}
+            if (ImGui::MenuItem("Hierarchy", nullptr, true)) {}
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+}
+
 
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
     void(*renderSceneContent)(MyWindow&, Importer*)) {

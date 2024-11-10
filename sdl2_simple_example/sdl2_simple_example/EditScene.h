@@ -14,6 +14,8 @@ public:
     void RenderEditorWindows(MyWindow& window, Importer* importer,
         void(*renderSceneContent)(MyWindow&, Importer*));
 
+    void RenderMenuBar();
+
     void RenderSceneWindow(MyWindow& window, Importer* importer,
         void(*renderSceneContent)(MyWindow&, Importer*));
 
