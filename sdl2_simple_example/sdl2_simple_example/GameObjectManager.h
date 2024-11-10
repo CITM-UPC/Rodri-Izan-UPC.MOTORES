@@ -1,4 +1,3 @@
-// GameObjectManager.h
 #pragma once
 #include "GameObject.h"
 #include <unordered_map>
@@ -6,9 +5,11 @@
 #include <string>
 #include <vector>
 
+// Clase singleton que se encarga de gestionar los GameObjects
 class GameObjectManager {
 public:
-    static GameObjectManager& GetInstance() {
+    // Método para obtener la instancia del singleton
+    static GameObjectManager& GetInstance(){
         static GameObjectManager instance;
         return instance;
     }
@@ -20,34 +21,36 @@ public:
     // Métodos para gestionar GameObjects
     template<typename T = GameObject>
     T* CreateGameObject(const std::string& name = "") {
-        std::string objectName = name.empty() ? "GameObject_" + std::to_string(m_nextId) : name;
-        auto gameObject = std::make_unique<T>(objectName);
-        T* rawPtr = gameObject.get();
-
-        m_gameObjects[m_nextId] = std::move(gameObject);
-        m_objectIds[objectName] = m_nextId;
-        m_nextId++;
+        std::string objectName = name.empty() ? "GameObject_" + std::to_string(m_nextId) : name; // Nombre por defecto
+        auto gameObject = std::make_unique<T>(objectName); // Crear el GameObject
+        T* rawPtr = gameObject.get(); 
+        m_gameObjects[m_nextId] = std::move(gameObject); // Agregar el GameObject al mapa
+        m_objectIds[objectName] = m_nextId; // Agregar el ID del GameObject al mapa
+        m_nextId++; // Incrementar el ID
 
         return rawPtr;
     }
 
+    // Eliminar un GameObject por nombre
     void DestroyGameObject(const std::string& name) {
-        auto idIt = m_objectIds.find(name);
-        if (idIt != m_objectIds.end()) {
-            m_gameObjects.erase(idIt->second);
-            m_objectIds.erase(idIt);
+        auto idIt = m_objectIds.find(name); // Buscar el ID del GameObject
+        if (idIt != m_objectIds.end()) { 
+            m_gameObjects.erase(idIt->second); // Eliminar el GameObject
+            m_objectIds.erase(idIt); // Eliminar el ID del GameObject
         }
     }
 
+    // Eliminar un GameObject por ID
     void DestroyGameObject(size_t id) {
-        auto objIt = m_gameObjects.find(id);
-        if (objIt != m_gameObjects.end()) {
-            std::string name = objIt->second->GetName();
-            m_objectIds.erase(name);
-            m_gameObjects.erase(objIt);
+        auto objIt = m_gameObjects.find(id); // Buscar el GameObject
+        if (objIt != m_gameObjects.end()) { 
+            std::string name = objIt->second->GetName(); // Obtener el nombre del GameObject
+            m_objectIds.erase(name); // Eliminar el ID del GameObject
+            m_gameObjects.erase(objIt); // Eliminar el GameObject
         }
     }
 
+    // Buscar un GameObject por nombre
     GameObject* FindGameObject(const std::string& name) {
         auto idIt = m_objectIds.find(name);
         if (idIt != m_objectIds.end()) {
@@ -56,11 +59,13 @@ public:
         return nullptr;
     }
 
+    // Buscar un GameObject por ID
     GameObject* GetGameObject(size_t id) {
         auto it = m_gameObjects.find(id);
         return it != m_gameObjects.end() ? it->second.get() : nullptr;
     }
 
+    // Obtener todos los GameObjects de un tipo concreto, esto es para asignarle el tipo RenderableGameObject
     template<typename T>
     std::vector<T*> GetGameObjectsOfType() {
         std::vector<T*> objects;
@@ -72,6 +77,7 @@ public:
         return objects;
     }
 
+    // Obtener todos los GameObjects
     std::vector<GameObject*> GetAllGameObjects() {
         std::vector<GameObject*> objects;
         objects.reserve(m_gameObjects.size());
@@ -81,24 +87,27 @@ public:
         return objects;
     }
 
+    // Limpiar todos los GameObjects
     void Clear() {
         m_gameObjects.clear();
         m_objectIds.clear();
         m_nextId = 0;
     }
 
+    // Obtener el GameObject seleccionado
     GameObject* GetSelectedGameObject() {
         return m_selectedGameObject;
     }
 
+    // Establecer el GameObject seleccionado
     void SetSelectedGameObject(GameObject* gameObject) {
         m_selectedGameObject = gameObject;
     }
 
 private:
-    GameObjectManager() : m_nextId(0) {}
-    GameObject* m_selectedGameObject = nullptr;
-    std::unordered_map<size_t, std::unique_ptr<GameObject>> m_gameObjects;
-    std::unordered_map<std::string, size_t> m_objectIds;
-    size_t m_nextId;
+    GameObjectManager() : m_nextId(0) {} // Constructor privado para el singleton
+    GameObject* m_selectedGameObject = nullptr; // GameObject seleccionado
+    std::unordered_map<size_t, std::unique_ptr<GameObject>> m_gameObjects; // Mapa de GameObjects
+    std::unordered_map<std::string, size_t> m_objectIds; // Mapa de IDs de GameObjects
+    size_t m_nextId; // ID del siguiente GameObject
 };

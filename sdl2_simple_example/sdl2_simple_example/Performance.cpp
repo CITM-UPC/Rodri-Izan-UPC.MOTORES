@@ -17,9 +17,9 @@ PerformanceWindow::PerformanceWindow()
 }
 
 void PerformanceWindow::UpdateFPS() {
-    auto currentTime = std::chrono::steady_clock::now();
-    float deltaTime = std::chrono::duration<float>(currentTime - lastFrameTime).count();
-    lastFrameTime = currentTime;
+    auto currentTime = std::chrono::steady_clock::now(); // Obtener el tiempo actual
+    float deltaTime = std::chrono::duration<float>(currentTime - lastFrameTime).count(); // Calcular el tiempo transcurrido
+    lastFrameTime = currentTime; // Actualizar el tiempo del último frame
 
     currentFps = 1.0f / deltaTime;
 
@@ -39,7 +39,7 @@ size_t PerformanceWindow::GetProcessMemoryUsage() const {
 #else
     struct rusage usage;
     if (getrusage(RUSAGE_SELF, &usage) == 0) {
-        return usage.ru_maxrss * 1024; // ru_maxrss está en KB, lo convertimos a bytes
+        return usage.ru_maxrss * 1024;
     }
 #endif
     return 0;
@@ -59,11 +59,11 @@ std::string PerformanceWindow::FormatMemorySize(size_t bytes) const {
 }
 
 void PerformanceWindow::DrawPerformanceWindow() {
+    // Llamar a UpdateFPS para calcular el FPS actual y actualizar el historial
     UpdateFPS();
 
     ImGui::Begin("Performance Monitor");
 
-    // Mostrar FPS actual
     ImGui::Text("FPS: %.1f", currentFps);
 
     // Gráfico de FPS
@@ -75,6 +75,7 @@ void PerformanceWindow::DrawPerformanceWindow() {
             0.0f, 150.0f,
             ImVec2(0, 80));
     }
+
 
     // Mostrar uso de memoria
     size_t memoryUsage = GetProcessMemoryUsage();

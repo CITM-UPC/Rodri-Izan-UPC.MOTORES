@@ -4,43 +4,54 @@
 #include <string>
 #include <glm/glm.hpp>
 
+// Clase para almacenar y renderizar mallas
 class Mesh {
 public:
-    Mesh() = default;
+    //Constructor
+    Mesh() = default; 
 
+    //Constructor con datos de malla
     Mesh(const std::vector<GLfloat>& vertices, const std::vector<GLfloat>& texCoords,
         const std::vector<GLuint>& indices)
         : vertices(vertices), texCoords(texCoords), indices(indices) {
         SetupMesh();
     }
 
+    //Destructor
     ~Mesh() {
         Cleanup();
     }
 
-    // Mesh data
-    std::vector<GLfloat> vertices;     // Vertex positions
-    std::vector<GLfloat> texCoords;    // Texture coordinates
-    std::vector<GLfloat> normals;      // Normal vectors (optional)
-    std::vector<GLuint> indices;       // Vertex indices
+    // Datos de malla
+    std::vector<GLfloat> vertices;     
+    std::vector<GLfloat> texCoords;    
+    std::vector<GLfloat> normals;     
+    std::vector<GLuint> indices;      
 
-    // OpenGL buffer objects
+    // Identificadores de OpenGL
     GLuint VAO = 0;  // Vertex Array Object
     GLuint VBO = 0;  // Vertex Buffer Object
     GLuint EBO = 0;  // Element Buffer Object
 
+	// Configurar los datos de malla en OpenGL
     void SetupMesh() {
+        // Verifica si hay datos de vértices e índices antes de configurar el mesh
         if (!vertices.empty() && !indices.empty()) {
+
+            // Genera y enlaza el VAO 
             glGenVertexArrays(1, &VAO);
             glBindVertexArray(VAO);
 
+            // Genera y enlaza el VBO 
             glGenBuffers(1, &VBO);
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
 
+            // Configura el atributo de posición en el índice 0
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
             glEnableVertexAttribArray(0);
 
+            // Configura opcionalmente las coordenadas de textura solo si están disponibles
             if (!texCoords.empty()) {
                 GLuint texCoordVBO;
                 glGenBuffers(1, &texCoordVBO);
@@ -51,14 +62,17 @@ public:
                 glEnableVertexAttribArray(1);
             }
 
+            // Genera y enlaza el EBO
             glGenBuffers(1, &EBO);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
-            glBindVertexArray(0); // Unbind VAO
+            // Desvincula el VAO 
+            glBindVertexArray(0);
         }
     }
 
+    // Limpiar los identificadores de OpenGL
     void Cleanup() {
         if (VAO != 0) {
             glDeleteVertexArrays(1, &VAO);
@@ -73,8 +87,4 @@ public:
             EBO = 0;
         }
     }
-
-    // Utility functions
-    size_t GetVertexCount() const { return vertices.size() / 3; }
-    size_t GetTriangleCount() const { return indices.size() / 3; }
 };

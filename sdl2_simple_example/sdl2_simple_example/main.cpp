@@ -29,12 +29,13 @@ static const ivec2 WINDOW_SIZE(720, 720);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
 
-const char* filefbx = "../Assets/BakerHouse.fbx";
-const char* filefbx1 = "../Assets/masterchief.fbx";
+// Archivso para crear la casa al inicio
+const char* filefbx = "../Assets/BakerHouse.fbx"; 
 const char* filetex = "../Assets/Baker_house.png";
 
 EditScene editor;
 
+// Inicialización de OpenGL
 static void init_openGL() {
     glewInit();
     if (!GLEW_VERSION_3_0) throw exception("OpenGL 3.0 API is not available.");
@@ -42,6 +43,7 @@ static void init_openGL() {
     glClearColor(0.5, 0.5, 0.5, 1.0);
 }
 
+// Creación de un grid
 void drawGrid(float gridSize, int gridDivisions) {
     float halfSize = gridSize * 0.5f;
     float step = gridSize / gridDivisions;
@@ -64,8 +66,9 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-
+// Renderizado de la escena
 void renderSceneContent(MyWindow& window, Importer* importer) {
+    // Limpiar buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Configuración de proyección y vista
@@ -76,6 +79,7 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    // Configuración de cámara
     auto camPos = window.GetCameraPosition();
     auto targetPos = window.GetTargetPosition();
     gluLookAt(camPos.x, camPos.y, camPos.z, targetPos.x, targetPos.y, targetPos.z, 0.0f, 1.0f, 0.0f);
@@ -86,9 +90,11 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     auto& manager = GameObjectManager::GetInstance();
     auto renderableObjects = manager.GetGameObjectsOfType<RenderableGameObject>();
 
+    // Renderizar cada gameObject
     for (const auto* gameObject : renderableObjects) {
         if (!gameObject->IsActive()) continue;
 
+        // Aplicar transformación de la cámara
         glPushMatrix();
 
         // Aplicar transformación del GameObject
@@ -107,8 +113,8 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
             if (meshIndex >= 0 && meshIndex < meshes.size()) {
                 const auto& mesh = meshes[meshIndex];
 
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
+                glEnableClientState(GL_VERTEX_ARRAY); 
+                glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data()); 
 
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
@@ -120,10 +126,12 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
             }
         }
 
+        // Desactivar textura si existe
         if (gameObject->GetTextureID() != 0) {
             glDisable(GL_TEXTURE_2D);
         }
 
+        // Deshacer transformaciones
         glPopMatrix();
     }
     glFlush();
@@ -134,6 +142,8 @@ int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);
 
     init_openGL();
+
+    // Inicialización de Importer y carga de archivos
     importer.Init();
     importer.ImportFBX(filefbx);
     importer.ImportTexture(filetex);
@@ -141,22 +151,22 @@ int main(int argc, char** argv) {
     // Crear GameObjects de ejemplo
     auto& manager = GameObjectManager::GetInstance();
 
-    // Crear un único objeto renderizable para todas las mallas
-    auto* obj = manager.CreateGameObject<RenderableGameObject>("Chuchu_House");
-    const auto& meshes = importer.GetMeshes();
-    for (size_t i = 0; i < meshes.size(); i++) {
+    auto* obj = manager.CreateGameObject<RenderableGameObject>("Chuchu_House"); 
+    const auto& meshes = importer.GetMeshes(); // Obtener las mallas del Importer
+    for (size_t i = 0; i < meshes.size(); i++) { // Asignar todas las mallas al GameObject
         obj->SetMeshIndex(i);
     }
-    obj->SetTextureID(importer.GetTextureID());
+    obj->SetTextureID(importer.GetTextureID()); // Asignar la textura al GameObject
     obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
     obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplOpenGL3_NewFrame(); 
+        ImGui_ImplSDL2_NewFrame(); 
         ImGui::NewFrame();
 
+        // Llamar a la función de renderizado de la escena, que esta llama al renderizado de los GameObjects
         editor.RenderEditorWindows(window, &importer, renderSceneContent);
 
         ImGui::Render();

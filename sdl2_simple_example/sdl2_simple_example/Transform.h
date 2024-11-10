@@ -1,11 +1,12 @@
-// Transform.h
 #pragma once
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+// Clase para manejar la transformación de un objeto
 class Transform {
 public:
+    //Constructor
     Transform() :
         position(0.0f),
         rotation(0.0f),
@@ -34,7 +35,8 @@ public:
     const glm::mat4& GetMatrix() const { return modelMatrix; }
 
 private:
-    void UpdateMatrix() {
+    // Actualiza la matriz de transformación
+    void UpdateMatrix() { 
         modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::translate(modelMatrix, position);
         modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.x), glm::vec3(1, 0, 0));
@@ -43,8 +45,8 @@ private:
         modelMatrix = glm::scale(modelMatrix, scale);
     }
 
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
-    glm::mat4 modelMatrix;
+    glm::vec3 position; // Posición
+    glm::vec3 rotation; // Rotación
+    glm::vec3 scale; // Escala
+    glm::mat4 modelMatrix; // Matriz de transformación
 };
