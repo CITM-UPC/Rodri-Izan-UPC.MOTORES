@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
+#include "stdlib.h"
 
 EditScene::EditScene() {
 }
@@ -51,17 +52,14 @@ void EditScene::RenderMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("New Scene", "Ctrl+N")) {
-                // Handle New Scene
             }
             if (ImGui::MenuItem("Open Scene", "Ctrl+O")) {
-                // Handle Open Scene
             }
             if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
-                // Handle Save Scene
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Exit", "Alt+F4")) {
-                // Handle Exit
+                exit(0);
             }
             ImGui::EndMenu();
         }
