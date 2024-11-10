@@ -30,8 +30,8 @@ static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
 
 // Archivso para crear la casa al inicio
-const char* filefbx = "../Assets/BakerHouse.fbx"; 
-const char* filetex = "../Assets/Baker_house.png";
+const char* filefbx = "./Assets/BakerHouse.fbx"; 
+const char* filetex = "./Assets/Baker_house.png";
 
 EditScene editor;
 
