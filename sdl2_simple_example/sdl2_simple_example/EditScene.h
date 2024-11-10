@@ -8,6 +8,7 @@
 #include "GameObjectManager.h"
 #include "Performance.h"
 
+// Clase que se encarga de motrar las ventanas de la escena
 class EditScene {
 public:
     EditScene();
