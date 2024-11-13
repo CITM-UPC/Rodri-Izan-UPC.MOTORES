@@ -320,18 +320,20 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     if (fileExtension == "fbx") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
-            // Obtener el GameObjectManager
             auto& manager = GameObjectManager::GetInstance();
-            // Crear un �nico objeto renderizable para todas las mallas
-            auto* obj = manager.CreateGameObject<RenderableGameObject>("Empty");
-            const auto& meshes = importer->GetMeshes();
-            for (size_t i = 0; i < meshes.size(); i++) {
-                obj->SetMeshIndex(i);
+            const std::string modelname = importer->GetModelName(droppedFile);
+            const auto* model = importer->GetModel(modelname);
+            if (model)
+            {
+                auto* obj = manager.CreateGameObject<RenderableGameObject>(modelname);
+
+                for (size_t i = 0; i < model->meshes.size(); i++)
+                {
+                    obj->SetMeshIndex(i);
+                }
+                obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+                obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
             }
-            obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-            obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-            obj->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-            // Opcional: Enfocar la c�mara en el nuevo objeto
             FocusOnObject();
         }
     }

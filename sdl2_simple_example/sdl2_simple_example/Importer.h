@@ -7,58 +7,60 @@
 #include <assimp/Importer.hpp>        
 #include <assimp/scene.h>            
 #include <assimp/postprocess.h>    
+#include <unordered_map>
 
 class Importer {
 public:
     struct Mesh {
-        std::vector<GLfloat> vertices;  
+        std::vector<GLfloat> vertices;
         std::vector<GLfloat> texCoords;
-        std::vector<GLuint> indices;    
+        std::vector<GLuint> indices;
 
-        GLuint VAO = 0; 
-        GLuint VBO = 0; 
-        GLuint EBO = 0; 
+        GLuint VAO = 0;
+        GLuint VBO = 0;
+        GLuint EBO = 0;
     };
 
+    struct Model {
+        std::string name;
+        std::vector<Mesh> meshes;
+    };
 
     struct Texture {
-        GLuint textureID = 0; 
-        int width = 0;        
-        int height = 0;       
-        int channels = 0;   
+        GLuint textureID = 0;
+        int width = 0;
+        int height = 0;
+        int channels = 0;
     };
 
     // Constructor y destructor
-    Importer(); 
-    ~Importer(); 
+    Importer();
+    ~Importer();
 
-    bool Init(); 
+    bool Init();
 
-    // Funciones para manejo de mallas
-    bool ImportFBX(const std::string& filePath);          // Importar malla desde un archivo FBX
-    bool SaveMeshToCustomFormat(const std::string& outputPath); // Guardar malla en formato personalizado
-    bool LoadMeshFromCustomFormat(const std::string& filePath); // Cargar malla desde formato personalizado
+    // Funciones modificadas para manejo de modelos
+    bool ImportFBX(const std::string& filePath);
+    bool SaveModelToCustomFormat(const std::string& modelName, const std::string& outputPath);
+    bool LoadModelFromCustomFormat(const std::string& filePath);
 
     // Funciones para manejo de texturas
-    bool ImportTexture(const std::string& filePath);          // Importar textura desde archivo
-    //bool SaveTextureToCustomFormat(const std::string& outputPath); // Guardar textura en formato personalizado
-    //bool LoadTextureFromCustomFormat(const std::string& filePath); // Cargar textura desde formato personalizado
+    bool ImportTexture(const std::string& filePath);
 
-    // Getters para obtener información de las mallas y texturas cargadas
-    const std::vector<Mesh>& GetMeshes() const { return meshes; }   // Obtener mallas cargadas
-    const Texture& GetTexture() const { return texture; }           // Obtener textura cargada
-    GLuint GetTextureID() const { return texture.textureID; }       // Obtener ID de textura para OpenGL
-    bool ProcessMesh(aiMesh* mesh, const aiScene* scene); // Procesar una malla 
+    // Getters modificados
+    const std::unordered_map<std::string, Model>& GetModels() const { return models; }
+    const Model* GetModel(const std::string& modelName) const;
+    const std::string GetModelName(const std::string& filePath) const;
+    const Texture& GetTexture() const { return texture; }
+    GLuint GetTextureID() const { return texture.textureID; }
 
 private:
-    // Funciones internas
-    bool CreateRequiredDirectories();                     // Crear directorios requeridos para guardar recursos
-    bool ProcessNode(aiNode* node, const aiScene* scene); // Procesar un nodo de la escena 
+    bool CreateRequiredDirectories();
+    bool ProcessNode(aiNode* node, const aiScene* scene, Model& model);
+    bool ProcessMesh(aiMesh* mesh, const aiScene* scene, Model& model);
 
-
-
-    std::vector<Mesh> meshes;       
-    Texture texture;             
-    std::string assetsPath;         
-    std::string libraryPath;       
+    std::unordered_map<std::string, Model> models; 
+    Texture texture;
+    std::string assetsPath;
+    std::string libraryPath;
 };
