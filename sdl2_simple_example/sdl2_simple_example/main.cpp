@@ -66,7 +66,6 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-// Renderizado de la escena
 void renderSceneContent(MyWindow& window, Importer* importer) {
     // Limpiar buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -94,6 +93,10 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     for (const auto* gameObject : renderableObjects) {
         if (!gameObject->IsActive()) continue;
 
+        // Obtener el modelo correspondiente al GameObject
+        const auto* model = importer->GetModel(gameObject->GetName());
+        if (!model) continue;
+
         // Aplicar transformación de la cámara
         glPushMatrix();
 
@@ -108,13 +111,12 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
         }
 
         // Renderizar todas las mallas asociadas
-        const auto& meshes = importer->GetMeshes();
         for (int meshIndex : gameObject->GetMeshIndices()) {
-            if (meshIndex >= 0 && meshIndex < meshes.size()) {
-                const auto& mesh = meshes[meshIndex];
+            if (meshIndex >= 0 && meshIndex < model->meshes.size()) {
+                const auto& mesh = model->meshes[meshIndex];
 
-                glEnableClientState(GL_VERTEX_ARRAY); 
-                glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data()); 
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
 
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 glTexCoordPointer(2, GL_FLOAT, 0, mesh.texCoords.data());
@@ -136,7 +138,6 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     }
     glFlush();
 }
-
 int main(int argc, char** argv) {
     Importer importer;
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);
@@ -150,15 +151,20 @@ int main(int argc, char** argv) {
 
     // Crear GameObjects de ejemplo
     auto& manager = GameObjectManager::GetInstance();
+    const std::string modelname = importer.GetModelName(filefbx);
+    const auto* model = importer.GetModel(modelname);
+    if (model)
+    {
+        auto* obj = manager.CreateGameObject<RenderableGameObject>(modelname);
 
-    auto* obj = manager.CreateGameObject<RenderableGameObject>("Chuchu_House");
-    const auto& meshes = importer.GetMeshes();
-    for (size_t i = 0; i < meshes.size(); i++) {
-        obj->SetMeshIndex(i);
+        for (size_t i = 0; i < model->meshes.size(); i++)
+        {
+            obj->SetMeshIndex(i);
+        }
+        obj->SetTextureID(importer.GetTextureID());
+        obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+        obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
     }
-    obj->SetTextureID(importer.GetTextureID());
-    obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-    obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
