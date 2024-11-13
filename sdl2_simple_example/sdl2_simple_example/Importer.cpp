@@ -66,19 +66,19 @@ bool Importer::ImportFBX(const std::string& filePath) {
         return true;
     }
 
-    //// Intentar cargar el archivo custom primero
-    //if (std::filesystem::exists(customPath)) {
-    //    std::cout << "Custom format found, loading " << customPath << std::endl;
-    //    auto startTime = std::chrono::high_resolution_clock::now();
+    // Intentar cargar el archivo custom primero
+    if (std::filesystem::exists(customPath)) {
+        std::cout << "Custom format found, loading " << customPath << std::endl;
+        auto startTime = std::chrono::high_resolution_clock::now();
 
-    //    bool success = LoadModelFromCustomFormat(customPath);
+        bool success = LoadModelFromCustomFormat(customPath);
 
-    //    auto endTime = std::chrono::high_resolution_clock::now();
-    //    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    //    std::cout << "Custom format loading time: " << duration.count() << "ms" << std::endl;
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Custom format loading time: " << duration.count() << "ms" << std::endl;
 
-    //    return success;
-    //}
+        return success;
+    }
 
     // Si no existe el archivo custom, procesar el FBX
     std::cout << "Processing FBX: " << modelName << std::endl;
@@ -237,45 +237,63 @@ bool Importer::SaveModelToCustomFormat(const std::string& modelName, const std::
     return true;
 }
 
-//bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
-//    auto startTime = std::chrono::high_resolution_clock::now();
-//    std::ifstream inFile(filePath, std::ios::binary);
-//    if (!inFile.is_open()) {
-//        std::cerr << "Error opening file for loading: " << filePath << std::endl;
-//        return false;
-//    }
-//
-//    meshes.clear();
-//    size_t meshCount;
-//    inFile.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
-//
-//    for (size_t i = 0; i < meshCount; i++) {
-//        Mesh mesh;
-//        size_t vertexCount, texCoordCount, indexCount;
-//
-//        inFile.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
-//        mesh.vertices.resize(vertexCount);
-//        inFile.read(reinterpret_cast<char*>(mesh.vertices.data()), vertexCount * sizeof(GLfloat));
-//
-//        inFile.read(reinterpret_cast<char*>(&texCoordCount), sizeof(texCoordCount));
-//        mesh.texCoords.resize(texCoordCount);
-//        inFile.read(reinterpret_cast<char*>(mesh.texCoords.data()), texCoordCount * sizeof(GLfloat));
-//
-//        inFile.read(reinterpret_cast<char*>(&indexCount), sizeof(indexCount));
-//        mesh.indices.resize(indexCount);
-//        inFile.read(reinterpret_cast<char*>(mesh.indices.data()), indexCount * sizeof(GLuint));
-//
-//        meshes.push_back(mesh);
-//    }
-//
-//    // Calcular tiempo de carga y mostrarlo
-//    auto endTime = std::chrono::high_resolution_clock::now();
-//    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-//    std::cout << "FBX Loading time: " << duration.count() << "ms" << std::endl;
-//
-//    return true;
-//}
-//
+bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
+    auto startTime = std::chrono::high_resolution_clock::now();
+    std::ifstream inFile(filePath, std::ios::binary);
+    if (!inFile.is_open()) {
+        std::cerr << "Error opening file for loading: " << filePath << std::endl;
+        return false;
+    }
+
+    // Leer el nombre del modelo
+    size_t nameLength;
+    inFile.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+    std::string modelName(nameLength, '\0');
+    inFile.read(&modelName[0], nameLength);
+
+    // Crear nuevo modelo
+    Model newModel;
+    newModel.name = modelName;
+
+    // Leer número de mallas
+    size_t meshCount;
+    inFile.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
+
+    // Leer cada malla
+    for (size_t i = 0; i < meshCount; i++) {
+        Mesh mesh;
+        size_t vertexCount, texCoordCount, indexCount;
+
+        // Leer vértices
+        inFile.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
+        mesh.vertices.resize(vertexCount);
+        inFile.read(reinterpret_cast<char*>(mesh.vertices.data()),
+            vertexCount * sizeof(GLfloat));
+
+        // Leer coordenadas de textura
+        inFile.read(reinterpret_cast<char*>(&texCoordCount), sizeof(texCoordCount));
+        mesh.texCoords.resize(texCoordCount);
+        inFile.read(reinterpret_cast<char*>(mesh.texCoords.data()),
+            texCoordCount * sizeof(GLfloat));
+
+        // Leer índices
+        inFile.read(reinterpret_cast<char*>(&indexCount), sizeof(indexCount));
+        mesh.indices.resize(indexCount);
+        inFile.read(reinterpret_cast<char*>(mesh.indices.data()),
+            indexCount * sizeof(GLuint));
+
+        newModel.meshes.push_back(std::move(mesh));
+    }
+
+    // Agregar o actualizar el modelo en el mapa
+    models[modelName] = std::move(newModel);
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "Custom format loading time: " << duration.count() << "ms" << std::endl;
+
+    return true;
+}
 
 bool Importer::ImportTexture(const std::string& filePath) {
     if (texture.textureID != 0) {
