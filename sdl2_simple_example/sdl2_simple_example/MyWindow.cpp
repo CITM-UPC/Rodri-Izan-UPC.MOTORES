@@ -331,7 +331,6 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
                 {
                     obj->SetMeshIndex(i);
                 }
-                obj->SetTextureID(importer->GetTextureID());
                 obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
                 obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
             }
