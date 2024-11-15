@@ -30,6 +30,12 @@ private:
     int _viewportWidth = 0;
     int _viewportHeight = 0;
 
+    int framebufferWidth = 0;
+    int framebufferHeight = 0;
+    float fov = 45.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 100.0f;
+
     // Camera properties
     GLfloat cameraX = 0.0f;
     GLfloat cameraY = 5.0f;
@@ -56,7 +62,6 @@ private:
 
     void RotateCamera(int xrel, int yrel);
     void FocusOnObject();
-    void MoveCameraWithMouseWheel(int wheelDirection, const Uint8* keystate);
     void HandleDroppedFile(const char* droppedFile);
 
 public:
@@ -89,5 +94,11 @@ public:
     void bindFramebuffer();
     bool processEvents(IEventProcessor* event_processor = nullptr);
     void swapBuffers();
+
+    void updateSceneSize();
+    void createFrameBuffer(int width, int height);
+    float getAspectRatio() const { return static_cast<float>(framebufferWidth) / framebufferHeight; }
+    int getFramebufferWidth() const { return framebufferWidth; }
+    int getFramebufferHeight() const { return framebufferHeight; }
 
 };
