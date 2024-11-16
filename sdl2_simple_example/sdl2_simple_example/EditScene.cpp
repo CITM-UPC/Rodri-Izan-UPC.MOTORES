@@ -4,7 +4,8 @@
 #include "imgui_impl_opengl3.h"
 #include "stdlib.h"
 
-EditScene::EditScene() {
+EditScene::EditScene()
+    : biblio("C:/Users/rodri/Documents/Github/Rodri-Izan-UPC.MOTORES/sdl2_simple_example/sdl2_simple_example") { // Inicializamos con una ruta
 }
 
 void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
@@ -134,9 +135,10 @@ void EditScene::RenderHierarchyWindow() {
 
 void EditScene::RenderAssetsWindow() {
     ImGui::Begin("Assets");
-    assets.DrawTransformWindow();
+    biblio.DrawAssetsWindow();
     ImGui::End();
 }
+
 
 void EditScene::RenderPerformanceWindow() {
     ImGui::Begin("Performance Monitor");

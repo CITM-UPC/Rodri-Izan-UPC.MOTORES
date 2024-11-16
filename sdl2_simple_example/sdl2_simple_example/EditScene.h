@@ -28,6 +28,6 @@ public:
 private:
     Hierarchy hierarchy;
     Inspector inspector;
-    Biblio assets;
+    Biblio biblio;
     PerformanceWindow performance;
 };
