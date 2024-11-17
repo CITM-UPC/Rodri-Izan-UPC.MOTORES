@@ -228,8 +228,6 @@ void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
     targetY += horizontalMovement.y + verticalMovement.y;
     targetZ += horizontalMovement.z + verticalMovement.z;
 }
-
-
 bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -312,6 +310,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 
     return true;
 }
+
 void MyWindow::HandleDroppedFile(const char* droppedFile) {
     std::string fileExtension = std::string(droppedFile);
     fileExtension = fileExtension.substr(fileExtension.find_last_of(".") + 1);
@@ -332,7 +331,7 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
                     obj->SetMeshIndex(i);
                 }
                 obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-                obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+                obj->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
             }
             FocusOnObject();
         }
@@ -340,13 +339,17 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     else if (fileExtension == "png" || fileExtension == "dds") {
         if (importer->ImportTexture(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();
-            // Obtener el GameObject seleccionado
-            GameObject* selectedGameObject = manager.GetSelectedGameObject();
-            if (selectedGameObject) {
-                // Comprobar si el GameObject seleccionado es de tipo RenderableGameObject
-                if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
-                    // Asignar la textura al objeto renderizable seleccionado
-                    renderableObj->SetTextureID(importer->GetTextureID());
+			const std::string textureName = importer->GetTextureName(droppedFile);
+			const auto* texture = importer->GetTexture(textureName);
+            if (texture) {
+                // Obtener el GameObject seleccionado
+                GameObject* selectedGameObject = manager.GetSelectedGameObject();
+                if (selectedGameObject) {
+                    // Comprobar si el GameObject seleccionado es de tipo RenderableGameObject
+                    if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
+                        // Asignar la textura al objeto renderizable seleccionado
+						renderableObj->SetTextureID(texture->textureID);
+                    }
                 }
             }
         }

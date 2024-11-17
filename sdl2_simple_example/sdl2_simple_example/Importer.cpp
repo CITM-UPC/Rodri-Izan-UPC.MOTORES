@@ -296,34 +296,48 @@ bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
 }
 
 bool Importer::ImportTexture(const std::string& filePath) {
-    if (texture.textureID != 0) {
-        glDeleteTextures(1, &texture.textureID);
+    std::string textureName = std::filesystem::path(filePath).stem().string();
+
+    // Verificar si la textura ya está cargada
+    auto it = textures.find(textureName);
+    if (it != textures.end()) {
+        std::cout << "Texture " << textureName << " already loaded" << std::endl;
+        return true;
     }
 
-    // Cargar nueva textura usando stb_image
+    // Crear nueva textura
+    Texture newTexture;
+    newTexture.name = textureName;
+
+    // Cargar textura usando stb_image
     unsigned char* data = stbi_load(filePath.c_str(),
-        &texture.width, &texture.height, &texture.channels, STBI_rgb_alpha);
+        &newTexture.width, &newTexture.height, &newTexture.channels, STBI_rgb_alpha);
 
     if (!data) {
         std::cerr << "Error loading texture: " << filePath << std::endl;
         return false;
     }
 
-    // Generar y configurar la textura 
-    glGenTextures(1, &texture.textureID);
-    glBindTexture(GL_TEXTURE_2D, texture.textureID);
+    // Generar y configurar la textura OpenGL
+    glGenTextures(1, &newTexture.textureID);
+    glBindTexture(GL_TEXTURE_2D, newTexture.textureID);
 
     // Parámetros de textura
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // Filtro min
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Filtro mag
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Cargar la imagen en OpenGL
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture.width, texture.height,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newTexture.width, newTexture.height,
         0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-    stbi_image_free(data);  // Liberar datos de la imagen cargada
+    stbi_image_free(data);
+
+    // Agregar la textura al mapa
+    textures[textureName] = std::move(newTexture);
+    std::cout << "Texture " << textureName << " loaded successfully" << std::endl;
+
     return true;
 }
 
@@ -345,3 +359,23 @@ const std::string Importer::GetModelName(const std::string& filePath) const {
     }
     return ""; 
 }
+
+const Importer::Texture* Importer::GetTexture(const std::string& textureName) const {
+	auto it = textures.find(textureName);
+	if (it != textures.end()) {
+		return &it->second;
+	}
+	return nullptr;
+}
+
+const std::string Importer::GetTextureName(const std::string& filePath) const {
+	std::string textureName = std::filesystem::path(filePath).stem().string();
+
+	// Buscar la textura en el mapa
+	auto it = textures.find(textureName);
+	if (it != textures.end()) {
+		return it->second.name;
+	}
+	return "";
+}
+

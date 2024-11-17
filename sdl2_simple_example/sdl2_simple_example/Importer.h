@@ -31,6 +31,7 @@ public:
         int width = 0;
         int height = 0;
         int channels = 0;
+        std::string name;
     };
 
     // Constructor y destructor
@@ -46,6 +47,8 @@ public:
 
     // Funciones para manejo de texturas
     bool ImportTexture(const std::string& filePath);
+    const std::string GetTextureName(const std::string& filepath)const;
+    const Texture* GetTexture(const std::string& textureName)const;
 
     // Getters modificados
     const std::unordered_map<std::string, Model>& GetModels() const { return models; }
@@ -60,6 +63,7 @@ private:
     bool ProcessMesh(aiMesh* mesh, const aiScene* scene, Model& model);
 
     std::unordered_map<std::string, Model> models; 
+    std::unordered_map<std::string, Texture> textures;
     Texture texture;
     std::string assetsPath;
     std::string libraryPath;

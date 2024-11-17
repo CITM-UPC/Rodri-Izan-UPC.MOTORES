@@ -144,27 +144,8 @@ int main(int argc, char** argv) {
 
     init_openGL();
 
-    // Inicialización de Importer y carga de archivos
+    // Inicialización de Importer
     importer.Init();
-    importer.ImportFBX(filefbx);
-    importer.ImportTexture(filetex);
-
-    // Crear GameObjects de ejemplo
-    auto& manager = GameObjectManager::GetInstance();
-    const std::string modelname = importer.GetModelName(filefbx);
-    const auto* model = importer.GetModel(modelname);
-    if (model)
-    {
-        auto* obj = manager.CreateGameObject<RenderableGameObject>(modelname);
-
-        for (size_t i = 0; i < model->meshes.size(); i++)
-        {
-            obj->SetMeshIndex(i);
-        }
-        obj->SetTextureID(importer.GetTextureID());
-        obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-        obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-    }
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
