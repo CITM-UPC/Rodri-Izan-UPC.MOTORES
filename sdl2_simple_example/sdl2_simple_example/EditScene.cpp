@@ -4,7 +4,8 @@
 #include "imgui_impl_opengl3.h"
 #include "stdlib.h"
 
-EditScene::EditScene() {
+EditScene::EditScene()
+    : biblio("C:/Users/rodri/Documents/Github/Rodri-Izan-UPC.MOTORES/sdl2_simple_example/sdl2_simple_example") { // Inicializamos con una ruta
 }
 
 void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
@@ -44,6 +45,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     RenderHierarchyWindow();
     RenderAssetsWindow();
     RenderPerformanceWindow();
+    RenderConsoleWindow();
 
     ImGui::End();
 }
@@ -87,24 +89,32 @@ void EditScene::RenderMenuBar() {
 
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
     void(*renderSceneContent)(MyWindow&, Importer*)) {
-    ImGui::Begin("Scene");
+    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar);
 
-    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
-    if (contentRegion.x > 0 && contentRegion.y > 0) {
-        window.resizeFramebuffer(static_cast<int>(contentRegion.x),
-            static_cast<int>(contentRegion.y));
+    // Actualizar el tamaño de la escena
+    window.updateSceneSize();
 
-        window.bindFramebuffer();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderSceneContent(window, importer);
-        window.unbindFramebuffer();
+    ImVec2 contentSize = ImGui::GetContentRegionAvail();
 
-        ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())),
-            contentRegion);
-    }
+    // Renderizar la escena
+    window.bindFramebuffer();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderSceneContent(window, importer);
+    window.unbindFramebuffer();
+
+    // Renderizar la textura del framebuffer
+    ImGui::Image(
+        reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())),
+        contentSize,
+        ImVec2(0, 0),     // UV0
+        ImVec2(1, 1),     // UV1
+        ImVec4(1, 1, 1, 1), // Tint color
+        ImVec4(0, 0, 0, 0)  // Border color
+    );
 
     ImGui::End();
 }
+
 
 void EditScene::RenderInspectorWindow() {
     ImGui::Begin("Inspector");
@@ -126,9 +136,16 @@ void EditScene::RenderHierarchyWindow() {
 
 void EditScene::RenderAssetsWindow() {
     ImGui::Begin("Assets");
-    assets.DrawTransformWindow();
+    biblio.DrawAssetsWindow();
     ImGui::End();
 }
+
+void EditScene::RenderConsoleWindow() {
+   
+    console.Flush();
+    console.Draw("Console");
+}
+
 
 void EditScene::RenderPerformanceWindow() {
     ImGui::Begin("Performance Monitor");

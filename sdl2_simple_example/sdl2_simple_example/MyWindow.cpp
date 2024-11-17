@@ -97,11 +97,75 @@ GLuint MyWindow::getRenderedTexture() const {
     return renderedTexture;
 }
 
+void MyWindow::updateSceneSize() {
+    ImVec2 availableSize = ImGui::GetContentRegionAvail();
+
+    // No actualizar si el tamaño es 0 o no ha cambiado
+    if (availableSize.x <= 0 || availableSize.y <= 0) {
+        return;
+    }
+
+    int newWidth = static_cast<int>(availableSize.x);
+    int newHeight = static_cast<int>(availableSize.y);
+
+    if (newWidth != framebufferWidth || newHeight != framebufferHeight) {
+        framebufferWidth = newWidth;
+        framebufferHeight = newHeight;
+        createFrameBuffer(framebufferWidth, framebufferHeight);
+    }
+}
+
 void MyWindow::bindFramebuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    // Usar el tama�o del viewport espec�fico en lugar del tama�o de la ventana
-    glViewport(0, 0, _viewportWidth, _viewportHeight);
+    glViewport(0, 0, framebufferWidth, framebufferHeight);
+
+    // Actualizar la matriz de proyección
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    float aspectRatio = getAspectRatio();
+    gluPerspective(fov, aspectRatio, nearPlane, farPlane);
+
+    // Volver a la matriz de modelview
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
+
+void MyWindow::createFrameBuffer(int width, int height) {
+    // Si ya existe un framebuffer, lo eliminamos
+    if (framebuffer) {
+        glDeleteFramebuffers(1, &framebuffer);
+        glDeleteTextures(1, &renderedTexture);
+        glDeleteRenderbuffers(1, &depthRenderbuffer);
+    }
+
+    // Crear el framebuffer
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    // Crear la textura
+    glGenTextures(1, &renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Crear renderbuffer para profundidad
+    glGenRenderbuffers(1, &depthRenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer);
+
+    // Adjuntar la textura al framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderedTexture, 0);
+
+    // Verificar que el framebuffer esté completo
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Error: El framebuffer no está completo.");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 
 void MyWindow::unbindFramebuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);  // Vuelve a renderizar en el framebuffer por defecto
@@ -314,8 +378,9 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 void MyWindow::HandleDroppedFile(const char* droppedFile) {
     std::string fileExtension = std::string(droppedFile);
     fileExtension = fileExtension.substr(fileExtension.find_last_of(".") + 1);
-    // Convertir a min�sculas para comparaci�n
+    // Convertir a minúsculas para comparación
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
+
     if (fileExtension == "fbx") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
@@ -336,11 +401,12 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
             FocusOnObject();
         }
     }
-    else if (fileExtension == "png" || fileExtension == "dds") {
+    else if (fileExtension == "png" || fileExtension == "dds" || fileExtension == "jpg" || fileExtension == "jpeg") {
+        // Importar la textura
         if (importer->ImportTexture(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();
-			const std::string textureName = importer->GetTextureName(droppedFile);
-			const auto* texture = importer->GetTexture(textureName);
+			      const std::string textureName = importer->GetTextureName(droppedFile);
+			      const auto* texture = importer->GetTexture(textureName);
             if (texture) {
                 // Obtener el GameObject seleccionado
                 GameObject* selectedGameObject = manager.GetSelectedGameObject();
@@ -348,13 +414,14 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
                     // Comprobar si el GameObject seleccionado es de tipo RenderableGameObject
                     if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
                         // Asignar la textura al objeto renderizable seleccionado
-						renderableObj->SetTextureID(texture->textureID);
+						            renderableObj->SetTextureID(texture->textureID);
                     }
                 }
             }
         }
     }
 }
+
 
 
 void MyWindow::swapBuffers() {
