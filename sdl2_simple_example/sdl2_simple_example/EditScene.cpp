@@ -45,6 +45,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     RenderHierarchyWindow();
     RenderAssetsWindow();
     RenderPerformanceWindow();
+    RenderConsoleWindow();
 
     ImGui::End();
 }
@@ -137,6 +138,12 @@ void EditScene::RenderAssetsWindow() {
     ImGui::Begin("Assets");
     biblio.DrawAssetsWindow();
     ImGui::End();
+}
+
+void EditScene::RenderConsoleWindow() {
+   
+    console.Flush();
+    console.Draw("Console");
 }
 
 

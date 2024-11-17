@@ -1,5 +1,6 @@
 #pragma once
 #include "Importer.h"
+#include "Console.h"
 #include "MyWindow.h"
 #include "Hierarchy.h"
 #include "Inspector.h"
@@ -23,11 +24,13 @@ public:
     void RenderInspectorWindow();
     void RenderHierarchyWindow();
     void RenderAssetsWindow();
+    void RenderConsoleWindow();
     void RenderPerformanceWindow();
 
 private:
     Hierarchy hierarchy;
     Inspector inspector;
     Biblio biblio;
+    Console console;
     PerformanceWindow performance;
 };
