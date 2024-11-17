@@ -8,22 +8,35 @@
 namespace fs = std::filesystem;
 
 Biblio::Biblio()
-    : m_assetsPath("C:/Users/rodri/Documents/Github/Rodri-Izan-UPC.MOTORES/sdl2_simple_example/sdl2_simple_example") {}
+    : m_assetsPath("C:/Users/rodri/Documents/Github/Rodri-Izan-UPC.MOTORES/sdl2_simple_example/sdl2_simple_example/Assets"),
+    m_selectedAsset("") {}
 
 Biblio::Biblio(const std::string& assetsPath)
-    : m_assetsPath(assetsPath) {}
+    : m_assetsPath(assetsPath), m_selectedAsset("") {}
+
 
 void Biblio::DrawAssetsWindow() {
     ImGui::Begin("Assets");
 
+    // Mostrar archivo seleccionado actualmente
+    if (!m_selectedAsset.empty()) {
+        ImGui::Text("Selected Asset: %s", m_selectedAsset.c_str());
+    }
+    else {
+        ImGui::Text("No asset selected");
+    }
+
+    // Verificar que la ruta de assets sea válida
     if (fs::exists(m_assetsPath)) {
         if (fs::is_directory(m_assetsPath)) {
             ImGui::Text("Valid assets path: %s", m_assetsPath.c_str());
             DrawDirectoryRecursive(m_assetsPath);
-        } else {
+        }
+        else {
             ImGui::Text("Path exists but is not a directory: %s", m_assetsPath.c_str());
         }
-    } else {
+    }
+    else {
         ImGui::Text("Path does not exist: %s", m_assetsPath.c_str());
     }
 
@@ -40,8 +53,11 @@ void Biblio::DrawDirectoryRecursive(const std::string& path) {
             }
         }
         else {
-            // Dibujar un archivo
-            ImGui::Text("%s", entry.path().filename().string().c_str());
+            // Dibujar un archivo como seleccionable
+            if (ImGui::Selectable(entry.path().filename().string().c_str(),
+                m_selectedAsset == entry.path().string())) {
+                m_selectedAsset = entry.path().string();
+            }
 
             // Drag-and-drop para archivos
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
