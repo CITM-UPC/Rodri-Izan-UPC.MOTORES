@@ -66,7 +66,6 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-// Renderizado de la escena
 void renderSceneContent(MyWindow& window, Importer* importer) {
     // Comenzar la ventana Scene
     ImGui::Begin("Scene");
@@ -146,7 +145,10 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
 
     for (const auto* gameObject : renderableObjects) {
         if (!gameObject->IsActive()) continue;
+        const auto* model = importer->GetModel(gameObject->GetName());
+        if (!model) continue;
 
+        // Aplicar transformación de la cámara
         glPushMatrix();
         glm::mat4 transform = gameObject->GetTransformMatrix();
         glMultMatrixf(glm::value_ptr(transform));
@@ -155,11 +157,11 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, gameObject->GetTextureID());
         }
-
-        const auto& meshes = importer->GetMeshes();
+        // Renderizar todas las mallas asociadas
         for (int meshIndex : gameObject->GetMeshIndices()) {
-            if (meshIndex >= 0 && meshIndex < meshes.size()) {
-                const auto& mesh = meshes[meshIndex];
+            if (meshIndex >= 0 && meshIndex < model->meshes.size()) {
+                const auto& mesh = model->meshes[meshIndex];
+
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -178,6 +180,7 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     }
 
     window.unbindFramebuffer();
+    glFlush();
 }
 int main(int argc, char** argv) {
     Importer importer;
@@ -185,22 +188,8 @@ int main(int argc, char** argv) {
 
     init_openGL();
 
-    // Inicialización de Importer y carga de archivos
+    // Inicialización de Importer
     importer.Init();
-    importer.ImportFBX(filefbx);
-    importer.ImportTexture(filetex);
-
-    // Crear GameObjects de ejemplo
-    auto& manager = GameObjectManager::GetInstance();
-
-    auto* obj = manager.CreateGameObject<RenderableGameObject>("Chuchu_House");
-    const auto& meshes = importer.GetMeshes();
-    for (size_t i = 0; i < meshes.size(); i++) {
-        obj->SetMeshIndex(i);
-    }
-    obj->SetTextureID(importer.GetTextureID());
-    obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-    obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {

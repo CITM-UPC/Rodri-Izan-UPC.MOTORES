@@ -292,8 +292,6 @@ void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
     targetY += horizontalMovement.y + verticalMovement.y;
     targetZ += horizontalMovement.z + verticalMovement.z;
 }
-
-
 bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -376,6 +374,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 
     return true;
 }
+
 void MyWindow::HandleDroppedFile(const char* droppedFile) {
     std::string fileExtension = std::string(droppedFile);
     fileExtension = fileExtension.substr(fileExtension.find_last_of(".") + 1);
@@ -385,54 +384,41 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     if (fileExtension == "fbx") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
-            // Obtener el GameObjectManager
             auto& manager = GameObjectManager::GetInstance();
-            // Crear un único objeto renderizable para todas las mallas
-            auto* obj = manager.CreateGameObject<RenderableGameObject>("Empty");
-            const auto& meshes = importer->GetMeshes();
-            for (size_t i = 0; i < meshes.size(); i++) {
-                obj->SetMeshIndex(i);
+            const std::string modelname = importer->GetModelName(droppedFile);
+            const auto* model = importer->GetModel(modelname);
+            if (model)
+            {
+                auto* obj = manager.CreateGameObject<RenderableGameObject>(modelname);
+
+                for (size_t i = 0; i < model->meshes.size(); i++)
+                {
+                    obj->SetMeshIndex(i);
+                }
+                obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+                obj->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
             }
-            obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-            obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-            obj->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-            // Opcional: Enfocar la cámara en el nuevo objeto
             FocusOnObject();
         }
     }
-    else if (fileExtension == "png" || fileExtension == "dds") {
+    else if (fileExtension == "png" || fileExtension == "dds" || fileExtension == "jpg" || fileExtension == "jpeg") {
         // Importar la textura
         if (importer->ImportTexture(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();
-            // Obtener el GameObject seleccionado
-            GameObject* selectedGameObject = manager.GetSelectedGameObject();
-            if (selectedGameObject) {
-                // Comprobar si el GameObject seleccionado es de tipo RenderableGameObject
-                if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
-                    // Asignar la textura al objeto renderizable seleccionado
-                    renderableObj->SetTextureID(importer->GetTextureID());
+			      const std::string textureName = importer->GetTextureName(droppedFile);
+			      const auto* texture = importer->GetTexture(textureName);
+            if (texture) {
+                // Obtener el GameObject seleccionado
+                GameObject* selectedGameObject = manager.GetSelectedGameObject();
+                if (selectedGameObject) {
+                    // Comprobar si el GameObject seleccionado es de tipo RenderableGameObject
+                    if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
+                        // Asignar la textura al objeto renderizable seleccionado
+						            renderableObj->SetTextureID(texture->textureID);
+                    }
                 }
             }
         }
-    }
-    else if (fileExtension == "jpg" || fileExtension == "jpeg") {
-        // Similar a las imágenes png/dds, pero con soporte para jpg/jpeg
-        if (importer->ImportTexture(droppedFile)) {
-            auto& manager = GameObjectManager::GetInstance();
-            // Obtener el GameObject seleccionado
-            GameObject* selectedGameObject = manager.GetSelectedGameObject();
-            if (selectedGameObject) {
-                if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
-                    // Asignar la textura al objeto renderizable seleccionado
-                    renderableObj->SetTextureID(importer->GetTextureID());
-                }
-            }
-        }
-    }
-  
-    else {
-        // Manejar otros tipos de archivos si es necesario
-        ImGui::Text("Unsupported file type: %s", droppedFile);
     }
 }
 
