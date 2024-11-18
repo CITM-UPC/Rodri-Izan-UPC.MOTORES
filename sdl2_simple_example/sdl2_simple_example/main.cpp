@@ -67,81 +67,6 @@ void drawGrid(float gridSize, int gridDivisions) {
 }
 
 void renderSceneContent(MyWindow& window, Importer* importer) {
-    // Comenzar la ventana Scene
-    ImGui::Begin("Scene");
-
-    // Obtener el tamaño disponible para la ventana Scene
-    ImVec2 availableSize = ImGui::GetContentRegionAvail();
-
-    // Renderizar la textura del framebuffer
-    ImGui::Image((void*)(intptr_t)window.getRenderedTexture(),
-        availableSize,
-        ImVec2(0, 1),
-        ImVec2(1, 0));
-
-    // Implementar drag & drop en la ventana Scene
-    if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_PATH")) {
-            const char* path = static_cast<const char*>(payload->Data);
-            std::string filePath(path);
-            std::string extension = filePath.substr(filePath.find_last_of(".") + 1);
-            std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-
-            // Manejar diferentes tipos de archivos
-            if (extension == "fbx") {
-                if (importer->ImportFBX(filePath.c_str())) {
-                    auto& manager = GameObjectManager::GetInstance();
-                    auto* obj = manager.CreateGameObject<RenderableGameObject>("DraggedModel");
-                    const std::string modelname = importer->GetModelName(filePath.c_str());
-                    const auto* model = importer->GetModel(modelname);
-                    if (model)
-                    {
-                        auto* obj = manager.CreateGameObject<RenderableGameObject>(modelname);
-
-                        for (size_t i = 0; i < model->meshes.size(); i++)
-                        {
-                            obj->SetMeshIndex(i);
-                        }
-                        obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-                        obj->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-                    }
-                    obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-                    obj->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-
-                    // Calcular la posición en el mundo basada en la posición del ratón
-                    ImVec2 mousePos = ImGui::GetMousePos();
-                    ImVec2 windowPos = ImGui::GetWindowPos();
-                    ImVec2 relativePos = ImVec2(mousePos.x - windowPos.x, mousePos.y - windowPos.y);
-
-                    // Convertir la posición 2D del ratón a una posición 3D en el mundo
-                    // Esta es una implementación simple, podrías mejorarla según tus necesidades
-                    float worldX = (relativePos.x / availableSize.x - 0.5f) * 20.0f;
-                    float worldZ = (relativePos.y / availableSize.y - 0.5f) * 20.0f;
-                    obj->SetPosition(glm::vec3(worldX, 0.0f, worldZ));
-                }
-            }
-            else if (extension == "png" || extension == "jpg" || extension == "jpeg" || extension == "dds") {
-                if (importer->ImportTexture(filePath.c_str())) {
-                    auto& manager = GameObjectManager::GetInstance();
-                    if (GameObject* selectedObj = manager.GetSelectedGameObject()) {
-                        if (RenderableGameObject* renderableObj = dynamic_cast<RenderableGameObject*>(selectedObj)) {
-                            renderableObj->SetTextureID(importer->GetTextureID());
-                        }
-                    }
-                }
-            }
-        }
-        ImGui::EndDragDropTarget();
-    }
-
-    ImGui::End();
-
-    // Renderizar la escena 3D
-    window.bindFramebuffer();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
     auto camPos = window.GetCameraPosition();
     auto targetPos = window.GetTargetPosition();
     gluLookAt(camPos.x, camPos.y, camPos.z, targetPos.x, targetPos.y, targetPos.z, 0.0f, 1.0f, 0.0f);
@@ -166,6 +91,7 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, gameObject->GetTextureID());
         }
+
         // Renderizar todas las mallas asociadas
         for (int meshIndex : gameObject->GetMeshIndices()) {
             if (meshIndex >= 0 && meshIndex < model->meshes.size()) {
