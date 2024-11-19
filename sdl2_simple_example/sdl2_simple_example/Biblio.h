@@ -11,8 +11,8 @@ public:
 
     void DrawAssetsWindow(); // Dibujar la ventana de assets
 
-    // Getter para obtener el asset seleccionado
-    const std::string& GetSelectedAsset() const;
+
+    static const char* GetDragDropType() { return "ASSET_PATH"; }
 
 private:
     std::string m_assetsPath = "Assets/"; // Ruta predeterminada

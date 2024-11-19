@@ -5,7 +5,7 @@
 #include "stdlib.h"
 
 EditScene::EditScene()
-    : biblio("C:/Users/rodri/Documents/Github/Rodri-Izan-UPC.MOTORES/sdl2_simple_example/sdl2_simple_example") { // Inicializamos con una ruta
+    : biblio("./Assets") { // Inicializamos con una ruta
 }
 
 void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
@@ -111,6 +111,8 @@ void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
         ImVec4(1, 1, 1, 1), // Tint color
         ImVec4(0, 0, 0, 0)  // Border color
     );
+
+    window.HandleDragDropTarget();
 
     ImGui::End();
 }

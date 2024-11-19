@@ -422,6 +422,22 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     }
 }
 
+void MyWindow::HandleDragDropTarget() {
+   
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(Biblio::GetDragDropType())) {
+            // Asegúrate de que el payload es válido
+            if (payload->DataSize > 0) {
+                // El payload contiene la ruta del archivo
+                const char* droppedFile = static_cast<const char*>(payload->Data);
+                HandleDroppedFile(droppedFile);
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+}
+
+
 
 
 void MyWindow::swapBuffers() {

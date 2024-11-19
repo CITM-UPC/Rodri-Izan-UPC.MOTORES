@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "Importer.h"
+#include "Biblio.h"
 
 // Clase abstracta que se encarga de procesar eventos
 class IEventProcessor {
@@ -100,5 +101,7 @@ public:
     float getAspectRatio() const { return static_cast<float>(framebufferWidth) / framebufferHeight; }
     int getFramebufferWidth() const { return framebufferWidth; }
     int getFramebufferHeight() const { return framebufferHeight; }
+
+    void HandleDragDropTarget();
 
 };

@@ -46,34 +46,28 @@ void Biblio::DrawAssetsWindow() {
 void Biblio::DrawDirectoryRecursive(const std::string& path) {
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
         if (entry.is_directory()) {
-            // Dibujar una carpeta
             if (ImGui::TreeNode(entry.path().filename().string().c_str())) {
                 DrawDirectoryRecursive(entry.path().string());
                 ImGui::TreePop();
             }
         }
         else {
-            // Dibujar un archivo como seleccionable
             if (ImGui::Selectable(entry.path().filename().string().c_str(),
                 m_selectedAsset == entry.path().string())) {
                 m_selectedAsset = entry.path().string();
             }
 
-            // Drag-and-drop para archivos
+           
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
                 std::string filePath = entry.path().string();
-
-                // Tipo de archivo como payload
-                ImGui::SetDragDropPayload("ASSET_PATH", filePath.c_str(), filePath.size() + 1);
-
-                // Mostrar nombre mientras se arrastra
+                const char* filePathCStr = filePath.c_str();
+                ImGui::SetDragDropPayload(GetDragDropType(), filePathCStr, strlen(filePathCStr) + 1);
                 ImGui::Text("Dragging: %s", entry.path().filename().string().c_str());
                 ImGui::EndDragDropSource();
             }
         }
     }
 }
-
 GLuint Biblio::LoadTexture(const std::string& path) {
     int width, height, channels;
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
