@@ -33,4 +33,18 @@ private:
     Biblio biblio;
     Console console;
     PerformanceWindow performance;
+
+    struct WindowStates {
+        bool showScene = true;
+        bool showGame = false;
+        bool showInspector = true;
+        bool showHierarchy = true;
+        bool showAssets = true;
+        bool showConsole = true;
+        bool showPerformance = true;
+    } windowStates;
+
+    void ToggleWindow(const char* name, bool& state);
+    void CloseWindow(const char* name, bool& state);
+
 };

@@ -381,7 +381,7 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     // Convertir a minúsculas para comparación
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 
-    if (fileExtension == "fbx") {
+    if (fileExtension == "fbx" || fileExtension =="Custom") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();

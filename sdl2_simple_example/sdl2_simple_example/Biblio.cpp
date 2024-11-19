@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 Biblio::Biblio()
-    : m_assetsPath("C:/Users/rodri/Documents/Github/Rodri-Izan-UPC.MOTORES/sdl2_simple_example/sdl2_simple_example/Assets"),
+    : m_assetsPath("./Assets"),
     m_selectedAsset("") {}
 
 Biblio::Biblio(const std::string& assetsPath)

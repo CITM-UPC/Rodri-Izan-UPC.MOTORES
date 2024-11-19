@@ -5,7 +5,7 @@
 #include "stdlib.h"
 
 EditScene::EditScene()
-    : biblio("./Assets") { // Inicializamos con una ruta
+    : biblio("./Library") { // Inicializamos con una ruta
 }
 
 void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
@@ -50,6 +50,19 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     ImGui::End();
 }
 
+void EditScene::ToggleWindow(const char* name, bool& state) {
+    state = !state;
+    if (state) {
+        // Si la ventana se está abriendo, configurarla para que aparezca en el dockspace
+        ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
+    }
+}
+
+void EditScene::CloseWindow(const char* name, bool& state) {
+    state = false;
+}
+
+
 void EditScene::RenderMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -75,12 +88,30 @@ void EditScene::RenderMenuBar() {
         }
 
         if (ImGui::BeginMenu("View")) {
-            if (ImGui::MenuItem("Scene", nullptr, true)) {}
-            if (ImGui::MenuItem("Game", nullptr, false)) {}
-            if (ImGui::MenuItem("Inspector", nullptr, true)) {}
-            if (ImGui::MenuItem("Hierarchy", nullptr, true)) {}
+            if (ImGui::MenuItem("Scene", nullptr, windowStates.showScene)) {
+                ToggleWindow("Scene", windowStates.showScene);
+            }
+            if (ImGui::MenuItem("Game", nullptr, windowStates.showGame)) {
+                ToggleWindow("Game", windowStates.showGame);
+            }
+            if (ImGui::MenuItem("Inspector", nullptr, windowStates.showInspector)) {
+                ToggleWindow("Inspector", windowStates.showInspector);
+            }
+            if (ImGui::MenuItem("Hierarchy", nullptr, windowStates.showHierarchy)) {
+                ToggleWindow("Hierarchy", windowStates.showHierarchy);
+            }
+            if (ImGui::MenuItem("Assets", nullptr, windowStates.showAssets)) {
+                ToggleWindow("Assets", windowStates.showAssets);
+            }
+            if (ImGui::MenuItem("Console", nullptr, windowStates.showConsole)) {
+                ToggleWindow("Console", windowStates.showConsole);
+            }
+            if (ImGui::MenuItem("Performance", nullptr, windowStates.showPerformance)) {
+                ToggleWindow("Performance", windowStates.showPerformance);
+            }
             ImGui::EndMenu();
         }
+
 
         ImGui::EndMainMenuBar();
     }
@@ -89,7 +120,16 @@ void EditScene::RenderMenuBar() {
 
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
     void(*renderSceneContent)(MyWindow&, Importer*)) {
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoScrollbar);
+    if (!windowStates.showScene) return;
+
+    bool isOpen = true;
+    ImGui::Begin("Scene", &isOpen, ImGuiWindowFlags_NoScrollbar);
+
+    if (!isOpen) {
+        CloseWindow("Scene", windowStates.showScene);
+        ImGui::End();
+        return;
+    }
 
     // Actualizar el tamaño de la escena
     window.updateSceneSize();
@@ -106,51 +146,91 @@ void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
     ImGui::Image(
         reinterpret_cast<void*>(static_cast<intptr_t>(window.getRenderedTexture())),
         contentSize,
-        ImVec2(0, 0),     // UV0
-        ImVec2(1, 1),     // UV1
-        ImVec4(1, 1, 1, 1), // Tint color
-        ImVec4(0, 0, 0, 0)  // Border color
+        ImVec2(0, 0),
+        ImVec2(1, 1),
+        ImVec4(1, 1, 1, 1),
+        ImVec4(0, 0, 0, 0)
     );
 
     window.HandleDragDropTarget();
-
     ImGui::End();
 }
 
-
 void EditScene::RenderInspectorWindow() {
-    ImGui::Begin("Inspector");
-    // Obtener el objeto seleccionado del GameObjectManager si es necesario
-    auto& manager = GameObjectManager::GetInstance();
-    // Aquí podrías obtener el objeto seleccionado y pasarlo al inspector
+    if (!windowStates.showInspector) return;
+
+    bool isOpen = true;
+    ImGui::Begin("Inspector", &isOpen);
+
+    if (!isOpen) {
+        CloseWindow("Inspector", windowStates.showInspector);
+        ImGui::End();
+        return;
+    }
+
     inspector.DrawInspectorWindow();
     ImGui::End();
 }
 
 void EditScene::RenderHierarchyWindow() {
-    ImGui::Begin("Hierarchy");
-    auto& manager = GameObjectManager::GetInstance();
-    auto allObjects = manager.GetAllGameObjects();
-    // Aquí podrías pasar la lista de objetos a la jerarquía
+    if (!windowStates.showHierarchy) return;
+
+    bool isOpen = true;
+    ImGui::Begin("Hierarchy", &isOpen);
+
+    if (!isOpen) {
+        CloseWindow("Hierarchy", windowStates.showHierarchy);
+        ImGui::End();
+        return;
+    }
+
     hierarchy.DrawHierarchyWindow();
     ImGui::End();
 }
 
 void EditScene::RenderAssetsWindow() {
-    ImGui::Begin("Assets");
+    if (!windowStates.showAssets) return;
+
+    bool isOpen = true;
+    ImGui::Begin("Assets", &isOpen);
+
+    if (!isOpen) {
+        CloseWindow("Assets", windowStates.showAssets);
+        ImGui::End();
+        return;
+    }
+
     biblio.DrawAssetsWindow();
     ImGui::End();
 }
 
 void EditScene::RenderConsoleWindow() {
-   
-    console.Flush();
+    if (!windowStates.showConsole) return;
+
+    bool isOpen = true;
+  
     console.Draw("Console");
+
+    if (!isOpen) {
+        CloseWindow("Console", windowStates.showConsole);
+        return;
+    }
+
+    console.Flush();
 }
 
-
 void EditScene::RenderPerformanceWindow() {
-    ImGui::Begin("Performance Monitor");
-	performance.DrawPerformanceWindow();
-	ImGui::End();
+    if (!windowStates.showPerformance) return;
+
+    bool isOpen = true;
+    ImGui::Begin("Performance Monitor", &isOpen);
+
+    if (!isOpen) {
+        CloseWindow("Performance", windowStates.showPerformance);
+        ImGui::End();
+        return;
+    }
+
+    performance.DrawPerformanceWindow();
+    ImGui::End();
 }
