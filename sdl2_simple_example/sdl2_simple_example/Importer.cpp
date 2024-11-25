@@ -296,7 +296,9 @@ bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
 }
 
 bool Importer::ImportTexture(const std::string& filePath) {
-    std::string textureName = std::filesystem::path(filePath).stem().string();
+    namespace fs = std::filesystem;
+    std::string textureName = fs::path(filePath).stem().string();
+    std::string materialPath = libraryPath + "Materials/" + fs::path(filePath).filename().string();
 
     // Verificar si la textura ya está cargada
     auto it = textures.find(textureName);
@@ -305,16 +307,28 @@ bool Importer::ImportTexture(const std::string& filePath) {
         return true;
     }
 
+    // Copiar el archivo a la carpeta de materials
+    try {
+        if (!fs::exists(materialPath)) {
+            fs::copy_file(filePath, materialPath, fs::copy_options::overwrite_existing);
+            std::cout << "Texture copied to: " << materialPath << std::endl;
+        }
+    }
+    catch (const fs::filesystem_error& e) {
+        std::cerr << "Error copying texture file: " << e.what() << std::endl;
+        return false;
+    }
+
     // Crear nueva textura
     Texture newTexture;
     newTexture.name = textureName;
 
     // Cargar textura usando stb_image
-    unsigned char* data = stbi_load(filePath.c_str(),
+    unsigned char* data = stbi_load(materialPath.c_str(),
         &newTexture.width, &newTexture.height, &newTexture.channels, STBI_rgb_alpha);
 
     if (!data) {
-        std::cerr << "Error loading texture: " << filePath << std::endl;
+        std::cerr << "Error loading texture: " << materialPath << std::endl;
         return false;
     }
 
