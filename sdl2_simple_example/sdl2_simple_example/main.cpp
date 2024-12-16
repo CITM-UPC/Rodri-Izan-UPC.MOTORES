@@ -7,6 +7,7 @@
 #include "MyWindow.h"
 #include "Importer.h"
 #include "Biblio.h"
+#include "SceneCamera.h"
 #include "Hierarchy.h"
 #include <imgui_impl_sdl2.h>
 #include "EditScene.h"
@@ -34,6 +35,7 @@ const char* filefbx = "./Assets/BakerHouse.fbx";
 const char* filetex = "./Assets/Baker_house.png";
 
 EditScene editor;
+SceneCamera sceneCamera;
 
 // Inicialización de OpenGL
 static void init_openGL() {
@@ -67,8 +69,8 @@ void drawGrid(float gridSize, int gridDivisions) {
 }
 
 void renderSceneContent(MyWindow& window, Importer* importer) {
-    auto camPos = window.GetCameraPosition();
-    auto targetPos = window.GetTargetPosition();
+    auto camPos = sceneCamera.GetCameraPosition();
+    auto targetPos = sceneCamera.GetTargetPosition();
     gluLookAt(camPos.x, camPos.y, camPos.z, targetPos.x, targetPos.y, targetPos.z, 0.0f, 1.0f, 0.0f);
 
     drawGrid(10.0f, 20);

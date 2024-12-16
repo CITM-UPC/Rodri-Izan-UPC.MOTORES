@@ -50,13 +50,6 @@ void SceneCamera::Rotate(int xrel, int yrel) {
     UpdateCameraPosition();
 }
 
-void SceneCamera::FocusOnObject() {
-    target = glm::vec3(0.0f, 0.0f, 0.0f);
-    orbitAngleHorizontal = 0.0f;
-    orbitAngleVertical = -30.0f;
-    orbitRadius = 10.0f;
-    UpdateCameraPosition();
-}
 
 void SceneCamera::MoveCameraWithMouse(int xrel, int yrel) {
     glm::vec3 up(0.0f, 1.0f, 0.0f);
