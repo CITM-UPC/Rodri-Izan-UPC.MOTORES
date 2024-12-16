@@ -212,86 +212,6 @@ void MyWindow::close() {
     }
 }
 
-void MyWindow::MoveCamera(const Uint8* keystate) {
-    float adjustedSpeed = (keystate[SDL_SCANCODE_LSHIFT] ? cameraSpeed * 2.0f : cameraSpeed);
-    float horizontalRad = glm::radians(orbitAngleHorizontal);
-    float verticalRad = glm::radians(orbitAngleVertical);
-
-    glm::vec3 forward(
-        cos(verticalRad) * sin(horizontalRad),
-        sin(verticalRad),
-        cos(verticalRad) * cos(horizontalRad)
-    );
-
-    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-
-    // Movimiento adelante y atr�s
-    if (keystate[SDL_SCANCODE_W]) {
-        cameraX -= forward.x * adjustedSpeed;
-        cameraY -= forward.y * adjustedSpeed;
-        cameraZ -= forward.z * adjustedSpeed;
-    }
-    if (keystate[SDL_SCANCODE_S]) {
-        cameraX += forward.x * adjustedSpeed;
-        cameraY += forward.y * adjustedSpeed;
-        cameraZ += forward.z * adjustedSpeed;
-    }
-
-    // Movimiento lateral
-    if (keystate[SDL_SCANCODE_D]) {
-        cameraX -= right.x * adjustedSpeed;
-        cameraY -= right.y * adjustedSpeed;
-        cameraZ -= right.z * adjustedSpeed;
-    }
-    if (keystate[SDL_SCANCODE_A]) {
-        cameraX += right.x * adjustedSpeed;
-        cameraY += right.y * adjustedSpeed;
-        cameraZ += right.z * adjustedSpeed;
-    }
-}
-
-void MyWindow::RotateCamera(int xrel, int yrel) {
-    const float sensitivity = 0.3f;
-
-    orbitAngleHorizontal += xrel * sensitivity;
-    orbitAngleVertical += yrel * sensitivity;
-
-    float horizontalRad = glm::radians(orbitAngleHorizontal);
-    float verticalRad = glm::radians(orbitAngleVertical);
-
-    // Actualizar la posici�n de la c�mara basada en los �ngulos
-    cameraX = targetX + orbitRadius * cos(verticalRad) * sin(horizontalRad);
-    cameraY = targetY + orbitRadius * sin(verticalRad);
-    cameraZ = targetZ + orbitRadius * cos(verticalRad) * cos(horizontalRad);
-}
-void MyWindow::FocusOnObject() {
-    // Cambia targetX, Y, Z seg�n el objeto que deseas centrar
-    targetX = 0.0f;
-    targetY = 0.0f;
-    targetZ = 0.0f;
-    orbitAngleHorizontal = 0.0f;
-    orbitAngleVertical = -30.0f;
-    orbitRadius = 10.0f;  // Ajusta el radio seg�n el tama�o del objeto
-    RotateCamera(0, 0);
-}
-void MyWindow::MoveCameraWithMouse(int xrel, int yrel) {
-    float sensitivity = 0.05f; 
-    glm::vec3 up(0.0f, 1.0f, 0.0f);  // Eje vertical para mover en el eje Y
-    glm::vec3 right(-1.0f, 0.0f, 0.0f);  // Eje vertical para mover en el eje X
-
-    // C�lculo del desplazamiento en el eje horizontal y vertical
-    glm::vec3 horizontalMovement = right * (-xrel * sensitivity); 
-    glm::vec3 verticalMovement = up * (yrel * sensitivity);        
-
-    // Actualizar la posici�n de la c�mara y el objetivo
-    cameraX += horizontalMovement.x + verticalMovement.x;
-    cameraY += horizontalMovement.y + verticalMovement.y;
-    cameraZ += horizontalMovement.z + verticalMovement.z;
-
-    targetX += horizontalMovement.x + verticalMovement.x;
-    targetY += horizontalMovement.y + verticalMovement.y;
-    targetZ += horizontalMovement.z + verticalMovement.z;
-}
 bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -305,7 +225,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             event_processor->processEvent(event);
         }
 
-        MoveCamera(keystate);
+        sceneCamera->Move(keystate);
 
         switch (event.type) {
         case SDL_QUIT:
@@ -322,13 +242,13 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 
         case SDL_KEYDOWN:
             if (event.key.keysym.sym == SDLK_f) {
-                FocusOnObject();
+                sceneCamera->FocusOnObject();
             }
             break;
 
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_RIGHT) {
-                rotatingCamera = true;
+                sceneCamera::rotatingCamera = true;
             }
             if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
                 rotatingCamera = true;
@@ -348,13 +268,13 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
                 RotateCamera(event.motion.xrel, event.motion.yrel);
             }
             if (movingCameraWithMouse) {
-                MoveCameraWithMouse(event.motion.xrel, event.motion.yrel);
+                SceneCamera::MoveCameraWithMouse(event.motion.xrel, event.motion.yrel);
             }
             break;
 
         case SDL_MOUSEWHEEL:
             if (event.wheel.y > 0) {
-                orbitRadius = glm::max(orbitRadius - 1.0f, 2.0f);
+                Camera::orbitRadius;
             }
             else if (event.wheel.y < 0) {
                 orbitRadius = glm::min(orbitRadius + 1.0f, 30.0f);
