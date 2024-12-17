@@ -6,6 +6,7 @@
 #include "Importer.h"
 #include "Biblio.h"
 #include "SceneCamera.h"
+#include "Camera.h"
 
 // Clase abstracta que se encarga de procesar eventos
 class IEventProcessor {
@@ -17,7 +18,8 @@ public:
 class MyWindow {
 private:
     Importer* importer;
-    SceneCamera* sceneCamera;
+    SceneCamera sceneCamera;
+    Camera* camera;
 
     SDL_Window* _window = nullptr;
     SDL_GLContext _ctx = nullptr;

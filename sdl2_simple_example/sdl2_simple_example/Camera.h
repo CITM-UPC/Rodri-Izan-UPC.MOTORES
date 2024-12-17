@@ -25,7 +25,7 @@ protected:
 
     // Parámetros de movimiento
     float cameraSpeed;
-    float orbitRadius;
+
     float sensitivity;
 
     // Ángulos de rotación
@@ -35,7 +35,7 @@ protected:
 public:
     Camera();
     virtual ~Camera() = default;
-
+    float orbitRadius;
     // Getters y setters básicos
     glm::vec3 GetPosition() const { return position; }
     void SetPosition(const glm::vec3& pos);
@@ -56,6 +56,8 @@ public:
 
     // Método para actualizar la proyección
     void UpdateProjection(float width, float height);
+
+    void Zoom(float amount);
 
 protected:
     // Método interno para calcular la posición de la cámara basada en ángulos

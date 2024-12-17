@@ -2,7 +2,7 @@
 #include <cmath>
 
 Camera::Camera()
-    : position(0.0f, 0.0f, 10.0f),
+    : position(0.0f, -10.0f, 10.0f),
     target(0.0f, 0.0f, 0.0f),
     upVector(0.0f, 1.0f, 0.0f),
     fov(45.0f),
@@ -35,6 +35,13 @@ glm::mat4 Camera::GetViewMatrix() const {
 
 void Camera::UpdateProjection(float width, float height) {
     aspectRatio = width / height;
+}
+
+void Camera::Zoom(float amount) {
+    if (this != nullptr) {
+        orbitRadius = glm::clamp(orbitRadius + amount, 2.0f, 30.0f);
+        UpdateCameraPosition();
+    }
 }
 
 void Camera::UpdateCameraPosition() {

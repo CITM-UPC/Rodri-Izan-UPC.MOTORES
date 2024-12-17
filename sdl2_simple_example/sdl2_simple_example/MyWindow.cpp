@@ -225,7 +225,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             event_processor->processEvent(event);
         }
 
-        sceneCamera->Move(keystate);
+        sceneCamera.Move(keystate);
 
         switch (event.type) {
         case SDL_QUIT:
@@ -242,44 +242,44 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
 
         case SDL_KEYDOWN:
             if (event.key.keysym.sym == SDLK_f) {
-                sceneCamera->FocusOnObject();
+                sceneCamera.FocusOnObject();
             }
             break;
 
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_RIGHT) {
-                sceneCamera::rotatingCamera = true;
+                sceneCamera.rotatingCamera = true;
             }
             if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
-                rotatingCamera = true;
+                sceneCamera.rotatingCamera = true;
             }
             if (event.button.button == SDL_BUTTON_MIDDLE && keystate[SDL_SCANCODE_LALT]) {
-                movingCameraWithMouse = true;
+                sceneCamera.movingCameraWithMouse = true;
             }
             break;
 
         case SDL_MOUSEBUTTONUP:
-            rotatingCamera = false;
-            movingCameraWithMouse = false;
+            sceneCamera.rotatingCamera = false;
+            sceneCamera.movingCameraWithMouse = false;
             break;
 
         case SDL_MOUSEMOTION:
-            if (rotatingCamera) {
-                RotateCamera(event.motion.xrel, event.motion.yrel);
+            if (sceneCamera.rotatingCamera) {
+                sceneCamera.Rotate(event.motion.xrel, event.motion.yrel);
             }
-            if (movingCameraWithMouse) {
-                SceneCamera::MoveCameraWithMouse(event.motion.xrel, event.motion.yrel);
+            if (sceneCamera.movingCameraWithMouse) {
+                sceneCamera.MoveCameraWithMouse(event.motion.xrel, event.motion.yrel);
             }
             break;
 
         case SDL_MOUSEWHEEL:
             if (event.wheel.y > 0) {
-                Camera::orbitRadius;
+                camera->orbitRadius;
             }
             else if (event.wheel.y < 0) {
-                orbitRadius = glm::min(orbitRadius + 1.0f, 30.0f);
+                sceneCamera.orbitRadius = glm::min(sceneCamera.orbitRadius + 1.0f, 30.0f);
             }
-            RotateCamera(0, 0);
+            sceneCamera.Rotate(0, 0);
             break;
 
         case SDL_DROPFILE: {
@@ -318,7 +318,7 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
                 obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
                 obj->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
             }
-            FocusOnObject();
+            sceneCamera.FocusOnObject();
         }
     }
     else if (fileExtension == "png" || fileExtension == "dds" || fileExtension == "jpg" || fileExtension == "jpeg") {

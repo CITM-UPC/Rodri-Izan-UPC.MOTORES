@@ -124,19 +124,36 @@ int main(int argc, char** argv) {
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);
 
     init_openGL();
-
-    // Inicialización de Importer
     importer.Init();
+
+
+    // Inicializar la cámara con un punto de enfoque inicial
+    sceneCamera.FocusOnObject();
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
+        // Obtener estado del teclado
+        const Uint8* keystate = SDL_GetKeyboardState(NULL);
+
+        // Mover la cámara con el teclado
+        sceneCamera.Move(keystate);
+
+        // Manejar eventos de ratón para rotación
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_MOUSEMOTION:
+                if (event.motion.state & SDL_BUTTON_RMASK) {  // Botón derecho presionado
+                    sceneCamera.Rotate(event.motion.xrel, event.motion.yrel);
+                }
+                break;
+            }
+        }
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-
-
-        // Llamar a la función de renderizado de la escena, que esta llama al renderizado de los GameObjects
         editor.RenderEditorWindows(window, &importer, renderSceneContent);
 
         ImGui::Render();
