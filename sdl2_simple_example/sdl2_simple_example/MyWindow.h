@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "Importer.h"
+#include "SceneCamera.h"
 #include "Biblio.h"
 
 // Clase abstracta que se encarga de procesar eventos
@@ -16,6 +17,7 @@ public:
 class MyWindow {
 private:
     Importer* importer;
+    SceneCamera sceneCamera;
 
     SDL_Window* _window = nullptr;
     SDL_GLContext _ctx = nullptr;
