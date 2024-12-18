@@ -18,6 +18,8 @@
 #include <assimp/postprocess.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "GameObjectManager.h"
+#include "MyWindow.h"
+#include "SceneCamera.h"
 
 using namespace std;
 using hrclock = chrono::high_resolution_clock;
