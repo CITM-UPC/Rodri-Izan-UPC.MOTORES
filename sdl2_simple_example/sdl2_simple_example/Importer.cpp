@@ -212,25 +212,41 @@ bool Importer::SaveModelToCustomFormat(const std::string& modelName, const std::
     size_t meshCount = model.meshes.size();
     outFile.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
 
-    // Escribir cada malla
-    for (const auto& mesh : model.meshes) {
+    // Guardar cada malla por separado
+    for (size_t i = 0; i < model.meshes.size(); ++i) {
+        const auto& mesh = model.meshes[i];
+
+        // Crear un nombre único para la malla
+        std::string meshFileName = libraryPath + "Meshes/" + modelName + "_Mesh" + std::to_string(i) + ".msh";
+
+        // Guardar la malla en su propio archivo
+        std::ofstream meshFile(meshFileName, std::ios::binary);
+        if (!meshFile.is_open()) {
+            std::cerr << "Error opening mesh file for saving: " << meshFileName << std::endl;
+            return false;
+        }
+
         // Guardar vértices
         size_t vertexCount = mesh.vertices.size();
-        outFile.write(reinterpret_cast<const char*>(&vertexCount), sizeof(vertexCount));
-        outFile.write(reinterpret_cast<const char*>(mesh.vertices.data()),
-            vertexCount * sizeof(GLfloat));
+        meshFile.write(reinterpret_cast<const char*>(&vertexCount), sizeof(vertexCount));
+        meshFile.write(reinterpret_cast<const char*>(mesh.vertices.data()), vertexCount * sizeof(GLfloat));
 
         // Guardar coordenadas de textura
         size_t texCoordCount = mesh.texCoords.size();
-        outFile.write(reinterpret_cast<const char*>(&texCoordCount), sizeof(texCoordCount));
-        outFile.write(reinterpret_cast<const char*>(mesh.texCoords.data()),
-            texCoordCount * sizeof(GLfloat));
+        meshFile.write(reinterpret_cast<const char*>(&texCoordCount), sizeof(texCoordCount));
+        meshFile.write(reinterpret_cast<const char*>(mesh.texCoords.data()), texCoordCount * sizeof(GLfloat));
 
         // Guardar índices
         size_t indexCount = mesh.indices.size();
-        outFile.write(reinterpret_cast<const char*>(&indexCount), sizeof(indexCount));
-        outFile.write(reinterpret_cast<const char*>(mesh.indices.data()),
-            indexCount * sizeof(GLuint));
+        meshFile.write(reinterpret_cast<const char*>(&indexCount), sizeof(indexCount));
+        meshFile.write(reinterpret_cast<const char*>(mesh.indices.data()), indexCount * sizeof(GLuint));
+
+        // Escribir el nombre del archivo de la malla en el archivo del modelo
+        size_t meshFileNameLength = meshFileName.length();
+        outFile.write(reinterpret_cast<const char*>(&meshFileNameLength), sizeof(meshFileNameLength));
+        outFile.write(meshFileName.c_str(), meshFileNameLength);
+
+        meshFile.close();
     }
 
     std::cout << "Model " << modelName << " saved successfully to " << outputPath << std::endl;
@@ -259,33 +275,41 @@ bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
     size_t meshCount;
     inFile.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
 
-    // Leer cada malla
-    for (size_t i = 0; i < meshCount; i++) {
+    // Leer referencias a archivos de mallas y cargar cada malla
+    for (size_t i = 0; i < meshCount; ++i) {
+        size_t meshFileNameLength;
+        inFile.read(reinterpret_cast<char*>(&meshFileNameLength), sizeof(meshFileNameLength));
+        std::string meshFileName(meshFileNameLength, '\0');
+        inFile.read(&meshFileName[0], meshFileNameLength);
+
+        std::ifstream meshFile(meshFileName, std::ios::binary);
+        if (!meshFile.is_open()) {
+            std::cerr << "Error opening mesh file for loading: " << meshFileName << std::endl;
+            return false;
+        }
+
         Mesh mesh;
         size_t vertexCount, texCoordCount, indexCount;
 
         // Leer vértices
-        inFile.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
+        meshFile.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
         mesh.vertices.resize(vertexCount);
-        inFile.read(reinterpret_cast<char*>(mesh.vertices.data()),
-            vertexCount * sizeof(GLfloat));
+        meshFile.read(reinterpret_cast<char*>(mesh.vertices.data()), vertexCount * sizeof(GLfloat));
 
         // Leer coordenadas de textura
-        inFile.read(reinterpret_cast<char*>(&texCoordCount), sizeof(texCoordCount));
+        meshFile.read(reinterpret_cast<char*>(&texCoordCount), sizeof(texCoordCount));
         mesh.texCoords.resize(texCoordCount);
-        inFile.read(reinterpret_cast<char*>(mesh.texCoords.data()),
-            texCoordCount * sizeof(GLfloat));
+        meshFile.read(reinterpret_cast<char*>(mesh.texCoords.data()), texCoordCount * sizeof(GLfloat));
 
         // Leer índices
-        inFile.read(reinterpret_cast<char*>(&indexCount), sizeof(indexCount));
+        meshFile.read(reinterpret_cast<char*>(&indexCount), sizeof(indexCount));
         mesh.indices.resize(indexCount);
-        inFile.read(reinterpret_cast<char*>(mesh.indices.data()),
-            indexCount * sizeof(GLuint));
+        meshFile.read(reinterpret_cast<char*>(mesh.indices.data()), indexCount * sizeof(GLuint));
 
         newModel.meshes.push_back(std::move(mesh));
     }
 
-    // Agregar o actualizar el modelo en el mapa
+    // Agregar el modelo cargado al mapa
     models[modelName] = std::move(newModel);
 
     auto endTime = std::chrono::high_resolution_clock::now();
