@@ -381,7 +381,7 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
     // Convertir a minúsculas para comparación
     std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 
-    if (fileExtension == "fbx" || fileExtension =="custom") {
+    if (fileExtension == "fbx" || fileExtension =="mdl") {
         // Importar el modelo
         if (importer->ImportFBX(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();
@@ -401,7 +401,7 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
             FocusOnObject();
         }
     }
-    else if (fileExtension == "png" || fileExtension == "dds" || fileExtension == "jpg" || fileExtension == "jpeg") {
+    else if (fileExtension == "png" || fileExtension == "dds" || fileExtension == "jpg" || fileExtension == "jpeg" || fileExtension == "tex") {
         // Importar la textura
         if (importer->ImportTexture(droppedFile)) {
             auto& manager = GameObjectManager::GetInstance();

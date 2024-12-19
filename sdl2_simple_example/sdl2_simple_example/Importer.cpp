@@ -58,7 +58,7 @@ bool Importer::CreateRequiredDirectories() {
 
 bool Importer::ImportFBX(const std::string& filePath) {
     std::string modelName = std::filesystem::path(filePath).stem().string();
-    std::string customPath = "Library/Meshes/" + modelName + ".custom";
+    std::string customPath = "Library/Models/" + modelName + ".mdl";
 
     // Verificar si el modelo ya está cargado
     if (models.find(modelName) != models.end()) {
@@ -298,7 +298,7 @@ bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
 bool Importer::ImportTexture(const std::string& filePath) {
     namespace fs = std::filesystem;
     std::string textureName = fs::path(filePath).stem().string();
-    std::string materialPath = libraryPath + "Materials/" + fs::path(filePath).filename().string();
+    std::string customPath = libraryPath + "Materials/" + textureName + ".tex";
 
     // Verificar si la textura ya está cargada
     auto it = textures.find(textureName);
@@ -307,52 +307,225 @@ bool Importer::ImportTexture(const std::string& filePath) {
         return true;
     }
 
-    // Copiar el archivo a la carpeta de materials
-    try {
-        if (!fs::exists(materialPath)) {
-            fs::copy_file(filePath, materialPath, fs::copy_options::overwrite_existing);
-            std::cout << "Texture copied to: " << materialPath << std::endl;
-        }
-    }
-    catch (const fs::filesystem_error& e) {
-        std::cerr << "Error copying texture file: " << e.what() << std::endl;
-        return false;
+    // Intentar cargar el archivo custom primero
+    if (fs::exists(customPath)) {
+        std::cout << "Custom texture format found, loading " << customPath << std::endl;
+        return LoadTextureFromCustomFormat(customPath);
     }
 
     // Crear nueva textura
     Texture newTexture;
     newTexture.name = textureName;
 
-    // Cargar textura usando stb_image
-    unsigned char* data = stbi_load(materialPath.c_str(),
-        &newTexture.width, &newTexture.height, &newTexture.channels, STBI_rgb_alpha);
+    try {
+        // Cargar textura usando stb_image
+        unsigned char* data = stbi_load(filePath.c_str(),
+            &newTexture.width, &newTexture.height, &newTexture.channels, STBI_rgb_alpha);
 
-    if (!data) {
-        std::cerr << "Error loading texture: " << materialPath << std::endl;
+        if (!data) {
+            std::cerr << "Error loading texture: " << filePath << std::endl;
+            return false;
+        }
+
+        // Verificar dimensiones válidas
+        const int MAX_TEXTURE_SIZE = 16384;
+        if (newTexture.width <= 0 || newTexture.height <= 0 ||
+            newTexture.width > MAX_TEXTURE_SIZE || newTexture.height > MAX_TEXTURE_SIZE) {
+            std::cerr << "Invalid texture dimensions: " << newTexture.width << "x" << newTexture.height << std::endl;
+            stbi_image_free(data);
+            return false;
+        }
+
+        // Verificar tamaño total
+        size_t dataSize = static_cast<size_t>(newTexture.width) *
+            static_cast<size_t>(newTexture.height) * 4;
+        if (dataSize > std::numeric_limits<size_t>::max() / 4) {
+            std::cerr << "Texture size too large" << std::endl;
+            stbi_image_free(data);
+            return false;
+        }
+
+        // Generar y configurar la textura OpenGL
+        glGenTextures(1, &newTexture.textureID);
+        glBindTexture(GL_TEXTURE_2D, newTexture.textureID);
+
+        // Parámetros de textura
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        // Cargar la imagen en OpenGL
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newTexture.width, newTexture.height,
+            0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        // Verificar errores de OpenGL
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cerr << "OpenGL error while loading texture: " << error << std::endl;
+            stbi_image_free(data);
+            glDeleteTextures(1, &newTexture.textureID);
+            return false;
+        }
+
+        // Guardar en formato custom antes de liberar los datos
+        if (!SaveTextureToCustomFormat(textureName, data, newTexture)) {
+            std::cerr << "Failed to save texture in custom format" << std::endl;
+        }
+
+        stbi_image_free(data);
+
+        // Agregar la textura al mapa
+        textures[textureName] = std::move(newTexture);
+        std::cout << "Texture " << textureName << " loaded successfully" << std::endl;
+
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Exception while loading texture: " << e.what() << std::endl;
         return false;
     }
+}
 
-    // Generar y configurar la textura OpenGL
-    glGenTextures(1, &newTexture.textureID);
-    glBindTexture(GL_TEXTURE_2D, newTexture.textureID);
+bool Importer::SaveTextureToCustomFormat(const std::string& textureName, unsigned char* data, const Texture& texture) {
+    try {
+        std::string outputPath = libraryPath + "Materials/" + textureName + ".tex";
+        std::ofstream outFile(outputPath, std::ios::binary);
 
-    // Parámetros de textura
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        if (!outFile.is_open()) {
+            std::cerr << "Error opening file for saving texture: " << outputPath << std::endl;
+            return false;
+        }
 
-    // Cargar la imagen en OpenGL
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newTexture.width, newTexture.height,
-        0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        // Verificar nombre válido
+        if (texture.name.empty() || texture.name.length() > 1024) {
+            std::cerr << "Invalid texture name length" << std::endl;
+            return false;
+        }
 
-    stbi_image_free(data);
+        // Escribir el nombre de la textura
+        size_t nameLength = texture.name.length();
+        outFile.write(reinterpret_cast<const char*>(&nameLength), sizeof(nameLength));
+        outFile.write(texture.name.c_str(), nameLength);
 
-    // Agregar la textura al mapa
-    textures[textureName] = std::move(newTexture);
-    std::cout << "Texture " << textureName << " loaded successfully" << std::endl;
+        // Escribir las dimensiones y canales
+        outFile.write(reinterpret_cast<const char*>(&texture.width), sizeof(texture.width));
+        outFile.write(reinterpret_cast<const char*>(&texture.height), sizeof(texture.height));
+        outFile.write(reinterpret_cast<const char*>(&texture.channels), sizeof(texture.channels));
 
-    return true;
+        // Verificar y escribir los datos de la imagen
+        size_t dataSize = static_cast<size_t>(texture.width) *
+            static_cast<size_t>(texture.height) * 4;
+        if (dataSize == 0 || dataSize > std::numeric_limits<size_t>::max() / 4) {
+            std::cerr << "Invalid texture data size" << std::endl;
+            return false;
+        }
+
+        outFile.write(reinterpret_cast<const char*>(data), dataSize);
+
+        if (!outFile) {
+            std::cerr << "Error writing texture data" << std::endl;
+            return false;
+        }
+
+        std::cout << "Texture " << textureName << " saved successfully to " << outputPath << std::endl;
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Exception while saving texture: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Importer::LoadTextureFromCustomFormat(const std::string& filePath) {
+    try {
+        std::ifstream inFile(filePath, std::ios::binary);
+        if (!inFile.is_open()) {
+            std::cerr << "Error opening file for loading texture: " << filePath << std::endl;
+            return false;
+        }
+
+        // Leer el nombre de la textura
+        size_t nameLength;
+        inFile.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+
+        // Verificar longitud del nombre
+        if (nameLength == 0 || nameLength > 1024) {
+            std::cerr << "Invalid texture name length" << std::endl;
+            return false;
+        }
+
+        std::string textureName(nameLength, '\0');
+        inFile.read(&textureName[0], nameLength);
+
+        // Crear nueva textura
+        Texture newTexture;
+        newTexture.name = textureName;
+
+        // Leer dimensiones y canales
+        inFile.read(reinterpret_cast<char*>(&newTexture.width), sizeof(newTexture.width));
+        inFile.read(reinterpret_cast<char*>(&newTexture.height), sizeof(newTexture.height));
+        inFile.read(reinterpret_cast<char*>(&newTexture.channels), sizeof(newTexture.channels));
+
+        // Verificar dimensiones válidas
+        const int MAX_TEXTURE_SIZE = 16384;
+        if (newTexture.width <= 0 || newTexture.height <= 0 ||
+            newTexture.width > MAX_TEXTURE_SIZE || newTexture.height > MAX_TEXTURE_SIZE) {
+            std::cerr << "Invalid texture dimensions: " << newTexture.width << "x" << newTexture.height << std::endl;
+            return false;
+        }
+
+        // Verificar tamaño total
+        size_t dataSize = static_cast<size_t>(newTexture.width) *
+            static_cast<size_t>(newTexture.height) * 4;
+        if (dataSize > std::numeric_limits<size_t>::max() / 4) {
+            std::cerr << "Texture size too large" << std::endl;
+            return false;
+        }
+
+        // Leer los datos de la imagen
+        std::vector<unsigned char> data(dataSize);
+        inFile.read(reinterpret_cast<char*>(data.data()), dataSize);
+
+        if (!inFile) {
+            std::cerr << "Error reading texture data" << std::endl;
+            return false;
+        }
+
+        // Generar y configurar la textura OpenGL
+        glGenTextures(1, &newTexture.textureID);
+        glBindTexture(GL_TEXTURE_2D, newTexture.textureID);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newTexture.width, newTexture.height,
+            0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+
+        // Verificar errores de OpenGL
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cerr << "OpenGL error while loading texture: " << error << std::endl;
+            glDeleteTextures(1, &newTexture.textureID);
+            return false;
+        }
+
+        // Agregar la textura al mapa
+        textures[textureName] = std::move(newTexture);
+        std::cout << "Texture " << textureName << " loaded successfully from custom format" << std::endl;
+
+        return true;
+    }
+    catch (const std::bad_alloc& e) {
+        std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+        return false;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error loading texture: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 const Importer::Model* Importer::GetModel(const std::string& modelName) const {
