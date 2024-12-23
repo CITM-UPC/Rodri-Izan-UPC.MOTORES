@@ -46,6 +46,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     RenderAssetsWindow();
     RenderPerformanceWindow();
     RenderConsoleWindow();
+	RenderResourcesWindow();
 
     ImGui::End();
 }
@@ -232,5 +233,20 @@ void EditScene::RenderPerformanceWindow() {
     }
 
     performance.DrawPerformanceWindow();
+    ImGui::End();
+}
+void EditScene::RenderResourcesWindow() {
+    if (!windowStates.showResources) return;
+
+    bool isOpen = true;
+    ImGui::Begin("Resources Monitor", &isOpen);
+
+    if (!isOpen) {
+        CloseWindow("Resources", windowStates.showResources);
+        ImGui::End();
+        return;
+    }
+
+	resourceUsage.Display();
     ImGui::End();
 }

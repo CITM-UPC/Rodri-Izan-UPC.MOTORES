@@ -83,6 +83,9 @@ public:
         return m_textureID;
     }
 
+    std::string GetModelName() const;
+    std::string GetTextureName() const;
+
 private:
     std::vector<int> m_meshIndices;   // Índice de la malla en el Importer
     GLuint m_textureID;   // ID de la textura

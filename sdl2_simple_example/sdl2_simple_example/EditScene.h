@@ -8,6 +8,7 @@
 #include "GameObject.h"
 #include "GameObjectManager.h"
 #include "Performance.h"
+#include "Resources.h"
 
 // Clase que se encarga de motrar las ventanas de la escena
 class EditScene {
@@ -26,6 +27,7 @@ public:
     void RenderAssetsWindow();
     void RenderConsoleWindow();
     void RenderPerformanceWindow();
+    void RenderResourcesWindow();
 
 private:
     Hierarchy hierarchy;
@@ -33,6 +35,7 @@ private:
     Biblio biblio;
     Console console;
     PerformanceWindow performance;
+	ResourceUsageWindow resourceUsage;
 
     struct WindowStates {
         bool showScene = true;
@@ -42,6 +45,7 @@ private:
         bool showAssets = true;
         bool showConsole = true;
         bool showPerformance = true;
+		bool showResources = true;
     } windowStates;
 
     void ToggleWindow(const char* name, bool& state);
