@@ -4,6 +4,7 @@
 #include "imgui_impl_opengl3.h"
 #include "stdlib.h"
 #include "PrimitiveFactory.h"
+#include "GameObjectManager.h"
 
 EditScene::EditScene()
     : biblio("./Library") { // Inicializamos con una ruta
@@ -47,7 +48,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     RenderAssetsWindow();
     RenderPerformanceWindow();
     RenderConsoleWindow();
-	RenderResourcesWindow();
+    RenderResourcesWindow();
 
     ImGui::End();
 }
@@ -63,7 +64,6 @@ void EditScene::ToggleWindow(const char* name, bool& state) {
 void EditScene::CloseWindow(const char* name, bool& state) {
     state = false;
 }
-
 
 void EditScene::RenderMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
@@ -209,7 +209,14 @@ void EditScene::RenderHierarchyWindow() {
         return;
     }
 
-    hierarchy.DrawHierarchyWindow();
+    // Mostrar los GameObjects en la jerarquía
+    auto gameObjects = GameObjectManager::GetInstance().GetAllGameObjects();
+    for (auto* gameObject : gameObjects) {
+        if (ImGui::Selectable(gameObject->GetName().c_str())) {
+            GameObjectManager::GetInstance().SetSelectedGameObject(gameObject);
+        }
+    }
+
     ImGui::End();
 }
 
@@ -233,7 +240,7 @@ void EditScene::RenderConsoleWindow() {
     if (!windowStates.showConsole) return;
 
     bool isOpen = true;
-  
+
     console.Draw("Console");
 
     if (!isOpen) {
@@ -256,14 +263,14 @@ void EditScene::RenderPerformanceWindow() {
         return;
     }
 
-    performance.DrawPerformanceWindow();
     ImGui::End();
 }
+
 void EditScene::RenderResourcesWindow() {
     if (!windowStates.showResources) return;
 
     bool isOpen = true;
-    ImGui::Begin("Resources Monitor", &isOpen);
+    ImGui::Begin("Resources", &isOpen);
 
     if (!isOpen) {
         CloseWindow("Resources", windowStates.showResources);
@@ -271,6 +278,5 @@ void EditScene::RenderResourcesWindow() {
         return;
     }
 
-	resourceUsage.Display();
     ImGui::End();
 }
