@@ -139,6 +139,7 @@
     <ClCompile Include="MyWindow.cpp" />
     <ClCompile Include="Biblio.cpp" />
     <ClCompile Include="Performance.cpp" />
+    <ClCompile Include="PrimitiveFactory.cpp" />
     <ClCompile Include="SceneCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="MyWindow.h" />
     <ClInclude Include="Biblio.h" />
     <ClInclude Include="Performance.h" />
+    <ClInclude Include="PrimitiveFactory.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="SceneCamera.h" />
     <ClInclude Include="Window.h" />

@@ -1,11 +1,16 @@
 #include "GameObjectCamera.h"
-#include <SDL2/SDL.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 GameObjectCamera::GameObjectCamera() {
     // Inicialización por defecto
     position = glm::vec3(0.0f, 2.0f, -5.0f);
     target = glm::vec3(0.0f, 0.0f, 1.0f);
+    yaw = -90.0f; // Inicia mirando hacia el frente
+    pitch = 0.0f;
+    movementSpeed = 2.5f;
+    mouseSensitivity = 0.1f;
+    isActive = false;
+    isMouseLocked = false;
 }
 
 void GameObjectCamera::OnPlay() {
@@ -90,4 +95,14 @@ void GameObjectCamera::ProcessInput() {
 void GameObjectCamera::Update() {
     if (!isActive) return;
     ProcessInput();
+}
+
+glm::mat4 GameObjectCamera::GetViewMatrix() const {
+    // La matriz de vista se genera a partir de la posición y el objetivo
+    return glm::lookAt(position, target, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+glm::mat4 GameObjectCamera::GetProjectionMatrix(float fov, float aspect, float near, float far) const {
+    // La matriz de proyección es una proyección perspectiva
+    return glm::perspective(glm::radians(fov), aspect, near, far);
 }

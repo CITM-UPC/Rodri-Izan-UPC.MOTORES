@@ -21,6 +21,8 @@ public:
 
     void ProcessInput();
     void Update() override;
+    glm::mat4 GetViewMatrix() const;
+    glm::mat4 GetProjectionMatrix(float fov, float aspect, float, float) const;
     void OnPlay() override;
     void OnStop() override;
 

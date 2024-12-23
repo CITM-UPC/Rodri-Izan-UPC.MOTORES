@@ -3,6 +3,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include "stdlib.h"
+#include "PrimitiveFactory.h"
 
 EditScene::EditScene()
     : biblio("./Library") { // Inicializamos con una ruta
@@ -113,11 +114,34 @@ void EditScene::RenderMenuBar() {
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("GameObject")) {
+            if (ImGui::BeginMenu("3D Object")) {
+                if (ImGui::MenuItem("Cube")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cube);
+                }
+                if (ImGui::MenuItem("Sphere")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Sphere);
+                }
+                if (ImGui::MenuItem("Cylinder")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cylinder);
+                }
+                if (ImGui::MenuItem("Plane")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Plane);
+                }
+                if (ImGui::MenuItem("Cone")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cone);
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Camera")) {
+                PrimitiveFactory::CreateCamera();
+            }
+            ImGui::EndMenu();
+        }
 
         ImGui::EndMainMenuBar();
     }
 }
-
 
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
     void(*renderSceneContent)(MyWindow&, Importer*)) {
