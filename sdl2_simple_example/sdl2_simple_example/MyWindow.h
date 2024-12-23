@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Importer.h"
 #include "Biblio.h"
+#include "SceneCamera.h"
 
 // Clase abstracta que se encarga de procesar eventos
 class IEventProcessor {
@@ -16,6 +17,7 @@ public:
 class MyWindow {
 private:
     Importer* importer;
+    SceneCamera camera;
 
     SDL_Window* _window = nullptr;
     SDL_GLContext _ctx = nullptr;
@@ -37,38 +39,12 @@ private:
     float nearPlane = 0.1f;
     float farPlane = 100.0f;
 
-    // Camera properties
-    GLfloat cameraX = 0.0f;
-    GLfloat cameraY = 5.0f;
-    GLfloat cameraZ = 10.0f;
-    GLfloat cameraSpeed = 0.1f;
-
-    GLfloat cameraAngleX = 0.0f;
-    GLfloat cameraAngleY = 0.0f;
-    GLfloat cameraAngleZ = 0.0f;
-    bool rotatingCamera = false;
-    bool movingCamera = false;
-    bool movingCameraWithMouse = false;
-
-    GLfloat targetX = 0.0f;
-    GLfloat targetY = 0.0f;
-    GLfloat targetZ = 0.0f;
-    GLfloat orbitRadius = 10.0f;
-    GLfloat orbitAngleHorizontal = 0.0f;
-    GLfloat orbitAngleVertical = 30.0f;
-
-    // Private camera methods
-    void MoveCamera(const Uint8* keystate);
-    void MoveCameraWithMouse(int xrel, int yrel);
-
-    void RotateCamera(int xrel, int yrel);
-    void FocusOnObject();
     void HandleDroppedFile(const char* droppedFile);
 
 public:
     // Getters for camera properties
-    glm::vec3 GetCameraPosition() const { return glm::vec3(cameraX, cameraY, cameraZ); }
-    glm::vec3 GetTargetPosition() const { return glm::vec3(targetX, targetY, targetZ); }
+    glm::vec3 GetCameraPosition() const { return camera.GetPosition(); }
+    glm::vec3 GetTargetPosition() const { return camera.GetTarget(); }
 
 
     int width() const { return _width; }

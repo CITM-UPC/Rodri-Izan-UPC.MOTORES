@@ -138,8 +138,10 @@
     <ClCompile Include="MyWindow.cpp" />
     <ClCompile Include="Biblio.cpp" />
     <ClCompile Include="Performance.cpp" />
+    <ClCompile Include="SceneCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameObjectManager.h" />
@@ -152,6 +154,7 @@
     <ClInclude Include="Biblio.h" />
     <ClInclude Include="Performance.h" />
     <ClInclude Include="Resources.h" />
+    <ClInclude Include="SceneCamera.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
