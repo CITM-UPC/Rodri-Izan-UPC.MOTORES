@@ -47,6 +47,8 @@ public:
 
     // Funciones para manejo de texturas
     bool ImportTexture(const std::string& filePath);
+    bool SaveTextureToCustomFormat(const std::string& textureName, unsigned char* data, const Texture& texture);
+    bool LoadTextureFromCustomFormat(const std::string& filePath);
     const std::string GetTextureName(const std::string& filepath)const;
     const Texture* GetTexture(const std::string& textureName)const;
 

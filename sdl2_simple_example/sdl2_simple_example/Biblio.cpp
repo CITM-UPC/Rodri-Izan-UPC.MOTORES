@@ -9,10 +9,12 @@ namespace fs = std::filesystem;
 
 Biblio::Biblio()
     : m_assetsPath("./Assets"),
-    m_selectedAsset("") {}
+    m_selectedAsset("") {
+}
 
 Biblio::Biblio(const std::string& assetsPath)
-    : m_assetsPath(assetsPath), m_selectedAsset("") {}
+    : m_assetsPath(assetsPath), m_selectedAsset("") {
+}
 
 
 void Biblio::DrawAssetsWindow() {
@@ -21,6 +23,23 @@ void Biblio::DrawAssetsWindow() {
     // Mostrar archivo seleccionado actualmente
     if (!m_selectedAsset.empty()) {
         ImGui::Text("Selected Asset: %s", m_selectedAsset.c_str());
+
+        // Detectar si se presiona la tecla Suprimir
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
+            if (fs::exists(m_selectedAsset) && fs::is_regular_file(m_selectedAsset)) {
+                try {
+                    fs::remove(m_selectedAsset);
+                    std::cout << "Archivo eliminado: " << m_selectedAsset << std::endl;
+                    m_selectedAsset = ""; // Desmarcar el archivo seleccionado
+                }
+                catch (const std::exception& e) {
+                    std::cerr << "Error al eliminar el archivo: " << e.what() << std::endl;
+                }
+            }
+            else {
+                std::cerr << "No se puede eliminar: " << m_selectedAsset << " (no es un archivo válido)" << std::endl;
+            }
+        }
     }
     else {
         ImGui::Text("No asset selected");
@@ -57,7 +76,7 @@ void Biblio::DrawDirectoryRecursive(const std::string& path) {
                 m_selectedAsset = entry.path().string();
             }
 
-           
+
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
                 std::string filePath = entry.path().string();
                 const char* filePathCStr = filePath.c_str();
@@ -68,6 +87,7 @@ void Biblio::DrawDirectoryRecursive(const std::string& path) {
         }
     }
 }
+
 GLuint Biblio::LoadTexture(const std::string& path) {
     int width, height, channels;
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
