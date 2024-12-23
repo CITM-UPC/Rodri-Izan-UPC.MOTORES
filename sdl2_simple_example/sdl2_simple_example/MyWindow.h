@@ -6,6 +6,7 @@
 #include "Importer.h"
 #include "Biblio.h"
 #include "SceneCamera.h"
+#include "GameObjectCamera.h"
 
 // Clase abstracta que se encarga de procesar eventos
 class IEventProcessor {
@@ -17,7 +18,10 @@ public:
 class MyWindow {
 private:
     Importer* importer;
-    SceneCamera camera;
+    SceneCamera sceneCamera;
+
+    GameObjectCamera gameCamera;
+    bool isPlayMode = false;
 
     SDL_Window* _window = nullptr;
     SDL_GLContext _ctx = nullptr;
@@ -43,8 +47,27 @@ private:
 
 public:
     // Getters for camera properties
-    glm::vec3 GetCameraPosition() const { return camera.GetPosition(); }
-    glm::vec3 GetTargetPosition() const { return camera.GetTarget(); }
+    glm::vec3 GetCameraPosition() const {
+        return isPlayMode ? gameCamera.GetPosition() : sceneCamera.GetPosition();
+    }
+
+    glm::vec3 GetTargetPosition() const {
+        return isPlayMode ? gameCamera.GetTarget() : sceneCamera.GetTarget();
+    }
+
+    void SetPlayMode(bool enabled) {
+        isPlayMode = enabled;
+        if (isPlayMode) {
+            sceneCamera.SetActive(false);
+            gameCamera.OnPlay();
+        }
+        else {
+            gameCamera.OnStop();
+            sceneCamera.SetActive(true);
+        }
+    }
+
+    bool IsInPlayMode() const { return isPlayMode; }
 
 
     int width() const { return _width; }

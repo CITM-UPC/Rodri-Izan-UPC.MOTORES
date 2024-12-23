@@ -11,10 +11,12 @@ protected:
     glm::vec3 target = glm::vec3(0.0f);
     float moveSpeed = 0.1f;
 
-    // Orbit properties
+    // Propiedades de órbita
     float orbitRadius = 10.0f;
     float orbitAngleHorizontal = 0.0f;
     float orbitAngleVertical = 30.0f;
+
+    bool isActive = false;
 
 public:
     Camera() = default;
@@ -27,6 +29,7 @@ public:
     float GetNearPlane() const { return nearPlane; }
     float GetFarPlane() const { return farPlane; }
     float GetOrbitRadius() const { return orbitRadius; }
+    bool IsActive() const { return isActive; }
 
     // Setters
     void SetPosition(const glm::vec3& pos) { position = pos; }
@@ -35,7 +38,10 @@ public:
     void SetNearPlane(float near) { nearPlane = near; }
     void SetFarPlane(float far) { farPlane = far; }
     void SetMoveSpeed(float speed) { moveSpeed = speed; }
+    void SetActive(bool active) { isActive = active; }
 
-    // Virtual methods that can be overridden
+    // Métodos virtuales que pueden ser sobrescritos
     virtual void Update() {}
+    virtual void OnPlay() {} // Nuevo método para cuando se inicia el modo juego
+    virtual void OnStop() {} // Nuevo método para cuando se detiene el modo juego
 };

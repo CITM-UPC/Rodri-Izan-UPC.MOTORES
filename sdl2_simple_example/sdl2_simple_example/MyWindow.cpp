@@ -212,64 +212,74 @@ void MyWindow::close() {
     }
 }
 
-bool MyWindow::processEvents(IEventProcessor * event_processor) {
-        SDL_Event event;
-        const Uint8* keystate = SDL_GetKeyboardState(NULL);
+bool MyWindow::processEvents(IEventProcessor* event_processor) {
+    SDL_Event event;
+    const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
-        while (SDL_PollEvent(&event)) {
-            if (_imguiInitialized) {
-                ImGui_ImplSDL2_ProcessEvent(&event);
+    while (SDL_PollEvent(&event)) {
+        if (_imguiInitialized) {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+        }
+
+        if (event_processor) {
+            event_processor->processEvent(event);
+        }
+
+        // Procesar input según el modo actual
+        if (isPlayMode) {
+            gameCamera.Update();
+        }
+        else {
+            sceneCamera.ProcessKeyboardInput(keystate);
+        }
+
+        switch (event.type) {
+        case SDL_QUIT:
+            close();
+            return false;
+
+        case SDL_KEYDOWN:
+            // Añade una tecla para alternar entre modos (por ejemplo, F5)
+            if (event.key.keysym.sym == SDLK_F5) {
+                SetPlayMode(!isPlayMode);
             }
-
-            if (event_processor) {
-                event_processor->processEvent(event);
+            else if (!isPlayMode && event.key.keysym.sym == SDLK_f) {
+                sceneCamera.FocusOnObject();
             }
+            break;
 
-            camera.ProcessKeyboardInput(keystate);
-
-            switch (event.type) {
-            case SDL_QUIT:
-                close();
-                return false;
-
-            case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    _width = event.window.data1;
-                    _height = event.window.data2;
-                    resizeFramebuffer(_width, _height);
-                }
-                break;
-
-            case SDL_KEYDOWN:
-                if (event.key.keysym.sym == SDLK_f) {
-                    camera.FocusOnObject();
-                }
-                break;
-
-            case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONDOWN:
+            if (!isPlayMode) {
                 if (event.button.button == SDL_BUTTON_RIGHT) {
-                    camera.SetRotatingCamera(true);
+                    sceneCamera.SetRotatingCamera(true);
                 }
                 if (event.button.button == SDL_BUTTON_LEFT && keystate[SDL_SCANCODE_LALT]) {
-                    camera.SetRotatingCamera(true);
+                    sceneCamera.SetRotatingCamera(true);
                 }
                 if (event.button.button == SDL_BUTTON_MIDDLE && keystate[SDL_SCANCODE_LALT]) {
-                    camera.SetMovingCameraWithMouse(true);
+                    sceneCamera.SetMovingCameraWithMouse(true);
                 }
-                break;
+            }
+            break;
 
-            case SDL_MOUSEBUTTONUP:
-                camera.SetRotatingCamera(false);
-                camera.SetMovingCameraWithMouse(false);
-                break;
+        case SDL_MOUSEBUTTONUP:
+            if (!isPlayMode) {
+                sceneCamera.SetRotatingCamera(false);
+                sceneCamera.SetMovingCameraWithMouse(false);
+            }
+            break;
 
-            case SDL_MOUSEMOTION:
-                camera.ProcessMouseMotion(event.motion.xrel, event.motion.yrel);
-                break;
+        case SDL_MOUSEMOTION:
+            if (!isPlayMode) {
+                sceneCamera.ProcessMouseMotion(event.motion.xrel, event.motion.yrel);
+            }
+            break;
 
-            case SDL_MOUSEWHEEL:
-                camera.ProcessMouseWheel(event.wheel.y);
-                break;
+        case SDL_MOUSEWHEEL:
+            if (!isPlayMode) {
+                sceneCamera.ProcessMouseWheel(event.wheel.y);
+            }
+            break;
 
         case SDL_DROPFILE: {
             char* droppedFile = event.drop.file;
@@ -307,7 +317,7 @@ void MyWindow::HandleDroppedFile(const char* droppedFile) {
                 obj->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
                 obj->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
             }
-            camera.FocusOnObject();
+            sceneCamera.FocusOnObject();
         }
     }
     else if (fileExtension == "png" || fileExtension == "dds" || fileExtension == "jpg" || fileExtension == "jpeg" || fileExtension == "tex") {

@@ -130,6 +130,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Console.cpp" />
+    <ClCompile Include="GameObjectCamera.cpp" />
     <ClCompile Include="Hierarchy.cpp" />
     <ClCompile Include="Importer.cpp" />
     <ClCompile Include="EditScene.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GameObjectCamera.h" />
     <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Hierarchy.h" />
     <ClInclude Include="Importer.h" />
