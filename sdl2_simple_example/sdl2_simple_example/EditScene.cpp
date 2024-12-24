@@ -3,6 +3,8 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include "stdlib.h"
+#include "PrimitiveFactory.h"
+#include "GameObjectManager.h"
 
 EditScene::EditScene()
     : biblio("./Library") { // Inicializamos con una ruta
@@ -46,7 +48,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     RenderAssetsWindow();
     RenderPerformanceWindow();
     RenderConsoleWindow();
-	RenderResourcesWindow();
+    RenderResourcesWindow();
 
     ImGui::End();
 }
@@ -62,7 +64,6 @@ void EditScene::ToggleWindow(const char* name, bool& state) {
 void EditScene::CloseWindow(const char* name, bool& state) {
     state = false;
 }
-
 
 void EditScene::RenderMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
@@ -113,11 +114,34 @@ void EditScene::RenderMenuBar() {
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("GameObject")) {
+            if (ImGui::BeginMenu("3D Object")) {
+                if (ImGui::MenuItem("Cube")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cube);
+                }
+                if (ImGui::MenuItem("Sphere")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Sphere);
+                }
+                if (ImGui::MenuItem("Cylinder")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cylinder);
+                }
+                if (ImGui::MenuItem("Plane")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Plane);
+                }
+                if (ImGui::MenuItem("Cone")) {
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cone);
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Camera")) {
+                PrimitiveFactory::CreateCamera();
+            }
+            ImGui::EndMenu();
+        }
 
         ImGui::EndMainMenuBar();
     }
 }
-
 
 void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
     void(*renderSceneContent)(MyWindow&, Importer*)) {
@@ -185,7 +209,14 @@ void EditScene::RenderHierarchyWindow() {
         return;
     }
 
-    hierarchy.DrawHierarchyWindow();
+    // Mostrar los GameObjects en la jerarquía
+    auto gameObjects = GameObjectManager::GetInstance().GetAllGameObjects();
+    for (auto* gameObject : gameObjects) {
+        if (ImGui::Selectable(gameObject->GetName().c_str())) {
+            GameObjectManager::GetInstance().SetSelectedGameObject(gameObject);
+        }
+    }
+
     ImGui::End();
 }
 
@@ -209,7 +240,7 @@ void EditScene::RenderConsoleWindow() {
     if (!windowStates.showConsole) return;
 
     bool isOpen = true;
-  
+
     console.Draw("Console");
 
     if (!isOpen) {
@@ -232,14 +263,14 @@ void EditScene::RenderPerformanceWindow() {
         return;
     }
 
-    performance.DrawPerformanceWindow();
     ImGui::End();
 }
+
 void EditScene::RenderResourcesWindow() {
     if (!windowStates.showResources) return;
 
     bool isOpen = true;
-    ImGui::Begin("Resources Monitor", &isOpen);
+    ImGui::Begin("Resources", &isOpen);
 
     if (!isOpen) {
         CloseWindow("Resources", windowStates.showResources);
@@ -247,6 +278,5 @@ void EditScene::RenderResourcesWindow() {
         return;
     }
 
-	resourceUsage.Display();
     ImGui::End();
 }

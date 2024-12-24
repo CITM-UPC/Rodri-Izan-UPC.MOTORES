@@ -130,6 +130,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Console.cpp" />
+    <ClCompile Include="Empty.cpp" />
+    <ClCompile Include="GameObjectCamera.cpp" />
     <ClCompile Include="Hierarchy.cpp" />
     <ClCompile Include="Importer.cpp" />
     <ClCompile Include="EditScene.cpp" />
@@ -138,10 +140,15 @@
     <ClCompile Include="MyWindow.cpp" />
     <ClCompile Include="Biblio.cpp" />
     <ClCompile Include="Performance.cpp" />
+    <ClCompile Include="PrimitiveFactory.cpp" />
+    <ClCompile Include="SceneCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Console.h" />
+    <ClInclude Include="Empty.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GameObjectCamera.h" />
     <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Hierarchy.h" />
     <ClInclude Include="Importer.h" />
@@ -151,7 +158,9 @@
     <ClInclude Include="MyWindow.h" />
     <ClInclude Include="Biblio.h" />
     <ClInclude Include="Performance.h" />
+    <ClInclude Include="PrimitiveFactory.h" />
     <ClInclude Include="Resources.h" />
+    <ClInclude Include="SceneCamera.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
