@@ -42,7 +42,9 @@ RenderableGameObject* PrimitiveFactory::CreatePrimitive(PrimitiveType type) {
     // Utilizar Importer para cargar la malla
     Importer importer;
     if (importer.ImportFBX(meshFile)) {
-        const auto* model = importer.GetModel(name); // Obtener el modelo cargado
+        const std::string modelName = importer.GetModelName(meshFile);
+        const auto* model = importer.GetModel(modelName);
+
         if (model && !model->meshes.empty()) {
             // Asignar la primera malla del modelo al objeto
             obj->SetMeshIndex(0); // Índice 0 como ejemplo

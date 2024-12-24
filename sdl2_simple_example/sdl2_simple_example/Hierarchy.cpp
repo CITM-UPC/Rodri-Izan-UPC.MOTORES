@@ -1,4 +1,5 @@
 #include "Hierarchy.h"
+#include "Empty.h"
 #include "GameObjectManager.h"
 #include "imgui.h"
 
@@ -6,17 +7,17 @@ Hierarchy::Hierarchy() : selectedGameObject(-1) {}
 
 void Hierarchy::DrawHierarchyWindow() {
     ImGui::Begin("Hierarchy");
-
     auto& gameObjectManager = GameObjectManager::GetInstance();
     auto allGameObjects = gameObjectManager.GetAllGameObjects();
 
+    // Solo dibuja GameObjects sin padres (raíz de la jerarquía)
     for (GameObject* gameObject : allGameObjects) {
-        // Solo dibuja GameObjects sin padres (raíz de la jerarquía)
         if (!gameObject->GetParent()) {
             DrawGameObjectNode(gameObject);
         }
     }
 
+    // Menú contextual para crear Empty
     if (ImGui::BeginPopupContextWindow("HierarchyContextMenu", ImGuiPopupFlags_MouseButtonRight)) {
         if (ImGui::MenuItem("Create Empty")) {
             gameObjectManager.CreateGameObject("Empty");
@@ -28,58 +29,72 @@ void Hierarchy::DrawHierarchyWindow() {
 }
 
 void Hierarchy::DrawGameObjectNode(GameObject* gameObject) {
+    if (!gameObject) return;
+
     auto& gameObjectManager = GameObjectManager::GetInstance();
     bool isSelected = gameObjectManager.GetSelectedGameObject() == gameObject;
 
+    // Configurar flags para el TreeNode
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
     if (isSelected) flags |= ImGuiTreeNodeFlags_Selected;
     if (gameObject->GetChildren().empty()) flags |= ImGuiTreeNodeFlags_Leaf;
 
     bool opened = ImGui::TreeNodeEx(gameObject->GetName().c_str(), flags);
+
+    // Selección del objeto
     if (ImGui::IsItemClicked()) {
         gameObjectManager.SetSelectedGameObject(gameObject);
     }
 
-    // Arrastrar (Drag) el GameObject
+    // Drag & Drop source (cuando arrastramos)
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-        ImGui::SetDragDropPayload("HierarchyNode", &gameObject, sizeof(GameObject*)); // Asigna el payload
-        ImGui::Text("Dragging %s", gameObject->GetName().c_str());
+        const char* gameObjectPtr = reinterpret_cast<const char*>(&gameObject);
+        ImGui::SetDragDropPayload("GAMEOBJECT", gameObjectPtr, sizeof(GameObject*));
+        ImGui::Text("Moving: %s", gameObject->GetName().c_str());
         ImGui::EndDragDropSource();
     }
 
-    // Soltar (Drop) el GameObject sobre otro para hacerlo hijo
+    // Drag & Drop target (cuando soltamos)
     if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HierarchyNode")) {
-            GameObject* draggedGameObject = *(GameObject**)payload->Data;
-            if (draggedGameObject != gameObject) { // Evita que un objeto sea hijo de sí mismo
-                draggedGameObject->SetParent(gameObject);
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GAMEOBJECT")) {
+            GameObject* draggedObject = *reinterpret_cast<GameObject**>(payload->Data);
+
+            // Evitar ciclos y auto-referencia
+            bool canSetParent = true;
+            GameObject* parent = gameObject;
+            while (parent) {
+                if (parent == draggedObject) {
+                    canSetParent = false;
+                    break;
+                }
+                parent = parent->GetParent();
+            }
+
+            if (canSetParent && draggedObject != gameObject) {
+                // Remover del padre anterior si existe
+                if (GameObject* oldParent = draggedObject->GetParent()) {
+                    oldParent->RemoveChild(draggedObject);
+                }
+
+                // Establecer nuevo padre
+                gameObject->AddChild(draggedObject);
             }
         }
         ImGui::EndDragDropTarget();
     }
 
-    // Menú contextual para el GameObject
+    // Menú contextual para cada GameObject
     if (ImGui::BeginPopupContextItem()) {
         if (ImGui::MenuItem("Delete")) {
             gameObjectManager.DestroyGameObject(gameObject->GetName());
         }
-        if (ImGui::BeginMenu("Set Parent")) {
-            for (GameObject* potentialParent : gameObjectManager.GetAllGameObjects()) {
-                if (potentialParent != gameObject) {
-                    if (ImGui::MenuItem(potentialParent->GetName().c_str())) {
-                        gameObject->SetParent(potentialParent);
-                    }
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::MenuItem("Remove Parent")) {
-            gameObject->SetParent(nullptr);
+        if (ImGui::MenuItem("Remove Parent") && gameObject->GetParent()) {
+            gameObject->GetParent()->RemoveChild(gameObject);
         }
         ImGui::EndPopup();
     }
 
-    // Renderizar los hijos del GameObject de manera recursiva
+    // Dibujar hijos recursivamente
     if (opened) {
         for (GameObject* child : gameObject->GetChildren()) {
             DrawGameObjectNode(child);

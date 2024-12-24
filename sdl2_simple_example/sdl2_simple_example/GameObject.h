@@ -49,12 +49,33 @@ public:
         return transform;
     }
 
+    glm::vec3 GetGlobalPosition() const {
+        glm::vec3 globalPos = m_position;
+        if (m_parent) {
+            globalPos = glm::vec3(m_parent->GetGlobalTransformMatrix() * glm::vec4(m_position, 1.0f));
+        }
+        return globalPos;
+    }
+
+    glm::mat4 GetGlobalTransformMatrix() const {
+        glm::mat4 transform = GetTransformMatrix();
+        if (m_parent) {
+            transform = m_parent->GetGlobalTransformMatrix() * transform;
+        }
+        return transform;
+    }
+
 
     void AddChild(GameObject* child) {
-        if (child && std::find(m_children.begin(), m_children.end(), child) == m_children.end()) {
-            m_children.push_back(child);
-            child->SetParent(this);
+        if (!child || child == this) return;
+
+        // Si el child ya tiene un padre, primero lo removemos
+        if (GameObject* oldParent = child->GetParent()) {
+            oldParent->RemoveChild(child);
         }
+
+        m_children.push_back(child);
+        child->SetParent(this);
     }
 
     void RemoveChild(GameObject* child) {
