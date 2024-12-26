@@ -19,6 +19,13 @@ public:
     // Destructor
     virtual ~GameObject() = default;
 
+    void UpdateTransforms() {
+        UpdateWorldMatrix();
+        for (auto* child : m_children) {
+            child->UpdateTransforms();
+        }
+    }
+
     // Getters
     const std::string& GetName() const { return m_name; }
     const glm::vec3& GetPosition() const { return m_position; }
@@ -28,9 +35,21 @@ public:
 
     // Setters
     void SetName(const std::string& name) { m_name = name; }
-    void SetPosition(const glm::vec3& position) { m_position = position; }
-    void SetRotation(const glm::vec3& rotation) { m_rotation = rotation; }
-    void SetScale(const glm::vec3& scale) { m_scale = scale; }
+
+    void SetPosition(const glm::vec3& position) {
+        m_position = position;
+        UpdateTransforms();
+    }
+
+    void SetRotation(const glm::vec3& rotation) {
+        m_rotation = rotation;
+        UpdateTransforms();
+    }
+
+    void SetScale(const glm::vec3& scale) {
+        m_scale = scale;
+        UpdateTransforms();
+    }
     void SetActive(bool active) { m_active = active; }
 
     // Transformations
@@ -49,25 +68,14 @@ public:
         return transform;
     }
 
-    glm::vec3 GetGlobalPosition() const {
-        glm::vec3 globalPos = m_position;
-        if (m_parent) {
-            globalPos = glm::vec3(m_parent->GetGlobalTransformMatrix() * glm::vec4(m_position, 1.0f));
-        }
-        return globalPos;
-    }
 
-    glm::mat4 GetGlobalTransformMatrix() const {
-        glm::mat4 transform = GetTransformMatrix();
-        if (m_parent) {
-            transform = m_parent->GetGlobalTransformMatrix() * transform;
-        }
-        return transform;
-    }
 
 
     void AddChild(GameObject* child) {
         if (!child || child == this) return;
+
+        // Guardar la posición global actual del hijo
+        glm::vec3 globalPos = child->GetGlobalPosition();
 
         // Si el child ya tiene un padre, primero lo removemos
         if (GameObject* oldParent = child->GetParent()) {
@@ -76,6 +84,11 @@ public:
 
         m_children.push_back(child);
         child->SetParent(this);
+
+        // Calcular y establecer la nueva posición local
+        glm::mat4 inverseParentMatrix = glm::inverse(GetGlobalTransformMatrix());
+        glm::vec4 localPos = inverseParentMatrix * glm::vec4(globalPos, 1.0f);
+        child->SetPosition(glm::vec3(localPos));
     }
 
     void RemoveChild(GameObject* child) {
@@ -116,7 +129,32 @@ protected:
 
     GameObject* m_parent = nullptr;                
     std::vector<GameObject*> m_children;
+
+    void UpdateWorldMatrix() {
+        m_worldMatrix = GetTransformMatrix();
+        if (m_parent) {
+            m_worldMatrix = m_parent->m_worldMatrix * m_worldMatrix;
+        }
+    }
+
+    glm::mat4 m_worldMatrix = glm::mat4(1.0f);
 };
+
+glm::vec3 GetGlobalPosition() const {
+    glm::vec3 globalPos = m_position;
+    if (m_parent) {
+        globalPos = glm::vec3(m_parent->GetGlobalTransformMatrix() * glm::vec4(m_position, 1.0f));
+    }
+    return globalPos;
+}
+
+glm::mat4 GetGlobalTransformMatrix() const {
+    glm::mat4 transform = GetTransformMatrix();
+    if (m_parent) {
+        transform = m_parent->GetGlobalTransformMatrix() * transform;
+    }
+    return transform;
+}
 
 // Clase RenderableGameObject que se encarga de renderizar un objeto en la escena
 class RenderableGameObject : public GameObject {

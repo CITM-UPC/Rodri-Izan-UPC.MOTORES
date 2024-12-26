@@ -6,7 +6,6 @@ Inspector::Inspector() {}
 
 void Inspector::DrawInspectorWindow() {
     ImGui::Begin("Inspector");
-
     auto& gameObjectManager = GameObjectManager::GetInstance();
     GameObject* selectedGameObject = gameObjectManager.GetSelectedGameObject();
 
@@ -19,19 +18,53 @@ void Inspector::DrawInspectorWindow() {
             selectedGameObject->SetActive(isActive);
         }
 
-        // Transformaciones básicas
-        glm::vec3 position = selectedGameObject->GetPosition();
-        glm::vec3 rotation = selectedGameObject->GetRotation();
-        glm::vec3 scale = selectedGameObject->GetScale();
-        if (ImGui::DragFloat3("Position", &position[0], 0.1f)) {
-            selectedGameObject->SetPosition(position);
+        // Mostrar información sobre el parent si existe
+        if (GameObject* parent = selectedGameObject->GetParent()) {
+            ImGui::Text("Parent: %s", parent->GetName().c_str());
+            if (ImGui::Button("Remove Parent")) {
+                parent->RemoveChild(selectedGameObject);
+            }
         }
-        if (ImGui::DragFloat3("Rotation", &rotation[0], 0.1f)) {
-            selectedGameObject->SetRotation(rotation);
+        else {
+            ImGui::Text("No Parent");
         }
-        if (ImGui::DragFloat3("Scale", &scale[0], 0.1f)) {
-            selectedGameObject->SetScale(scale);
+
+        // Mostrar transformaciones locales
+        ImGui::Text("Local Transform");
+        glm::vec3 localPosition = selectedGameObject->GetPosition();
+        glm::vec3 localRotation = selectedGameObject->GetRotation();
+        glm::vec3 localScale = selectedGameObject->GetScale();
+
+        if (ImGui::DragFloat3("Position", &localPosition[0], 0.1f)) {
+            selectedGameObject->SetPosition(localPosition);
         }
+        if (ImGui::DragFloat3("Rotation", &localRotation[0], 0.1f)) {
+            selectedGameObject->SetRotation(localRotation);
+        }
+        if (ImGui::DragFloat3("Scale", &localScale[0], 0.1f)) {
+            selectedGameObject->SetScale(localScale);
+        }
+
+        // Mostrar transformaciones globales (solo lectura)
+        ImGui::Separator();
+        ImGui::Text("Global Transform");
+        glm::vec3 globalPosition = selectedGameObject->GetGlobalPosition();
+        ImGui::Text("Global Position: %.2f, %.2f, %.2f",
+            globalPosition.x, globalPosition.y, globalPosition.z);
+
+        // Mostrar lista de hijos
+        ImGui::Separator();
+        ImGui::Text("Children");
+        const auto& children = selectedGameObject->GetChildren();
+        if (!children.empty()) {
+            for (const auto* child : children) {
+                ImGui::BulletText("%s", child->GetName().c_str());
+            }
+        }
+        else {
+            ImGui::Text("No children");
+        }
+
 
         // Si el objeto es RenderableGameObject
         if (auto renderable = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {
