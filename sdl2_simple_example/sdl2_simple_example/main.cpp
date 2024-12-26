@@ -84,7 +84,7 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
 
         // Aplicar transformación de la cámara
         glPushMatrix();
-        glm::mat4 transform = gameObject->GetTransformMatrix();
+        glm::mat4 transform = gameObject->GetLocalTransformMatrix();
         glMultMatrixf(glm::value_ptr(transform));
 
         if (gameObject->GetTextureID() != 0) {
