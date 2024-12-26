@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <vector>
+#include "BoundingBox.h"
 
 // Clase GameObject que define un objeto en la escena
 class GameObject {
@@ -124,34 +125,35 @@ protected:
 // Clase RenderableGameObject que se encarga de renderizar un objeto en la escena
 class RenderableGameObject : public GameObject {
 public:
-    // Constructor
     RenderableGameObject(const std::string& name = "RenderableGameObject")
-        : GameObject(name), m_textureID(0) {}
-    
-    // Añadir índice de malla
-    void SetMeshIndex(int index) { 
+        : GameObject(name), m_textureID(0) {
+    }
+
+    void SetMeshIndex(int index) {
         m_meshIndices.push_back(index);
     }
 
-    // Añadir ID de textura
     void SetTextureID(GLuint textureID) { m_textureID = textureID; }
 
-    // Obtener índices de malla
     const std::vector<int>& GetMeshIndices() const {
         return m_meshIndices;
     }
 
-    // Obtener ID de textura
     GLuint GetTextureID() const {
         return m_textureID;
     }
 
-    std::string GetModelName() const;
-    std::string GetTextureName() const;
+    // Nuevos métodos para bounding boxes
+    void UpdateBoundingBoxes(const BoundingBox& meshBounds) {
+        localAABB = meshBounds;
+        globalAABB = localAABB;
+        globalAABB.Transform(GetGlobalTransformMatrix());
+    }
 
-
+    BoundingBox localAABB;
+    BoundingBox globalAABB;
 
 private:
-    std::vector<int> m_meshIndices;   // Índice de la malla en el Importer
-    GLuint m_textureID;   // ID de la textura
+    std::vector<int> m_meshIndices;
+    GLuint m_textureID;
 };
