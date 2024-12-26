@@ -132,54 +132,52 @@ bool Importer::ProcessNode(aiNode* node, const aiScene* scene, Model& model) {
 
 bool Importer::ProcessMesh(aiMesh* aimesh, const aiScene* scene, Model& model) {
     try {
-        Mesh mesh;
-
-        // Verificar que el número de vértices sea razonable
         if (aimesh->mNumVertices > 1000000) {
             std::cerr << "Too many vertices in mesh: " << aimesh->mNumVertices << std::endl;
             return false;
         }
 
-        // Reservar espacio para los vértices y coordenadas de textura
-        mesh.vertices.reserve(aimesh->mNumVertices * 3);
-        mesh.texCoords.reserve(aimesh->mNumVertices * 2);
+        std::vector<GLfloat> vertices;
+        std::vector<GLfloat> texCoords;
+        std::vector<GLuint> indices;
 
-        // Recorrer vértices de la malla y extraer datos de posición y textura
+        vertices.reserve(aimesh->mNumVertices * 3);
+        texCoords.reserve(aimesh->mNumVertices * 2);
+
+        // Process vertices and texture coordinates
         for (unsigned int i = 0; i < aimesh->mNumVertices; i++) {
-            // Agregar coordenadas de posición
-            mesh.vertices.push_back(aimesh->mVertices[i].x);
-            mesh.vertices.push_back(aimesh->mVertices[i].y);
-            mesh.vertices.push_back(aimesh->mVertices[i].z);
+            vertices.push_back(aimesh->mVertices[i].x);
+            vertices.push_back(aimesh->mVertices[i].y);
+            vertices.push_back(aimesh->mVertices[i].z);
 
-            // Agregar coordenadas de textura si existen; si no, añadir (0, 0)
             if (aimesh->HasTextureCoords(0)) {
-                mesh.texCoords.push_back(aimesh->mTextureCoords[0][i].x);
-                mesh.texCoords.push_back(aimesh->mTextureCoords[0][i].y);
+                texCoords.push_back(aimesh->mTextureCoords[0][i].x);
+                texCoords.push_back(aimesh->mTextureCoords[0][i].y);
             }
             else {
-                mesh.texCoords.push_back(0.0f);
-                mesh.texCoords.push_back(0.0f);
+                texCoords.push_back(0.0f);
+                texCoords.push_back(0.0f);
             }
         }
 
-        // Verificar que el número de caras sea razonable
         if (aimesh->mNumFaces > 1000000) {
             std::cerr << "Too many faces in mesh: " << aimesh->mNumFaces << std::endl;
             return false;
         }
 
-        // Reservar espacio para los índices
-        mesh.indices.reserve(aimesh->mNumFaces * 3);
-
-        // Recorrer cada cara y extraer los índices de vértices
+        indices.reserve(aimesh->mNumFaces * 3);
         for (unsigned int i = 0; i < aimesh->mNumFaces; i++) {
             const aiFace& face = aimesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++) {
-                mesh.indices.push_back(face.mIndices[j]);
+                indices.push_back(face.mIndices[j]);
             }
         }
 
-        model.meshes.push_back(std::move(mesh));
+        // Create new Mesh using the external Mesh class
+        Mesh newMesh(vertices, texCoords, indices);
+        newMesh.CalculateLocalAABB();
+        model.meshes.push_back(std::move(newMesh));
+
         return true;
     }
     catch (const std::exception& e) {
@@ -202,46 +200,42 @@ bool Importer::SaveModelToCustomFormat(const std::string& modelName, const std::
     }
 
     const Model& model = modelIt->second;
-
-    // Escribir el nombre del modelo
     size_t nameLength = model.name.length();
     outFile.write(reinterpret_cast<const char*>(&nameLength), sizeof(nameLength));
     outFile.write(model.name.c_str(), nameLength);
 
-    // Escribir el número de mallas
     size_t meshCount = model.meshes.size();
     outFile.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
 
-    // Guardar cada malla por separado
     for (size_t i = 0; i < model.meshes.size(); ++i) {
         const auto& mesh = model.meshes[i];
-
-        // Crear un nombre único para la malla
         std::string meshFileName = libraryPath + "Meshes/" + modelName + "_Mesh" + std::to_string(i) + ".msh";
 
-        // Guardar la malla en su propio archivo
         std::ofstream meshFile(meshFileName, std::ios::binary);
         if (!meshFile.is_open()) {
             std::cerr << "Error opening mesh file for saving: " << meshFileName << std::endl;
             return false;
         }
 
-        // Guardar vértices
+        // Save vertices
         size_t vertexCount = mesh.vertices.size();
         meshFile.write(reinterpret_cast<const char*>(&vertexCount), sizeof(vertexCount));
         meshFile.write(reinterpret_cast<const char*>(mesh.vertices.data()), vertexCount * sizeof(GLfloat));
 
-        // Guardar coordenadas de textura
+        // Save texture coordinates
         size_t texCoordCount = mesh.texCoords.size();
         meshFile.write(reinterpret_cast<const char*>(&texCoordCount), sizeof(texCoordCount));
         meshFile.write(reinterpret_cast<const char*>(mesh.texCoords.data()), texCoordCount * sizeof(GLfloat));
 
-        // Guardar índices
+        // Save indices
         size_t indexCount = mesh.indices.size();
         meshFile.write(reinterpret_cast<const char*>(&indexCount), sizeof(indexCount));
         meshFile.write(reinterpret_cast<const char*>(mesh.indices.data()), indexCount * sizeof(GLuint));
 
-        // Escribir el nombre del archivo de la malla en el archivo del modelo
+        // Save AABB data
+        BoundingBox bbox = mesh.GetLocalAABB();
+        meshFile.write(reinterpret_cast<const char*>(&bbox), sizeof(BoundingBox));
+
         size_t meshFileNameLength = meshFileName.length();
         outFile.write(reinterpret_cast<const char*>(&meshFileNameLength), sizeof(meshFileNameLength));
         outFile.write(meshFileName.c_str(), meshFileNameLength);
@@ -249,7 +243,6 @@ bool Importer::SaveModelToCustomFormat(const std::string& modelName, const std::
         meshFile.close();
     }
 
-    std::cout << "Model " << modelName << " saved successfully to " << outputPath << std::endl;
     return true;
 }
 
