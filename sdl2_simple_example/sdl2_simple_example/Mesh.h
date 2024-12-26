@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <glm/glm.hpp>
-#include "BoundingBox.h"
 
 // Clase para almacenar y renderizar mallas
 class Mesh {
@@ -87,43 +86,5 @@ public:
             glDeleteBuffers(1, &EBO);
             EBO = 0;
         }
-    }
-
-    // Añade un miembro para la AABB
-    BoundingBox localAABB;
-
-    // Método para calcular la AABB local
-    void CalculateLocalAABB() {
-        if (vertices.empty()) return;
-
-        localAABB.SetNegativeInfinity();
-
-        // Itera sobre los vértices (asumiendo que están en grupos de 3 floats)
-        for (size_t i = 0; i < vertices.size(); i += 3) {
-            glm::vec3 vertex(
-                vertices[i],
-                vertices[i + 1],
-                vertices[i + 2]
-            );
-            localAABB.Encapsulate(vertex);
-        }
-    }
-
-    // Modifica el constructor para calcular la AABB
-    Mesh(const std::vector<GLfloat>& vertices, const std::vector<GLfloat>& texCoords,
-        const std::vector<GLuint>& indices)
-        : vertices(vertices), texCoords(texCoords), indices(indices) {
-        CalculateLocalAABB();
-        SetupMesh();
-    }
-
-    // Getter para la AABB local
-    BoundingBox GetLocalAABB() const {
-        BoundingBox bbox;
-        for (size_t i = 0; i < vertices.size(); i += 3) {
-            glm::vec3 vertex(vertices[i], vertices[i + 1], vertices[i + 2]);
-            bbox.Encapsulate(vertex);
-        }
-        return bbox;
     }
 };

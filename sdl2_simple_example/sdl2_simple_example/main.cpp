@@ -18,7 +18,6 @@
 #include <assimp/postprocess.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "GameObjectManager.h"
-#include "BoundingBox.h"
 
 using namespace std;
 using hrclock = chrono::high_resolution_clock;
@@ -29,6 +28,10 @@ using vec3 = glm::dvec3;
 static const ivec2 WINDOW_SIZE(720, 720);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
+
+// Archivso para crear la casa al inicio
+const char* filefbx = "./Assets/BakerHouse.fbx"; 
+const char* filetex = "./Assets/Baker_house.png";
 
 EditScene editor;
 
@@ -63,69 +66,6 @@ void drawGrid(float gridSize, int gridDivisions) {
     glEnd();
 }
 
-// Dibujar bounding box
-void DrawBoundingBox(const BoundingBox& box, bool selected = false) {
-    const auto& min = box.GetMin();
-    const auto& max = box.GetMax();
-
-    // Color: verde normal, amarillo si está seleccionado
-    if (selected) {
-        glColor3f(1.0f, 1.0f, 0.0f);
-    }
-    else {
-        glColor3f(0.0f, 1.0f, 0.0f);
-    }
-
-    glDisable(GL_TEXTURE_2D);
-    glLineWidth(2.0f);
-    glBegin(GL_LINES);
-
-    // Front face
-    glVertex3f(min.x, min.y, min.z);
-    glVertex3f(max.x, min.y, min.z);
-
-    glVertex3f(max.x, min.y, min.z);
-    glVertex3f(max.x, max.y, min.z);
-
-    glVertex3f(max.x, max.y, min.z);
-    glVertex3f(min.x, max.y, min.z);
-
-    glVertex3f(min.x, max.y, min.z);
-    glVertex3f(min.x, min.y, min.z);
-
-    // Back face
-    glVertex3f(min.x, min.y, max.z);
-    glVertex3f(max.x, min.y, max.z);
-
-    glVertex3f(max.x, min.y, max.z);
-    glVertex3f(max.x, max.y, max.z);
-
-    glVertex3f(max.x, max.y, max.z);
-    glVertex3f(min.x, max.y, max.z);
-
-    glVertex3f(min.x, max.y, max.z);
-    glVertex3f(min.x, min.y, max.z);
-
-    // Connecting lines
-    glVertex3f(min.x, min.y, min.z);
-    glVertex3f(min.x, min.y, max.z);
-
-    glVertex3f(max.x, min.y, min.z);
-    glVertex3f(max.x, min.y, max.z);
-
-    glVertex3f(max.x, max.y, min.z);
-    glVertex3f(max.x, max.y, max.z);
-
-    glVertex3f(min.x, max.y, min.z);
-    glVertex3f(min.x, max.y, max.z);
-
-    glEnd();
-    glLineWidth(1.0f);
-    glEnable(GL_TEXTURE_2D);
-    glColor3f(1.0f, 1.0f, 1.0f);
-}
-
-// Renderizado de la escena
 void renderSceneContent(MyWindow& window, Importer* importer) {
     auto camPos = window.GetCameraPosition();
     auto targetPos = window.GetTargetPosition();
@@ -133,6 +73,7 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
 
     drawGrid(10.0f, 20);
 
+    // Renderizar GameObjects
     auto& manager = GameObjectManager::GetInstance();
     auto renderableObjects = manager.GetGameObjectsOfType<RenderableGameObject>();
 
@@ -141,20 +82,20 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
         const auto* model = importer->GetModel(gameObject->GetName());
         if (!model) continue;
 
+        // Aplicar transformación de la cámara
         glPushMatrix();
         glm::mat4 transform = gameObject->GetTransformMatrix();
         glMultMatrixf(glm::value_ptr(transform));
 
-        // Renderizar modelo
         if (gameObject->GetTextureID() != 0) {
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, gameObject->GetTextureID());
         }
 
+        // Renderizar todas las mallas asociadas
         for (int meshIndex : gameObject->GetMeshIndices()) {
             if (meshIndex >= 0 && meshIndex < model->meshes.size()) {
                 const auto& mesh = model->meshes[meshIndex];
-                gameObject->UpdateBoundingBoxes(mesh.GetLocalAABB());
 
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glVertexPointer(3, GL_FLOAT, 0, mesh.vertices.data());
@@ -163,8 +104,6 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
                 glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, mesh.indices.data());
                 glDisableClientState(GL_VERTEX_ARRAY);
                 glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-                DrawBoundingBox(gameObject->globalAABB);
             }
         }
 
@@ -178,7 +117,6 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     window.unbindFramebuffer();
     glFlush();
 }
-
 int main(int argc, char** argv) {
     Importer importer;
     MyWindow window("SDL2 Simple Example", WINDOW_SIZE.x, WINDOW_SIZE.y, &importer);

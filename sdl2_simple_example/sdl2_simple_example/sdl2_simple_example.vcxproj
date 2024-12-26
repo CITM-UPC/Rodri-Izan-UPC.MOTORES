@@ -144,7 +144,6 @@
     <ClCompile Include="SceneCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="Empty.h" />
@@ -162,8 +161,6 @@
     <ClInclude Include="PrimitiveFactory.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="SceneCamera.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Transform.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
