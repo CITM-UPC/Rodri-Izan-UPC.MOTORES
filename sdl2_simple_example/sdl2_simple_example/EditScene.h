@@ -29,6 +29,9 @@ public:
     void RenderPerformanceWindow();
     void RenderResourcesWindow();
 
+    bool showHierarchy = true;
+
+
 private:
     Hierarchy hierarchy;
     Inspector inspector;

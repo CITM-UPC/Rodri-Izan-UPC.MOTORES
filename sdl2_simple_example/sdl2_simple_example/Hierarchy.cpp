@@ -1,5 +1,4 @@
 #include "Hierarchy.h"
-#include "Empty.h"
 #include "GameObjectManager.h"
 #include "imgui.h"
 
@@ -7,6 +6,7 @@ Hierarchy::Hierarchy() : selectedGameObject(-1) {}
 
 void Hierarchy::DrawHierarchyWindow() {
     ImGui::Begin("Hierarchy");
+
     auto& gameObjectManager = GameObjectManager::GetInstance();
     auto allGameObjects = gameObjectManager.GetAllGameObjects();
 
@@ -23,6 +23,20 @@ void Hierarchy::DrawHierarchyWindow() {
             gameObjectManager.CreateGameObject("Empty");
         }
         ImGui::EndPopup();
+    }
+
+    // Manejar drag & drop en la ventana principal de jerarquía
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GetDragDropType())) {
+            if (payload->DataSize > 0) {
+                const char* objectName = static_cast<const char*>(payload->Data);
+                GameObject* draggedObject = gameObjectManager.FindGameObject(objectName);
+                if (draggedObject && draggedObject->GetParent()) {
+                    draggedObject->GetParent()->RemoveChild(draggedObject);
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
     }
 
     ImGui::End();
@@ -46,38 +60,47 @@ void Hierarchy::DrawGameObjectNode(GameObject* gameObject) {
         gameObjectManager.SetSelectedGameObject(gameObject);
     }
 
-    // Drag & Drop source (cuando arrastramos)
+    // Drag & Drop source
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-        const char* gameObjectPtr = reinterpret_cast<const char*>(&gameObject);
-        ImGui::SetDragDropPayload("GAMEOBJECT", gameObjectPtr, sizeof(GameObject*));
-        ImGui::Text("Moving: %s", gameObject->GetName().c_str());
+        std::string objectName = gameObject->GetName();
+        const char* objectNameCStr = objectName.c_str();
+        ImGui::SetDragDropPayload(GetDragDropType(), objectNameCStr, strlen(objectNameCStr) + 1);
+        ImGui::Text("Moving: %s", objectName.c_str());
         ImGui::EndDragDropSource();
     }
 
-    // Drag & Drop target (cuando soltamos)
+    // Drag & Drop target
     if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GAMEOBJECT")) {
-            GameObject* draggedObject = *reinterpret_cast<GameObject**>(payload->Data);
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GetDragDropType())) {
+            if (payload->DataSize > 0) {
+                const char* draggedObjectName = static_cast<const char*>(payload->Data);
+                GameObject* draggedObject = gameObjectManager.FindGameObject(draggedObjectName);
 
-            // Evitar ciclos y auto-referencia
-            bool canSetParent = true;
-            GameObject* parent = gameObject;
-            while (parent) {
-                if (parent == draggedObject) {
-                    canSetParent = false;
-                    break;
+                if (draggedObject && draggedObject != gameObject) {
+                    // Verificar que no estemos creando un ciclo
+                    bool canSetParent = true;
+                    GameObject* parent = gameObject;
+                    while (parent) {
+                        if (parent == draggedObject) {
+                            canSetParent = false;
+                            break;
+                        }
+                        parent = parent->GetParent();
+                    }
+
+                    if (canSetParent) {
+                        // Guardar la posición global antes del cambio
+                        glm::vec3 globalPos = draggedObject->GetGlobalPosition();
+
+                        // Cambiar el padre
+                        gameObject->AddChild(draggedObject);
+
+                        // Ajustar la posición local para mantener la posición global
+                        glm::vec4 newLocalPos = glm::inverse(gameObject->GetGlobalTransformMatrix()) *
+                            glm::vec4(globalPos, 1.0f);
+                        draggedObject->SetPosition(glm::vec3(newLocalPos));
+                    }
                 }
-                parent = parent->GetParent();
-            }
-
-            if (canSetParent && draggedObject != gameObject) {
-                // Remover del padre anterior si existe
-                if (GameObject* oldParent = draggedObject->GetParent()) {
-                    oldParent->RemoveChild(draggedObject);
-                }
-
-                // Establecer nuevo padre
-                gameObject->AddChild(draggedObject);
             }
         }
         ImGui::EndDragDropTarget();
@@ -102,4 +125,3 @@ void Hierarchy::DrawGameObjectNode(GameObject* gameObject) {
         ImGui::TreePop();
     }
 }
-

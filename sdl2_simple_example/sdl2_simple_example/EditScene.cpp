@@ -5,6 +5,7 @@
 #include "stdlib.h"
 #include "PrimitiveFactory.h"
 #include "GameObjectManager.h"
+#include "Hierarchy.h"
 
 EditScene::EditScene()
     : biblio("./Library") { // Inicializamos con una ruta
@@ -177,6 +178,21 @@ void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
         ImVec4(0, 0, 0, 0)
     );
 
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(Hierarchy::GetDragDropType())) {
+            if (payload->DataSize > 0) {
+                const char* objectName = static_cast<const char*>(payload->Data);
+                auto& manager = GameObjectManager::GetInstance();
+                GameObject* draggedObject = manager.FindGameObject(objectName);
+                if (draggedObject && draggedObject->GetParent()) {
+                    // Si el objeto es soltado en la escena, remover su padre
+                    draggedObject->GetParent()->RemoveChild(draggedObject);
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
     window.HandleDragDropTarget();
     ImGui::End();
 }
@@ -200,24 +216,14 @@ void EditScene::RenderInspectorWindow() {
 void EditScene::RenderHierarchyWindow() {
     if (!windowStates.showHierarchy) return;
 
-    bool isOpen = true;
-    ImGui::Begin("Hierarchy", &isOpen);
+    // Usar la clase Hierarchy en lugar de implementar la lógica directamente
+    hierarchy.DrawHierarchyWindow();
 
-    if (!isOpen) {
+    // Comprobar si la ventana se cerró
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
+        ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
         CloseWindow("Hierarchy", windowStates.showHierarchy);
-        ImGui::End();
-        return;
     }
-
-    // Mostrar los GameObjects en la jerarquía
-    auto gameObjects = GameObjectManager::GetInstance().GetAllGameObjects();
-    for (auto* gameObject : gameObjects) {
-        if (ImGui::Selectable(gameObject->GetName().c_str())) {
-            GameObjectManager::GetInstance().SetSelectedGameObject(gameObject);
-        }
-    }
-
-    ImGui::End();
 }
 
 void EditScene::RenderAssetsWindow() {

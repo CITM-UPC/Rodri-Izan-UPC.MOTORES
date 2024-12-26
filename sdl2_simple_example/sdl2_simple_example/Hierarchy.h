@@ -6,9 +6,9 @@ class Hierarchy {
 public:
     Hierarchy();
     void DrawHierarchyWindow();
-
-    void DrawGameObjectNode(GameObject* gameObject);
+    static const char* GetDragDropType() { return "HIERARCHY_GAMEOBJECT"; }
 
 private:
+    void DrawGameObjectNode(GameObject* gameObject);
     int selectedGameObject;
 };

@@ -99,10 +99,7 @@ public:
     }
 
     void UpdateTransform() {
-        if (m_parent) {
-            m_position += m_parent->GetPosition(); // Simplificación: hereda solo posición
-            // Agrega lógica adicional para rotación y escala si es necesario
-        }
+        // Solo necesitamos actualizar los hijos
         for (GameObject* child : m_children) {
             child->UpdateTransform();
         }
