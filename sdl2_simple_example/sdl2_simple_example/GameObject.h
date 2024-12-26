@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "BoundingBox.h"
-#include "Mesh.h"
 
 // Clase GameObject que define un objeto en la escena
 class GameObject {
@@ -145,8 +144,8 @@ public:
     }
 
     // Nuevos métodos para bounding boxes
-    void UpdateBoundingBoxes(const Mesh& mesh) {
-        localAABB = mesh.GetLocalAABB();
+    void UpdateBoundingBoxes(const BoundingBox& meshBounds) {
+        localAABB = meshBounds;
         globalAABB = localAABB;
         globalAABB.Transform(GetGlobalTransformMatrix());
     }

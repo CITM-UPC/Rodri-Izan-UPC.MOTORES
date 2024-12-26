@@ -8,10 +8,19 @@
 #include <assimp/scene.h>            
 #include <assimp/postprocess.h>    
 #include <unordered_map>
-#include "Mesh.h"
 
 class Importer {
 public:
+    struct Mesh {
+        std::vector<GLfloat> vertices;
+        std::vector<GLfloat> texCoords;
+        std::vector<GLuint> indices;
+
+        GLuint VAO = 0;
+        GLuint VBO = 0;
+        GLuint EBO = 0;
+    };
+
     struct Model {
         std::string name;
         std::vector<Mesh> meshes;

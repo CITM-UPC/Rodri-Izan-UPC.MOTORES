@@ -5,48 +5,54 @@
 #include <glm/glm.hpp>
 #include "BoundingBox.h"
 
+// Clase para almacenar y renderizar mallas
 class Mesh {
 public:
-    // Constructor por defecto
-    Mesh() = default;
+    //Constructor
+    Mesh() = default; 
 
-    // Constructor único con datos de malla
+    //Constructor con datos de malla
     Mesh(const std::vector<GLfloat>& vertices, const std::vector<GLfloat>& texCoords,
         const std::vector<GLuint>& indices)
         : vertices(vertices), texCoords(texCoords), indices(indices) {
-        CalculateLocalAABB();
         SetupMesh();
     }
 
-    // Destructor
+    //Destructor
     ~Mesh() {
         Cleanup();
     }
 
     // Datos de malla
-    std::vector<GLfloat> vertices;
-    std::vector<GLfloat> texCoords;
-    std::vector<GLfloat> normals;
-    std::vector<GLuint> indices;
+    std::vector<GLfloat> vertices;     
+    std::vector<GLfloat> texCoords;    
+    std::vector<GLfloat> normals;     
+    std::vector<GLuint> indices;      
 
     // Identificadores de OpenGL
     GLuint VAO = 0;  // Vertex Array Object
     GLuint VBO = 0;  // Vertex Buffer Object
     GLuint EBO = 0;  // Element Buffer Object
 
-    // Configurar los datos de malla en OpenGL
+	// Configurar los datos de malla en OpenGL
     void SetupMesh() {
+        // Verifica si hay datos de vértices e índices antes de configurar el mesh
         if (!vertices.empty() && !indices.empty()) {
+
+            // Genera y enlaza el VAO 
             glGenVertexArrays(1, &VAO);
             glBindVertexArray(VAO);
 
+            // Genera y enlaza el VBO 
             glGenBuffers(1, &VBO);
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
 
+            // Configura el atributo de posición en el índice 0
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
             glEnableVertexAttribArray(0);
 
+            // Configura opcionalmente las coordenadas de textura solo si están disponibles
             if (!texCoords.empty()) {
                 GLuint texCoordVBO;
                 glGenBuffers(1, &texCoordVBO);
@@ -57,10 +63,12 @@ public:
                 glEnableVertexAttribArray(1);
             }
 
+            // Genera y enlaza el EBO
             glGenBuffers(1, &EBO);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
+            // Desvincula el VAO 
             glBindVertexArray(0);
         }
     }
@@ -81,7 +89,7 @@ public:
         }
     }
 
-    // AABB
+    // Añade un miembro para la AABB
     BoundingBox localAABB;
 
     // Método para calcular la AABB local
@@ -90,6 +98,7 @@ public:
 
         localAABB.SetNegativeInfinity();
 
+        // Itera sobre los vértices (asumiendo que están en grupos de 3 floats)
         for (size_t i = 0; i < vertices.size(); i += 3) {
             glm::vec3 vertex(
                 vertices[i],
@@ -100,8 +109,21 @@ public:
         }
     }
 
+    // Modifica el constructor para calcular la AABB
+    Mesh(const std::vector<GLfloat>& vertices, const std::vector<GLfloat>& texCoords,
+        const std::vector<GLuint>& indices)
+        : vertices(vertices), texCoords(texCoords), indices(indices) {
+        CalculateLocalAABB();
+        SetupMesh();
+    }
+
     // Getter para la AABB local
     BoundingBox GetLocalAABB() const {
-        return localAABB;
+        BoundingBox bbox;
+        for (size_t i = 0; i < vertices.size(); i += 3) {
+            glm::vec3 vertex(vertices[i], vertices[i + 1], vertices[i + 2]);
+            bbox.Encapsulate(vertex);
+        }
+        return bbox;
     }
 };
