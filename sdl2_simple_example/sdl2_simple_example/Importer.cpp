@@ -132,54 +132,55 @@ bool Importer::ProcessNode(aiNode* node, const aiScene* scene, Model& model) {
 
 bool Importer::ProcessMesh(aiMesh* aimesh, const aiScene* scene, Model& model) {
     try {
-        Mesh mesh;
-
         // Verificar que el número de vértices sea razonable
         if (aimesh->mNumVertices > 1000000) {
             std::cerr << "Too many vertices in mesh: " << aimesh->mNumVertices << std::endl;
             return false;
         }
 
-        // Reservar espacio para los vértices y coordenadas de textura
-        mesh.vertices.reserve(aimesh->mNumVertices * 3);
-        mesh.texCoords.reserve(aimesh->mNumVertices * 2);
+        std::vector<GLfloat> vertices;
+        std::vector<GLfloat> texCoords;
+        std::vector<GLuint> indices;
 
-        // Recorrer vértices de la malla y extraer datos de posición y textura
+        // Reservar espacio
+        vertices.reserve(aimesh->mNumVertices * 3);
+        texCoords.reserve(aimesh->mNumVertices * 2);
+
+        // Procesar vértices y coordenadas de textura
         for (unsigned int i = 0; i < aimesh->mNumVertices; i++) {
-            // Agregar coordenadas de posición
-            mesh.vertices.push_back(aimesh->mVertices[i].x);
-            mesh.vertices.push_back(aimesh->mVertices[i].y);
-            mesh.vertices.push_back(aimesh->mVertices[i].z);
+            vertices.push_back(aimesh->mVertices[i].x);
+            vertices.push_back(aimesh->mVertices[i].y);
+            vertices.push_back(aimesh->mVertices[i].z);
 
-            // Agregar coordenadas de textura si existen; si no, añadir (0, 0)
             if (aimesh->HasTextureCoords(0)) {
-                mesh.texCoords.push_back(aimesh->mTextureCoords[0][i].x);
-                mesh.texCoords.push_back(aimesh->mTextureCoords[0][i].y);
+                texCoords.push_back(aimesh->mTextureCoords[0][i].x);
+                texCoords.push_back(aimesh->mTextureCoords[0][i].y);
             }
             else {
-                mesh.texCoords.push_back(0.0f);
-                mesh.texCoords.push_back(0.0f);
+                texCoords.push_back(0.0f);
+                texCoords.push_back(0.0f);
             }
         }
 
-        // Verificar que el número de caras sea razonable
+        // Verificar caras
         if (aimesh->mNumFaces > 1000000) {
             std::cerr << "Too many faces in mesh: " << aimesh->mNumFaces << std::endl;
             return false;
         }
 
-        // Reservar espacio para los índices
-        mesh.indices.reserve(aimesh->mNumFaces * 3);
-
-        // Recorrer cada cara y extraer los índices de vértices
+        // Procesar índices
+        indices.reserve(aimesh->mNumFaces * 3);
         for (unsigned int i = 0; i < aimesh->mNumFaces; i++) {
             const aiFace& face = aimesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++) {
-                mesh.indices.push_back(face.mIndices[j]);
+                indices.push_back(face.mIndices[j]);
             }
         }
 
-        model.meshes.push_back(std::move(mesh));
+        // Crear nueva malla usando la clase Mesh
+        Mesh newMesh(vertices, texCoords, indices);
+        model.meshes.push_back(std::move(newMesh));
+
         return true;
     }
     catch (const std::exception& e) {
@@ -203,24 +204,22 @@ bool Importer::SaveModelToCustomFormat(const std::string& modelName, const std::
 
     const Model& model = modelIt->second;
 
-    // Escribir el nombre del modelo
+    // Escribir nombre del modelo
     size_t nameLength = model.name.length();
     outFile.write(reinterpret_cast<const char*>(&nameLength), sizeof(nameLength));
     outFile.write(model.name.c_str(), nameLength);
 
-    // Escribir el número de mallas
+    // Escribir número de mallas
     size_t meshCount = model.meshes.size();
     outFile.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
 
-    // Guardar cada malla por separado
+    // Guardar cada malla
     for (size_t i = 0; i < model.meshes.size(); ++i) {
         const auto& mesh = model.meshes[i];
 
-        // Crear un nombre único para la malla
         std::string meshFileName = libraryPath + "Meshes/" + modelName + "_Mesh" + std::to_string(i) + ".msh";
-
-        // Guardar la malla en su propio archivo
         std::ofstream meshFile(meshFileName, std::ios::binary);
+
         if (!meshFile.is_open()) {
             std::cerr << "Error opening mesh file for saving: " << meshFileName << std::endl;
             return false;
@@ -241,7 +240,7 @@ bool Importer::SaveModelToCustomFormat(const std::string& modelName, const std::
         meshFile.write(reinterpret_cast<const char*>(&indexCount), sizeof(indexCount));
         meshFile.write(reinterpret_cast<const char*>(mesh.indices.data()), indexCount * sizeof(GLuint));
 
-        // Escribir el nombre del archivo de la malla en el archivo del modelo
+        // Escribir nombre del archivo de malla
         size_t meshFileNameLength = meshFileName.length();
         outFile.write(reinterpret_cast<const char*>(&meshFileNameLength), sizeof(meshFileNameLength));
         outFile.write(meshFileName.c_str(), meshFileNameLength);
@@ -249,25 +248,22 @@ bool Importer::SaveModelToCustomFormat(const std::string& modelName, const std::
         meshFile.close();
     }
 
-    std::cout << "Model " << modelName << " saved successfully to " << outputPath << std::endl;
     return true;
 }
 
 bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
-    auto startTime = std::chrono::high_resolution_clock::now();
     std::ifstream inFile(filePath, std::ios::binary);
     if (!inFile.is_open()) {
         std::cerr << "Error opening file for loading: " << filePath << std::endl;
         return false;
     }
 
-    // Leer el nombre del modelo
+    // Leer nombre del modelo
     size_t nameLength;
     inFile.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
     std::string modelName(nameLength, '\0');
     inFile.read(&modelName[0], nameLength);
 
-    // Crear nuevo modelo
     Model newModel;
     newModel.name = modelName;
 
@@ -275,7 +271,7 @@ bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
     size_t meshCount;
     inFile.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
 
-    // Leer referencias a archivos de mallas y cargar cada malla
+    // Cargar cada malla
     for (size_t i = 0; i < meshCount; ++i) {
         size_t meshFileNameLength;
         inFile.read(reinterpret_cast<char*>(&meshFileNameLength), sizeof(meshFileNameLength));
@@ -288,33 +284,33 @@ bool Importer::LoadModelFromCustomFormat(const std::string& filePath) {
             return false;
         }
 
-        Mesh mesh;
+        std::vector<GLfloat> vertices;
+        std::vector<GLfloat> texCoords;
+        std::vector<GLuint> indices;
         size_t vertexCount, texCoordCount, indexCount;
 
         // Leer vértices
         meshFile.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
-        mesh.vertices.resize(vertexCount);
-        meshFile.read(reinterpret_cast<char*>(mesh.vertices.data()), vertexCount * sizeof(GLfloat));
+        vertices.resize(vertexCount);
+        meshFile.read(reinterpret_cast<char*>(vertices.data()), vertexCount * sizeof(GLfloat));
 
         // Leer coordenadas de textura
         meshFile.read(reinterpret_cast<char*>(&texCoordCount), sizeof(texCoordCount));
-        mesh.texCoords.resize(texCoordCount);
-        meshFile.read(reinterpret_cast<char*>(mesh.texCoords.data()), texCoordCount * sizeof(GLfloat));
+        texCoords.resize(texCoordCount);
+        meshFile.read(reinterpret_cast<char*>(texCoords.data()), texCoordCount * sizeof(GLfloat));
 
         // Leer índices
         meshFile.read(reinterpret_cast<char*>(&indexCount), sizeof(indexCount));
-        mesh.indices.resize(indexCount);
-        meshFile.read(reinterpret_cast<char*>(mesh.indices.data()), indexCount * sizeof(GLuint));
+        indices.resize(indexCount);
+        meshFile.read(reinterpret_cast<char*>(indices.data()), indexCount * sizeof(GLuint));
 
-        newModel.meshes.push_back(std::move(mesh));
+        // Crear nueva malla con los datos cargados
+        Mesh newMesh(vertices, texCoords, indices);
+        newModel.meshes.push_back(std::move(newMesh));
     }
 
-    // Agregar el modelo cargado al mapa
+    // Agregar el modelo al mapa
     models[modelName] = std::move(newModel);
-
-    auto endTime = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    std::cout << "Custom format loading time: " << duration.count() << "ms" << std::endl;
 
     return true;
 }

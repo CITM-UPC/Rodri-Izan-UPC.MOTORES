@@ -104,6 +104,8 @@ public:
         m_selectedGameObject = gameObject;
     }
 
+
+
 private:
     GameObjectManager() : m_nextId(0) {} // Constructor privado para el singleton
     GameObject* m_selectedGameObject = nullptr; // GameObject seleccionado

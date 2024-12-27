@@ -1,26 +1,17 @@
 #pragma once
 
-#include <GL/glew.h>                  
-#include <string>                   
-#include <vector>                     
-#include <filesystem>                
-#include <assimp/Importer.hpp>        
-#include <assimp/scene.h>            
-#include <assimp/postprocess.h>    
+#include <GL/glew.h>
+#include <string>
+#include <vector>
+#include <filesystem>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include <unordered_map>
+#include "Mesh.h" // Incluir la clase Mesh
 
 class Importer {
 public:
-    struct Mesh {
-        std::vector<GLfloat> vertices;
-        std::vector<GLfloat> texCoords;
-        std::vector<GLuint> indices;
-
-        GLuint VAO = 0;
-        GLuint VBO = 0;
-        GLuint EBO = 0;
-    };
-
     struct Model {
         std::string name;
         std::vector<Mesh> meshes;
@@ -34,25 +25,21 @@ public:
         std::string name;
     };
 
-    // Constructor y destructor
     Importer();
     ~Importer();
 
     bool Init();
-
-    // Funciones modificadas para manejo de modelos
     bool ImportFBX(const std::string& filePath);
     bool SaveModelToCustomFormat(const std::string& modelName, const std::string& outputPath);
     bool LoadModelFromCustomFormat(const std::string& filePath);
 
-    // Funciones para manejo de texturas
+    // Funciones para manejo de texturas (sin cambios)
     bool ImportTexture(const std::string& filePath);
     bool SaveTextureToCustomFormat(const std::string& textureName, unsigned char* data, const Texture& texture);
     bool LoadTextureFromCustomFormat(const std::string& filePath);
     const std::string GetTextureName(const std::string& filepath)const;
     const Texture* GetTexture(const std::string& textureName)const;
 
-    // Getters modificados
     const std::unordered_map<std::string, Model>& GetModels() const { return models; }
     const Model* GetModel(const std::string& modelName) const;
     const std::string GetModelName(const std::string& filePath) const;
@@ -64,7 +51,7 @@ private:
     bool ProcessNode(aiNode* node, const aiScene* scene, Model& model);
     bool ProcessMesh(aiMesh* mesh, const aiScene* scene, Model& model);
 
-    std::unordered_map<std::string, Model> models; 
+    std::unordered_map<std::string, Model> models;
     std::unordered_map<std::string, Texture> textures;
     Texture texture;
     std::string assetsPath;

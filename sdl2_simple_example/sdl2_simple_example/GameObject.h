@@ -49,6 +49,66 @@ public:
         return transform;
     }
 
+    glm::vec3 GetGlobalPosition() const {
+        glm::vec3 globalPos = m_position;
+        if (m_parent) {
+            globalPos = glm::vec3(m_parent->GetGlobalTransformMatrix() * glm::vec4(m_position, 1.0f));
+        }
+        return globalPos;
+    }
+
+    glm::mat4 GetGlobalTransformMatrix() const {
+        glm::mat4 transform = GetTransformMatrix();
+        if (m_parent) {
+            transform = m_parent->GetGlobalTransformMatrix() * transform;
+        }
+        return transform;
+    }
+
+
+    void AddChild(GameObject* child) {
+        if (!child || child == this) return;
+
+        // Si el child ya tiene un padre, primero lo removemos
+        if (GameObject* oldParent = child->GetParent()) {
+            oldParent->RemoveChild(child);
+        }
+
+        m_children.push_back(child);
+        child->SetParent(this);
+    }
+
+    void RemoveChild(GameObject* child) {
+        auto it = std::find(m_children.begin(), m_children.end(), child);
+        if (it != m_children.end()) {
+            (*it)->SetParent(nullptr);
+            m_children.erase(it);
+        }
+    }
+
+    GameObject* GetParent() const {
+        return m_parent;
+    }
+
+    const std::vector<GameObject*>& GetChildren() const {
+        return m_children;
+    }
+
+    void SetParent(GameObject* parent) {
+        m_parent = parent;
+    }
+
+    void UpdateTransform() {
+        if (m_parent) {
+            m_position += m_parent->GetPosition(); // Simplificación: hereda solo posición
+            // Agrega lógica adicional para rotación y escala si es necesario
+        }
+        for (GameObject* child : m_children) {
+            child->UpdateTransform();
+        }
+    }
+
+
 protected:
     // Atributos
     std::string m_name;
@@ -56,6 +116,9 @@ protected:
     glm::vec3 m_rotation;
     glm::vec3 m_scale;
     bool m_active;
+
+    GameObject* m_parent = nullptr;                
+    std::vector<GameObject*> m_children;
 };
 
 // Clase RenderableGameObject que se encarga de renderizar un objeto en la escena
@@ -85,6 +148,8 @@ public:
 
     std::string GetModelName() const;
     std::string GetTextureName() const;
+
+
 
 private:
     std::vector<int> m_meshIndices;   // Índice de la malla en el Importer
