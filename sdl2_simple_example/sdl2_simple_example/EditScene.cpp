@@ -1,4 +1,5 @@
 #include "EditScene.h"
+#include "Importer.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
@@ -19,7 +20,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     // 2. Renderizar MenuBar primero
-    RenderMenuBar();
+    RenderMenuBar(importer);
 
     // 3. Crear DockSpace después del MenuBar
     ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -66,7 +67,7 @@ void EditScene::CloseWindow(const char* name, bool& state) {
     state = false;
 }
 
-void EditScene::RenderMenuBar() {
+void EditScene::RenderMenuBar(Importer* importer) {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("New Scene", "Ctrl+N")) {
@@ -118,19 +119,19 @@ void EditScene::RenderMenuBar() {
         if (ImGui::BeginMenu("GameObject")) {
             if (ImGui::BeginMenu("3D Object")) {
                 if (ImGui::MenuItem("Cube")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cube);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cube, importer);
                 }
                 if (ImGui::MenuItem("Sphere")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Sphere);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Sphere, importer);
                 }
                 if (ImGui::MenuItem("Cylinder")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cylinder);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cylinder, importer);
                 }
                 if (ImGui::MenuItem("Plane")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Plane);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Plane, importer);
                 }
                 if (ImGui::MenuItem("Cone")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cone);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cone, importer);
                 }
                 ImGui::EndMenu();
             }

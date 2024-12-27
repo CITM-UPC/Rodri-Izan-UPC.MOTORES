@@ -4,65 +4,66 @@
 #include "GameObjectCamera.h"
 
 
-RenderableGameObject* PrimitiveFactory::CreatePrimitive(PrimitiveType type) {
+const std::string PrimitiveFactory::PRIMITIVES_PATH = "Assets/Primitives/";
+
+RenderableGameObject* PrimitiveFactory::CreatePrimitive(PrimitiveType type, Importer* importer) {
+    if (!importer) return nullptr;
+
     RenderableGameObject* obj = nullptr;
     std::string name;
     std::string meshFile;
 
-    // Definir el nombre y archivo de la malla según el tipo
     switch (type) {
     case PrimitiveType::Cube:
         name = "Cube";
-        meshFile = "Assets/Primitives/Cube.fbx";
+        meshFile = PRIMITIVES_PATH + "Cube.fbx";
         break;
     case PrimitiveType::Sphere:
         name = "Sphere";
-        meshFile = "Assets/Primitives/Sphere.fbx";
-        break;
-    case PrimitiveType::Cylinder:
-        name = "Cylinder";
-        meshFile = "Assets/Primitives/Cylinder.fbx";
-        break;
-    case PrimitiveType::Plane:
-        name = "Plane";
-        meshFile = "Assets/Primitives/Plane.fbx";
+        meshFile = PRIMITIVES_PATH + "Sphere.fbx";
         break;
     case PrimitiveType::Cone:
         name = "Cone";
-        meshFile = "Assets/Primitives/Cone.fbx";
+        meshFile = PRIMITIVES_PATH + "Cone.fbx";
         break;
-    default:
-        return nullptr; // Tipo desconocido
+    case PrimitiveType::Plane:
+        name = "Plane";
+        meshFile = PRIMITIVES_PATH + "Plane.fbx";
+        break;
+    case PrimitiveType::Cylinder:
+        name = "Cylinder";
+        meshFile = PRIMITIVES_PATH + "Cylinder.fbx";
+        break;
+
+
     }
 
-    // Crear un objeto RenderableGameObject con el nombre asignado
-    auto& manager = GameObjectManager::GetInstance();
-    obj = manager.CreateGameObject<RenderableGameObject>(name);
+    // Importar el modelo
+    if (importer->ImportFBX(meshFile.c_str())) {
+        auto& manager = GameObjectManager::GetInstance();
+        const std::string modelName = importer->GetModelName(meshFile.c_str());
+        const auto* model = importer->GetModel(modelName);
 
-    // Utilizar Importer para cargar la malla
-    Importer importer;
-    if (importer.ImportFBX(meshFile)) {
-        const std::string modelName = importer.GetModelName(meshFile);
-        const auto* model = importer.GetModel(modelName);
+        if (model) {
+            obj = manager.CreateGameObject<RenderableGameObject>(name);
 
-        if (model && !model->meshes.empty()) {
-            // Asignar la primera malla del modelo al objeto
-            obj->SetMeshIndex(0); // Índice 0 como ejemplo
-            obj->SetTextureID(0); // Si el modelo tiene textura, puedes asignarla aquí
+            // Configurar todas las mallas del modelo
+            for (size_t i = 0; i < model->meshes.size(); i++) {
+                obj->SetMeshIndex(i);
+            }
+
+            // Configurar transformaciones
+            obj->SetPosition(glm::vec3(0.0f));
+            obj->SetRotation(glm::vec3(0.0f));
+            obj->SetScale(glm::vec3(1.0f));
+
+            return obj;
         }
     }
-    else {
-        std::cerr << "Error: Could not load primitive mesh from file: " << meshFile << std::endl;
-    }
 
-    // Configurar transformaciones iniciales del objeto
-    obj->SetPosition(glm::vec3(0.0f));
-    obj->SetRotation(glm::vec3(0.0f));
-    obj->SetScale(glm::vec3(1.0f));
-
-    return obj;
+    std::cerr << "Error: Could not load primitive mesh from file: " << meshFile << std::endl;
+    return nullptr;
 }
-
 Camera* PrimitiveFactory::CreateCamera() {
     // Crear un objeto GameObjectCamera
     GameObjectCamera* camera = new GameObjectCamera();
