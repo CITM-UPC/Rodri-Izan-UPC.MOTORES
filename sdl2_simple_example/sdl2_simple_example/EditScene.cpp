@@ -263,6 +263,7 @@ void EditScene::RenderPerformanceWindow() {
         return;
     }
 
+    performance.DrawPerformanceWindow();  // Llamar al método de la clase
     ImGui::End();
 }
 
@@ -278,5 +279,6 @@ void EditScene::RenderResourcesWindow() {
         return;
     }
 
+    resourceUsage.Display();  // Llamar al método de la clase
     ImGui::End();
 }
