@@ -32,6 +32,8 @@ void Inspector::DrawInspectorWindow() {
             selectedGameObject->SetLocalPosition(localPosition);
             selectedGameObject->SetLocalRotation(localRotation);
             selectedGameObject->SetLocalScale(localScale);
+
+
         }
 
         // Global Transform (read-only)

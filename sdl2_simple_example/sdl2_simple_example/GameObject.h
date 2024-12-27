@@ -40,21 +40,60 @@ public:
 
     void SetLocalPosition(const glm::vec3& position) {
         m_localPosition = position;
+        UpdateWorldMatrix();
+        // Actualizar los hijos
+        for (auto* child : m_children) {
+            child->UpdateTransforms();
+        }
     }
 
     void SetLocalRotation(const glm::vec3& rotation) {
         m_localRotation = rotation;
+        UpdateWorldMatrix();
+        // Actualizar los hijos
+        for (auto* child : m_children) {
+            child->UpdateTransforms();
+        }
     }
 
     void SetLocalScale(const glm::vec3& scale) {
         m_localScale = scale;
+        UpdateWorldMatrix();
+        // Actualizar los hijos
+        for (auto* child : m_children) {
+            child->UpdateTransforms();
+        }
     }
+
     void SetActive(bool active) { m_active = active; }
 
     // Transformations
-    void Translate(const glm::vec3& translation) { m_localPosition += translation; }
-    void Rotate(const glm::vec3& rotation) { m_localRotation += rotation; }
-    void Scale(const glm::vec3& scale) { m_localScale *= scale; }
+    void Translate(const glm::vec3& translation) {
+        m_localPosition += translation;
+        UpdateWorldMatrix();
+        // Actualizar los hijos
+        for (auto* child : m_children) {
+            child->UpdateTransforms();
+        }
+    }
+
+    void Rotate(const glm::vec3& rotation) {
+        m_localRotation += rotation;
+        UpdateWorldMatrix();
+        // Actualizar los hijos
+        for (auto* child : m_children) {
+            child->UpdateTransforms();
+        }
+    }
+
+    void Scale(const glm::vec3& scale) {
+        m_localScale *= scale;
+        UpdateWorldMatrix();
+        // Actualizar los hijos
+        for (auto* child : m_children) {
+            child->UpdateTransforms();
+        }
+    }
 
     // Matriz de transformación
     glm::mat4 GetLocalTransformMatrix() const {
