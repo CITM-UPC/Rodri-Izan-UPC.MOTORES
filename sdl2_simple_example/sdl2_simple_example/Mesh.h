@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <glm/glm.hpp>
+#include "BoundingBox.h"
 
 // Clase para almacenar y renderizar mallas
 class Mesh {
@@ -32,6 +33,8 @@ public:
     GLuint VAO = 0;  // Vertex Array Object
     GLuint VBO = 0;  // Vertex Buffer Object
     GLuint EBO = 0;  // Element Buffer Object
+
+	BoundingBox boundingBox; // Caja de colisión
 
 	// Configurar los datos de malla en OpenGL
     void SetupMesh() {
@@ -69,8 +72,12 @@ public:
 
             // Desvincula el VAO 
             glBindVertexArray(0);
+
+            boundingBox.CalculateFromVertices(vertices);
         }
     }
+
+    const BoundingBox& GetBoundingBox() const { return boundingBox; }
 
     // Limpiar los identificadores de OpenGL
     void Cleanup() {
