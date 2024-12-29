@@ -69,28 +69,22 @@ Camera* PrimitiveFactory::CreateCamera(Importer* importer) {
     auto& manager = GameObjectManager::GetInstance();
     GameObjectCamera* camera = manager.CreateGameObject<GameObjectCamera>("MainCamera");
 
-
-
-    // Cargar el modelo visual de la cámara directamente dentro de CreateCamera
-    const std::string cameraModelPath = "Assets/Models/Camera.fbx"; 
+    const std::string cameraModelPath = "Assets/Models/Camera.fbx";
     if (importer && importer->ImportFBX(cameraModelPath.c_str())) {
         const std::string modelName = importer->GetModelName(cameraModelPath.c_str());
         const auto* model = importer->GetModel(modelName);
-
         if (model && !model->meshes.empty()) {
             // Configurar las mallas del modelo
             for (size_t i = 0; i < model->meshes.size(); i++) {
                 camera->SetMeshIndex(i);
+                // Verificar que el material se asigna correctamente
+                std::cout << "Mesh " << i << " assigned to camera" << std::endl;
+                // Si tu sistema usa materiales, asegúrate de que se asignen aquí
             }
         }
-        // Configurar posición y rotación inicial
         camera->SetPosition(glm::vec3(0.0f, 2.0f, 5.0f));
         camera->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+        camera->SetScale(glm::vec3(0.1f)); // Añade una escala si el modelo es muy grande
     }
     return camera;
 }
-
-
-
-
-
