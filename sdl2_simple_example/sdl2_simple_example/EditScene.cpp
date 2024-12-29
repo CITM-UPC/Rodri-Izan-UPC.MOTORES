@@ -1,4 +1,5 @@
 #include "EditScene.h"
+#include "Camera.h"
 #include "Importer.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -136,7 +137,7 @@ void EditScene::RenderMenuBar(Importer* importer) {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Camera")) {
-                PrimitiveFactory::CreateCamera();
+                PrimitiveFactory::CreateCamera (importer);
             }
             ImGui::EndMenu();
         }

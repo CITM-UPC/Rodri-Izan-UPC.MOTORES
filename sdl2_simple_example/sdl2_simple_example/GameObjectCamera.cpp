@@ -1,8 +1,9 @@
 #include "GameObjectCamera.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 GameObjectCamera::GameObjectCamera(const std::string& name)
-    : GameObject(name), Camera() {
+    : RenderableGameObject(name), Camera() {
     SetPosition(glm::vec3(0.0f, 2.0f, -5.0f));
     SetRotation(glm::vec3(0.0f));
     yaw = -90.0f;
@@ -13,25 +14,28 @@ GameObjectCamera::GameObjectCamera(const std::string& name)
     isMouseLocked = false;
 }
 
+
 void GameObjectCamera::OnPlay() {
     Camera::SetActive(true);
-    LockMouse();
+    LockMouse();  // Bloquea el ratón
     SDL_GetMouseState(&lastMouseX, &lastMouseY);
 }
 
 void GameObjectCamera::OnStop() {
     Camera::SetActive(false);
-    UnlockMouse();
+    UnlockMouse();  // Desbloquea el ratón
 }
 
 void GameObjectCamera::LockMouse() {
     isMouseLocked = true;
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE); // Habilitar el modo relativo
+    SDL_ShowCursor(SDL_DISABLE);        // Deshabilitar el cursor visual
 }
 
 void GameObjectCamera::UnlockMouse() {
     isMouseLocked = false;
-    SDL_SetRelativeMouseMode(SDL_FALSE);
+    SDL_SetRelativeMouseMode(SDL_FALSE); // Deshabilitar el modo relativo
+    SDL_ShowCursor(SDL_ENABLE);          // Habilitar el cursor visual
 }
 
 void GameObjectCamera::ProcessInput() {
@@ -39,6 +43,15 @@ void GameObjectCamera::ProcessInput() {
 
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
     float deltaTime = 1.0f / 60.0f;
+
+    if (keystate[SDL_SCANCODE_F5]) {
+        if (!isMouseLocked) {
+            OnPlay();  // Activa la cámara y bloquea el ratón
+        }
+        else {
+            OnStop();  // Detiene la cámara y desbloquea el ratón
+        }
+    }
 
     // Calcular la dirección frontal basada en la rotación actual
     glm::vec3 front;
@@ -115,3 +128,4 @@ glm::mat4 GameObjectCamera::GetViewMatrix() const {
 glm::mat4 GameObjectCamera::GetProjectionMatrix(float aspect) const {
     return glm::perspective(glm::radians(GetFOV()), aspect, GetNearPlane(), GetFarPlane());
 }
+

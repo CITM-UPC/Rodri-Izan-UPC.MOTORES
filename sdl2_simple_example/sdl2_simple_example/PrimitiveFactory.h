@@ -12,11 +12,13 @@ public:
         Sphere,
         Cylinder,
         Plane,
-        Cone
+        Cone,
+        Camera
     };
 
     static RenderableGameObject* CreatePrimitive(PrimitiveType type, Importer* importer);
-    static Camera* CreateCamera();
+    static Camera* CreateCamera(Importer* importer);
+
 private:
     static const std::string PRIMITIVES_PATH;
 };

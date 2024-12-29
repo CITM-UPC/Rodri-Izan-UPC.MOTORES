@@ -64,18 +64,33 @@ RenderableGameObject* PrimitiveFactory::CreatePrimitive(PrimitiveType type, Impo
     std::cerr << "Error: Could not load primitive mesh from file: " << meshFile << std::endl;
     return nullptr;
 }
-Camera* PrimitiveFactory::CreateCamera() {
-    // Crear un objeto GameObjectCamera   
+
+Camera* PrimitiveFactory::CreateCamera(Importer* importer) {
     auto& manager = GameObjectManager::GetInstance();
-    
-    // Crear la cámara usando el manager
     GameObjectCamera* camera = manager.CreateGameObject<GameObjectCamera>("MainCamera");
 
 
-    // Configurar su posición y rotación si es necesario
-    camera->SetPosition(glm::vec3(0.0f, 2.0f, 5.0f)); // Posición inicial
-    camera->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f)); // Rotación inicial
 
-    return camera; // Retornamos un puntero a Camera*
+    // Cargar el modelo visual de la cámara directamente dentro de CreateCamera
+    const std::string cameraModelPath = "Assets/Models/Camera.fbx"; 
+    if (importer && importer->ImportFBX(cameraModelPath.c_str())) {
+        const std::string modelName = importer->GetModelName(cameraModelPath.c_str());
+        const auto* model = importer->GetModel(modelName);
+
+        if (model && !model->meshes.empty()) {
+            // Configurar las mallas del modelo
+            for (size_t i = 0; i < model->meshes.size(); i++) {
+                camera->SetMeshIndex(i);
+            }
+        }
+        // Configurar posición y rotación inicial
+        camera->SetPosition(glm::vec3(0.0f, 2.0f, 5.0f));
+        camera->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+    }
+    return camera;
 }
+
+
+
+
 
