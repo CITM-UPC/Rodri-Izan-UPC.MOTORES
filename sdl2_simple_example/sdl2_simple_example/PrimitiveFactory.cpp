@@ -65,11 +65,15 @@ RenderableGameObject* PrimitiveFactory::CreatePrimitive(PrimitiveType type, Impo
     return nullptr;
 }
 Camera* PrimitiveFactory::CreateCamera() {
-    // Crear un objeto GameObjectCamera
-    GameObjectCamera* camera = new GameObjectCamera();
+    // Crear un objeto GameObjectCamera   
+    auto& manager = GameObjectManager::GetInstance();
+    
+    // Crear la cámara usando el manager
+    GameObjectCamera* camera = manager.CreateGameObject<GameObjectCamera>("MainCamera");
+
 
     // Configurar su posición y rotación si es necesario
-    camera->SetPosition(glm::vec3(0.0f, 2.0f, -5.0f)); // Posición inicial
+    camera->SetPosition(glm::vec3(0.0f, 2.0f, 5.0f)); // Posición inicial
     camera->SetRotation(glm::vec3(0.0f, 0.0f, 0.0f)); // Rotación inicial
 
     return camera; // Retornamos un puntero a Camera*

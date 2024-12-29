@@ -1,11 +1,44 @@
 #include "GameObjectCamera.h"
 #include <glm/gtc/matrix_transform.hpp>
 
+GameObjectCamera::GameObjectCamera(const std::string& name)
+    : GameObject(name), Camera() {
+    SetPosition(glm::vec3(0.0f, 2.0f, -5.0f));
+    SetRotation(glm::vec3(0.0f));
+    yaw = -90.0f;
+    pitch = 0.0f;
+    movementSpeed = 2.5f;
+    mouseSensitivity = 0.1f;
+    Camera::SetActive(false);
+    isMouseLocked = false;
+}
+
+void GameObjectCamera::OnPlay() {
+    Camera::SetActive(true);
+    LockMouse();
+    SDL_GetMouseState(&lastMouseX, &lastMouseY);
+}
+
+void GameObjectCamera::OnStop() {
+    Camera::SetActive(false);
+    UnlockMouse();
+}
+
+void GameObjectCamera::LockMouse() {
+    isMouseLocked = true;
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+}
+
+void GameObjectCamera::UnlockMouse() {
+    isMouseLocked = false;
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+}
+
 void GameObjectCamera::ProcessInput() {
     if (!Camera::IsActive()) return;
 
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
-    float deltaTime = 1.0f / 60.0f; // Idealmente esto debería venir del game loop
+    float deltaTime = 1.0f / 60.0f;
 
     // Calcular la dirección frontal basada en la rotación actual
     glm::vec3 front;
@@ -17,42 +50,38 @@ void GameObjectCamera::ProcessInput() {
     // Calcular el vector derecho
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-    // Movimiento WASD
     float currentSpeed = movementSpeed;
     if (keystate[SDL_SCANCODE_LSHIFT]) {
         currentSpeed *= 2.0f;
     }
 
-    glm::vec3 movement(0.0f);
+    glm::vec3 newPosition = GetPosition();
 
     if (keystate[SDL_SCANCODE_W]) {
-        movement += forward * currentSpeed * deltaTime;
+        newPosition += forward * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_S]) {
-        movement -= forward * currentSpeed * deltaTime;
+        newPosition -= forward * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_A]) {
-        movement -= right * currentSpeed * deltaTime;
+        newPosition -= right * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_D]) {
-        movement += right * currentSpeed * deltaTime;
+        newPosition += right * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_SPACE]) {
-        movement.y += currentSpeed * deltaTime;
+        newPosition.y += currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_LCTRL]) {
-        movement.y -= currentSpeed * deltaTime;
+        newPosition.y -= currentSpeed * deltaTime;
     }
 
-    if (glm::length(movement) > 0) {
-        SetLocalPosition(GetLocalPosition() + movement);
-    }
+    SetPosition(newPosition);
 
     // Procesar movimiento del ratón si está bloqueado
     if (isMouseLocked) {
         int mouseX, mouseY;
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
-
         yaw += mouseX * mouseSensitivity;
         pitch -= mouseY * mouseSensitivity;
 
@@ -60,17 +89,29 @@ void GameObjectCamera::ProcessInput() {
         if (pitch > 89.0f) pitch = 89.0f;
         if (pitch < -89.0f) pitch = -89.0f;
 
-        // Actualizar la rotación del GameObject
-        SetLocalRotation(glm::vec3(pitch, yaw, 0.0f));
+        // Actualizar el vector target basado en los nuevos ángulos
+        Camera::SetTarget(GetPosition() + front);
     }
 }
 
-void GameObjectCamera::LockMouse() {
-    isMouseLocked = true;
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+void GameObjectCamera::Update() {
+    if (!Camera::IsActive()) return;
+    ProcessInput();
 }
 
-void GameObjectCamera::UnlockMouse() {
-    isMouseLocked = false;
-    SDL_SetRelativeMouseMode(SDL_FALSE);
+glm::mat4 GameObjectCamera::GetViewMatrix() const {
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    return glm::lookAt(
+        GetPosition(),
+        GetPosition() + glm::normalize(front),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    );
+}
+
+glm::mat4 GameObjectCamera::GetProjectionMatrix(float aspect) const {
+    return glm::perspective(glm::radians(GetFOV()), aspect, GetNearPlane(), GetFarPlane());
 }
