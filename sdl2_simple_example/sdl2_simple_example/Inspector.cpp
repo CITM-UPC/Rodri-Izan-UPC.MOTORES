@@ -6,32 +6,67 @@ Inspector::Inspector() {}
 
 void Inspector::DrawInspectorWindow() {
     ImGui::Begin("Inspector");
-
     auto& gameObjectManager = GameObjectManager::GetInstance();
     GameObject* selectedGameObject = gameObjectManager.GetSelectedGameObject();
-
     if (selectedGameObject) {
         ImGui::Text("Properties of %s", selectedGameObject->GetName().c_str());
 
-        // Checkbox para activar/desactivar el objeto
+        // Active checkbox
         bool isActive = selectedGameObject->IsActive();
         if (ImGui::Checkbox("Active", &isActive)) {
             selectedGameObject->SetActive(isActive);
         }
 
-        // Transformaciones básicas
-        glm::vec3 position = selectedGameObject->GetPosition();
-        glm::vec3 rotation = selectedGameObject->GetRotation();
-        glm::vec3 scale = selectedGameObject->GetScale();
-        if (ImGui::DragFloat3("Position", &position[0], 0.1f)) {
-            selectedGameObject->SetPosition(position);
+        // Local Transform
+        ImGui::Text("Local Transform");
+        glm::vec3 localPosition = selectedGameObject->GetLocalPosition();
+        glm::vec3 localRotation = selectedGameObject->GetLocalRotation();
+        glm::vec3 localScale = selectedGameObject->GetLocalScale();
+
+        bool changed = false;
+        changed |= ImGui::DragFloat3("Local Position", &localPosition[0], 0.1f);
+        changed |= ImGui::DragFloat3("Local Rotation", &localRotation[0], 0.1f);
+        changed |= ImGui::DragFloat3("Local Scale", &localScale[0], 0.1f);
+
+        if (changed) {
+            selectedGameObject->SetLocalPosition(localPosition);
+            selectedGameObject->SetLocalRotation(localRotation);
+            selectedGameObject->SetLocalScale(localScale);
+
+
         }
-        if (ImGui::DragFloat3("Rotation", &rotation[0], 0.1f)) {
-            selectedGameObject->SetRotation(rotation);
+
+        // Global Transform (read-only)
+        ImGui::Separator();
+        ImGui::Text("Global Transform");
+        glm::vec3 globalPosition = selectedGameObject->GetGlobalPosition();
+        ImGui::Text("Global Position: %.2f, %.2f, %.2f",
+            globalPosition.x, globalPosition.y, globalPosition.z);
+
+        // Hierarchy Information
+        ImGui::Separator();
+        if (GameObject* parent = selectedGameObject->GetParent()) {
+            ImGui::Text("Parent: %s", parent->GetName().c_str());
+            if (ImGui::Button("Remove Parent")) {
+                parent->RemoveChild(selectedGameObject);
+            }
         }
-        if (ImGui::DragFloat3("Scale", &scale[0], 0.1f)) {
-            selectedGameObject->SetScale(scale);
+        else {
+            ImGui::Text("No Parent");
         }
+
+        // Children
+        const auto& children = selectedGameObject->GetChildren();
+        if (!children.empty()) {
+            ImGui::Text("Children:");
+            for (const auto* child : children) {
+                ImGui::BulletText("%s", child->GetName().c_str());
+            }
+        }
+        else {
+            ImGui::Text("No Children");
+        }
+    
 
         // Si el objeto es RenderableGameObject
         if (auto renderable = dynamic_cast<RenderableGameObject*>(selectedGameObject)) {

@@ -1,14 +1,13 @@
 #pragma once
+#include "GameObject.h"
 #include "Camera.h"
+#include "Importer.h"
 #include <SDL2/SDL_events.h>
 
-class GameObjectCamera : public Camera {
+class GameObjectCamera : public RenderableGameObject, public Camera {
 private:
-    glm::vec3 rotation = glm::vec3(0.0f);
     float mouseSensitivity = 0.2f;
     float movementSpeed = 5.0f;
-
-    // Estado de entrada
     bool isMouseLocked = false;
     int lastMouseX = 0;
     int lastMouseY = 0;
@@ -16,23 +15,27 @@ private:
     float pitch = 0.0f;
 
 public:
-    GameObjectCamera();
+    GameObjectCamera(const std::string& name = "Camera");
     ~GameObjectCamera() override = default;
 
     void ProcessInput();
     void Update() override;
     glm::mat4 GetViewMatrix() const;
-    glm::mat4 GetProjectionMatrix(float fov, float aspect, float, float) const;
+    glm::mat4 GetProjectionMatrix(float aspect) const;
+
     void OnPlay() override;
     void OnStop() override;
-
-    void SetRotation(const glm::vec3& rot) { rotation = rot; }
-    glm::vec3 GetRotation() const { return rotation; }
 
     void SetMouseSensitivity(float sensitivity) { mouseSensitivity = sensitivity; }
     void SetMovementSpeed(float speed) { movementSpeed = speed; }
 
-    // Métodos de control
     void LockMouse();
     void UnlockMouse();
+
+    // Resolver ambigüedades de herencia múltiple
+    using RenderableGameObject::SetPosition;
+    using RenderableGameObject::GetPosition;
+    using Camera::SetActive;
+    using Camera::IsActive;
+
 };

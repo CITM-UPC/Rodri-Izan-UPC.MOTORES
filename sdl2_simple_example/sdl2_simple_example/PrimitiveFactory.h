@@ -3,6 +3,7 @@
 #include <vector>
 #include "GameObjectManager.h"
 #include "GameObjectCamera.h"
+#include "Importer.h"
 
 class PrimitiveFactory {
 public:
@@ -11,16 +12,13 @@ public:
         Sphere,
         Cylinder,
         Plane,
-        Cone
+        Cone,
+        Camera
     };
 
-    static RenderableGameObject* CreatePrimitive(PrimitiveType type);
-    static Camera* CreateCamera();
+    static RenderableGameObject* CreatePrimitive(PrimitiveType type, Importer* importer);
+    static Camera* CreateCamera(Importer* importer);
 
 private:
-    static std::vector<glm::vec3> GenerateCubeVertices();
-    static std::vector<glm::vec3> GenerateSphereVertices(float radius = 1.0f, int segments = 32);
-    static std::vector<glm::vec3> GenerateCylinderVertices(float radius = 1.0f, float height = 2.0f, int segments = 32);
-    static std::vector<glm::vec3> GeneratePlaneVertices();
-    static std::vector<glm::vec3> GenerateConeVertices(float radius = 1.0f, float height = 2.0f, int segments = 32);
+    static const std::string PRIMITIVES_PATH;
 };

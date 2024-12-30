@@ -1,44 +1,57 @@
 #include "GameObjectCamera.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
-GameObjectCamera::GameObjectCamera() {
-    // Inicialización por defecto
-    position = glm::vec3(0.0f, 2.0f, -5.0f);
-    target = glm::vec3(0.0f, 0.0f, 1.0f);
-    yaw = -90.0f; // Inicia mirando hacia el frente
+GameObjectCamera::GameObjectCamera(const std::string& name)
+    : RenderableGameObject(name), Camera() {
+    SetPosition(glm::vec3(0.0f, 2.0f, -5.0f));
+    SetRotation(glm::vec3(0.0f));
+    yaw = -90.0f;
     pitch = 0.0f;
     movementSpeed = 2.5f;
     mouseSensitivity = 0.1f;
-    isActive = false;
+    Camera::SetActive(false);
     isMouseLocked = false;
 }
 
+
 void GameObjectCamera::OnPlay() {
-    isActive = true;
-    LockMouse();
+    Camera::SetActive(true);
+    LockMouse();  // Bloquea el ratón
     SDL_GetMouseState(&lastMouseX, &lastMouseY);
 }
 
 void GameObjectCamera::OnStop() {
-    isActive = false;
-    UnlockMouse();
+    Camera::SetActive(false);
+    UnlockMouse();  // Desbloquea el ratón
 }
 
 void GameObjectCamera::LockMouse() {
     isMouseLocked = true;
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE); // Habilitar el modo relativo
+    SDL_ShowCursor(SDL_DISABLE);        // Deshabilitar el cursor visual
 }
 
 void GameObjectCamera::UnlockMouse() {
     isMouseLocked = false;
-    SDL_SetRelativeMouseMode(SDL_FALSE);
+    SDL_SetRelativeMouseMode(SDL_FALSE); // Deshabilitar el modo relativo
+    SDL_ShowCursor(SDL_ENABLE);          // Habilitar el cursor visual
 }
 
 void GameObjectCamera::ProcessInput() {
-    if (!isActive) return;
+    if (!Camera::IsActive()) return;
 
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
-    float deltaTime = 1.0f / 60.0f; // Idealmente esto debería venir del game loop
+    float deltaTime = 1.0f / 60.0f;
+
+    if (keystate[SDL_SCANCODE_F5]) {
+        if (!isMouseLocked) {
+            OnPlay();  // Activa la cámara y bloquea el ratón
+        }
+        else {
+            OnStop();  // Detiene la cámara y desbloquea el ratón
+        }
+    }
 
     // Calcular la dirección frontal basada en la rotación actual
     glm::vec3 front;
@@ -50,36 +63,38 @@ void GameObjectCamera::ProcessInput() {
     // Calcular el vector derecho
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-    // Movimiento WASD
     float currentSpeed = movementSpeed;
     if (keystate[SDL_SCANCODE_LSHIFT]) {
         currentSpeed *= 2.0f;
     }
 
+    glm::vec3 newPosition = GetPosition();
+
     if (keystate[SDL_SCANCODE_W]) {
-        position += forward * currentSpeed * deltaTime;
+        newPosition += forward * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_S]) {
-        position -= forward * currentSpeed * deltaTime;
+        newPosition -= forward * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_A]) {
-        position -= right * currentSpeed * deltaTime;
+        newPosition -= right * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_D]) {
-        position += right * currentSpeed * deltaTime;
+        newPosition += right * currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_SPACE]) {
-        position.y += currentSpeed * deltaTime;
+        newPosition.y += currentSpeed * deltaTime;
     }
     if (keystate[SDL_SCANCODE_LCTRL]) {
-        position.y -= currentSpeed * deltaTime;
+        newPosition.y -= currentSpeed * deltaTime;
     }
+
+    SetPosition(newPosition);
 
     // Procesar movimiento del ratón si está bloqueado
     if (isMouseLocked) {
         int mouseX, mouseY;
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
-
         yaw += mouseX * mouseSensitivity;
         pitch -= mouseY * mouseSensitivity;
 
@@ -88,21 +103,31 @@ void GameObjectCamera::ProcessInput() {
         if (pitch < -89.0f) pitch = -89.0f;
 
         // Actualizar el vector target basado en los nuevos ángulos
-        target = position + front;
+        Camera::SetTarget(GetPosition() + front);
     }
 }
 
 void GameObjectCamera::Update() {
-    if (!isActive) return;
+    if (!Camera::IsActive()) return;
     ProcessInput();
 }
 
 glm::mat4 GameObjectCamera::GetViewMatrix() const {
-    // La matriz de vista se genera a partir de la posición y el objetivo
-    return glm::lookAt(position, target, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    return glm::lookAt(
+        GetPosition(),
+        GetPosition() + glm::normalize(front),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    );
 }
 
-glm::mat4 GameObjectCamera::GetProjectionMatrix(float fov, float aspect, float near, float far) const {
-    // La matriz de proyección es una proyección perspectiva
-    return glm::perspective(glm::radians(fov), aspect, near, far);
+glm::mat4 GameObjectCamera::GetProjectionMatrix(float aspect) const {
+    return glm::perspective(glm::radians(GetFOV()), aspect, GetNearPlane(), GetFarPlane());
 }
+
+
+

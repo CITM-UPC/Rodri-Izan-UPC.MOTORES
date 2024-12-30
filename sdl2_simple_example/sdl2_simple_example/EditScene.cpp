@@ -1,10 +1,13 @@
 #include "EditScene.h"
+#include "Camera.h"
+#include "Importer.h"
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include "stdlib.h"
 #include "PrimitiveFactory.h"
 #include "GameObjectManager.h"
+#include "Hierarchy.h"
 
 EditScene::EditScene()
     : biblio("./Library") { // Inicializamos con una ruta
@@ -18,7 +21,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     // 2. Renderizar MenuBar primero
-    RenderMenuBar();
+    RenderMenuBar(importer);
 
     // 3. Crear DockSpace después del MenuBar
     ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -65,7 +68,7 @@ void EditScene::CloseWindow(const char* name, bool& state) {
     state = false;
 }
 
-void EditScene::RenderMenuBar() {
+void EditScene::RenderMenuBar(Importer* importer) {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("New Scene", "Ctrl+N")) {
@@ -117,24 +120,24 @@ void EditScene::RenderMenuBar() {
         if (ImGui::BeginMenu("GameObject")) {
             if (ImGui::BeginMenu("3D Object")) {
                 if (ImGui::MenuItem("Cube")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cube);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cube, importer);
                 }
                 if (ImGui::MenuItem("Sphere")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Sphere);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Sphere, importer);
                 }
                 if (ImGui::MenuItem("Cylinder")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cylinder);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cylinder, importer);
                 }
                 if (ImGui::MenuItem("Plane")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Plane);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Plane, importer);
                 }
                 if (ImGui::MenuItem("Cone")) {
-                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cone);
+                    PrimitiveFactory::CreatePrimitive(PrimitiveFactory::PrimitiveType::Cone, importer);
                 }
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Camera")) {
-                PrimitiveFactory::CreateCamera();
+                PrimitiveFactory::CreateCamera (importer);
             }
             ImGui::EndMenu();
         }
@@ -177,6 +180,21 @@ void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
         ImVec4(0, 0, 0, 0)
     );
 
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(Hierarchy::GetDragDropType())) {
+            if (payload->DataSize > 0) {
+                const char* objectName = static_cast<const char*>(payload->Data);
+                auto& manager = GameObjectManager::GetInstance();
+                GameObject* draggedObject = manager.FindGameObject(objectName);
+                if (draggedObject && draggedObject->GetParent()) {
+                    // Si el objeto es soltado en la escena, remover su padre
+                    draggedObject->GetParent()->RemoveChild(draggedObject);
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
     window.HandleDragDropTarget();
     ImGui::End();
 }
@@ -200,24 +218,14 @@ void EditScene::RenderInspectorWindow() {
 void EditScene::RenderHierarchyWindow() {
     if (!windowStates.showHierarchy) return;
 
-    bool isOpen = true;
-    ImGui::Begin("Hierarchy", &isOpen);
+    // Usar la clase Hierarchy en lugar de implementar la lógica directamente
+    hierarchy.DrawHierarchyWindow();
 
-    if (!isOpen) {
+    // Comprobar si la ventana se cerró
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
+        ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
         CloseWindow("Hierarchy", windowStates.showHierarchy);
-        ImGui::End();
-        return;
     }
-
-    // Mostrar los GameObjects en la jerarquía
-    auto gameObjects = GameObjectManager::GetInstance().GetAllGameObjects();
-    for (auto* gameObject : gameObjects) {
-        if (ImGui::Selectable(gameObject->GetName().c_str())) {
-            GameObjectManager::GetInstance().SetSelectedGameObject(gameObject);
-        }
-    }
-
-    ImGui::End();
 }
 
 void EditScene::RenderAssetsWindow() {

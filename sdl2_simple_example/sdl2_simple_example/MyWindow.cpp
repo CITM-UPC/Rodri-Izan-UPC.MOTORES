@@ -212,6 +212,8 @@ void MyWindow::close() {
     }
 }
 
+
+
 bool MyWindow::processEvents(IEventProcessor* event_processor) {
     SDL_Event event;
     const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -239,7 +241,7 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             return false;
 
         case SDL_KEYDOWN:
-            // Añade una tecla para alternar entre modos (por ejemplo, F5)
+            // Tecla para alternar entre modos (por ejemplo, F5)
             if (event.key.keysym.sym == SDLK_F5) {
                 SetPlayMode(!isPlayMode);
             }
@@ -287,12 +289,13 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             HandleDroppedFile(droppedFile);
             SDL_free(droppedFile);
             break;
-            }
+        }
         }
     }
 
     return true;
 }
+
 
 void MyWindow::HandleDroppedFile(const char* droppedFile) {
     std::string fileExtension = std::string(droppedFile);
