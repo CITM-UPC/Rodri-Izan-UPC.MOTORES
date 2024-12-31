@@ -32,7 +32,8 @@ static const auto FRAME_DT = 1.0s / FPS;
 EditScene editor;
 
 //ruta de un file fbx
-const char* filefbx = "./Assets/Street environment_V01.fbx";
+const char* filefbx = "./Assets/BakerHouse.fbx";
+const char* filetext = "./Assets/Baker_house.png";
 
 // Inicialización de OpenGL
 static void init_openGL() {
@@ -141,8 +142,11 @@ int main(int argc, char** argv) {
             }
 
             // Set default transform
-            obj->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
-            obj->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+            obj->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+            obj->SetRotation(glm::vec3(0.0f, 0.0f, 180.0f));
+
+			// Load texture
+			obj->SetTextureID(importer.ImportTexture(filetext));
         }
     }
 
