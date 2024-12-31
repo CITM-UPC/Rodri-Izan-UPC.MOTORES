@@ -30,7 +30,9 @@ public:
     void RenderResourcesWindow();
 
     bool showHierarchy = true;
-
+    bool isPlaying = false;
+    MyWindow* currentWindow = nullptr;
+    void SetWindow(MyWindow* window) { currentWindow = window; }
 
 private:
     Hierarchy hierarchy;
