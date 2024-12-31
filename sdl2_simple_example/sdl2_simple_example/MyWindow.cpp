@@ -252,7 +252,6 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
                 sceneCamera.FocusOnObject();
             }
             break;
-            break;
 
         case SDL_MOUSEBUTTONDOWN:
             if (!isPlayMode) {
