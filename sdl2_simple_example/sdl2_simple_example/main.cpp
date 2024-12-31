@@ -29,11 +29,10 @@ static const ivec2 WINDOW_SIZE(720, 720);
 static const unsigned int FPS = 60;
 static const auto FRAME_DT = 1.0s / FPS;
 
-// Archivso para crear la casa al inicio
-const char* filefbx = "./Assets/BakerHouse.fbx"; 
-const char* filetex = "./Assets/Baker_house.png";
-
 EditScene editor;
+
+//ruta de un file fbx
+const char* filefbx = "./Assets/Street environment_V01.fbx";
 
 // Inicialización de OpenGL
 static void init_openGL() {
@@ -76,6 +75,8 @@ void renderSceneContent(MyWindow& window, Importer* importer) {
     // Renderizar GameObjects
     auto& manager = GameObjectManager::GetInstance();
     auto renderableObjects = manager.GetGameObjectsOfType<RenderableGameObject>();
+
+    
 
     for (const auto* gameObject : renderableObjects) {
         if (!gameObject->IsActive()) continue;
@@ -125,6 +126,25 @@ int main(int argc, char** argv) {
 
     // Inicialización de Importer
     importer.Init();
+
+    if (importer.ImportFBX(filefbx)) {
+        auto& manager = GameObjectManager::GetInstance();
+        const std::string modelname = importer.GetModelName(filefbx);
+        const auto* model = importer.GetModel(modelname);
+
+        if (model) {
+            auto* obj = manager.CreateGameObject<RenderableGameObject>(modelname);
+
+            // Add all meshes from the model
+            for (size_t i = 0; i < model->meshes.size(); i++) {
+                obj->SetMeshIndex(static_cast<int>(i));
+            }
+
+            // Set default transform
+            obj->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
+            obj->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+        }
+    }
 
     // Bucle principal
     while (window.processEvents() && window.isOpen()) {
