@@ -1,4 +1,4 @@
-#include "EditScene.h"
+Ôªø#include "EditScene.h"
 #include "Camera.h"
 #include "Importer.h"
 #include "imgui.h"
@@ -23,7 +23,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     // 2. Renderizar MenuBar primero
     RenderMenuBar(importer);
 
-    // 3. Crear DockSpace despuÈs del MenuBar
+    // 3. Crear DockSpace despu√©s del MenuBar
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -44,7 +44,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
-    // 4. Renderizar las dem·s ventanas
+    // 4. Renderizar las dem√°s ventanas
     RenderSceneWindow(window, importer, renderSceneContent);
     RenderInspectorWindow();
     RenderHierarchyWindow();
@@ -59,7 +59,7 @@ void EditScene::RenderEditorWindows(MyWindow& window, Importer* importer,
 void EditScene::ToggleWindow(const char* name, bool& state) {
     state = !state;
     if (state) {
-        // Si la ventana se est· abriendo, configurarla para que aparezca en el dockspace
+        // Si la ventana se est√° abriendo, configurarla para que aparezca en el dockspace
         ImGui::SetNextWindowDockID(ImGui::GetID("MyDockSpace"), ImGuiCond_FirstUseEver);
     }
 }
@@ -159,7 +159,33 @@ void EditScene::RenderSceneWindow(MyWindow& window, Importer* importer,
         return;
     }
 
-    // Actualizar el tamaÒo de la escena
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+    ImGui::BeginGroup();
+
+    bool isPlaying = window.IsPlayMode();  // Obtener el estado actual
+
+    // Bot√≥n de Play/Pause con colores
+    ImGui::PushStyleColor(ImGuiCol_Button, isPlaying ? ImVec4(0.8f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.8f, 0.2f, 1.0f));
+    if (ImGui::Button(isPlaying ? "  ‚è∏  " : "  ‚ñ∂  ")) {
+        window.SetPlayMode(!isPlaying);  // Alternar el modo de juego
+    }
+    ImGui::PopStyleColor();
+
+    ImGui::SameLine();
+
+    // Bot√≥n de Stop
+    if (ImGui::Button("  ‚èπ  ")) {
+        if (isPlaying) {
+            window.SetPlayMode(false);  // Detener el modo de juego
+        }
+    }
+
+    ImGui::EndGroup();
+    ImGui::PopStyleVar();
+
+    ImGui::Separator();
+
+    // Actualizar el tama√±o de la escena
     window.updateSceneSize();
 
     ImVec2 contentSize = ImGui::GetContentRegionAvail();
@@ -218,10 +244,10 @@ void EditScene::RenderInspectorWindow() {
 void EditScene::RenderHierarchyWindow() {
     if (!windowStates.showHierarchy) return;
 
-    // Usar la clase Hierarchy en lugar de implementar la lÛgica directamente
+    // Usar la clase Hierarchy en lugar de implementar la l√≥gica directamente
     hierarchy.DrawHierarchyWindow();
 
-    // Comprobar si la ventana se cerrÛ
+    // Comprobar si la ventana se cerr√≥
     if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&
         ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
         CloseWindow("Hierarchy", windowStates.showHierarchy);
@@ -271,7 +297,7 @@ void EditScene::RenderPerformanceWindow() {
         return;
     }
 
-    performance.DrawPerformanceWindow();  // Llamar al mÈtodo de la clase
+    performance.DrawPerformanceWindow();  // Llamar al m√©todo de la clase
     ImGui::End();
 }
 
@@ -287,6 +313,6 @@ void EditScene::RenderResourcesWindow() {
         return;
     }
 
-    resourceUsage.Display();  // Llamar al mÈtodo de la clase
+    resourceUsage.Display();  // Llamar al m√©todo de la clase
     ImGui::End();
 }

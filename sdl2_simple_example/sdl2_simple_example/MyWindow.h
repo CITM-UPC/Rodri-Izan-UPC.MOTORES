@@ -92,6 +92,8 @@ public:
     GLuint getRenderedTexture() const;
     void unbindFramebuffer();
     void bindFramebuffer();
+
+    bool IsPlayMode() const { return isPlayMode; }
     bool processEvents(IEventProcessor* event_processor = nullptr);
     void swapBuffers();
 

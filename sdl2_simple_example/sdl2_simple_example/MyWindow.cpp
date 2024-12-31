@@ -241,13 +241,17 @@ bool MyWindow::processEvents(IEventProcessor* event_processor) {
             return false;
 
         case SDL_KEYDOWN:
-            // Tecla para alternar entre modos (por ejemplo, F5)
             if (event.key.keysym.sym == SDLK_F5) {
                 SetPlayMode(!isPlayMode);
+            }
+            else if (isPlayMode && (event.key.keysym.sym == SDLK_ESCAPE ||
+                event.key.keysym.sym == SDLK_p)) {
+                SetPlayMode(false);  // Salir del modo play con ESC o P
             }
             else if (!isPlayMode && event.key.keysym.sym == SDLK_f) {
                 sceneCamera.FocusOnObject();
             }
+            break;
             break;
 
         case SDL_MOUSEBUTTONDOWN:
