@@ -19,6 +19,7 @@ ChuchuEngine ofrece una interfaz intuitiva y permite personalizar la disposició
 - **F**: Centra la cámara en el GameObject seleccionado.
 - **Rueda del Ratón**: Realiza zoom in y zoom out.
 - **Click Derecho + WASD**: Activa el modo de movimiento libre de la cámara con las teclas WASD.
+- **En la ventana de la escena hay un botón de color verde que hace la función de play del editor, cambiándote a la cámara del gameplay
 
 ### Importación de Archivos
 ChuchuEngine admite la importación de los siguientes tipos de archivos:
@@ -28,9 +29,12 @@ ChuchuEngine admite la importación de los siguientes tipos de archivos:
 
 Para importar archivos, simplemente arrastra y suelta los archivos en la interfaz de ChuchuEngine.
 
+---
 
-### Comentarios adicionales
-Para más comodidad en su uso recomendamos su uso en full screen
+ChuchuEngine es un motor en crecimiento y, aunque actualmente se centra en funcionalidades básicas, representa una base sólida para el aprendizaje y desarrollo de futuros motores de gráficos 3D.
+
+!Bugs encontrados!
+Hemos encontrado un error que hace imposible trabajar con otro modelo 3D que no sea el de BakerHaouse, de parte del equipo creemos que viene de la manera en que se gestionan las meses de los modelos, debido a la cantidad de trabajo que hay que hacer se nos ha imposibilitado arreglarlo para esta realise, de parte del equipo de ChuchuEngine nos disculpamos por ello
 
 
 
